@@ -1,0 +1,84 @@
+﻿on_game_started_after_lobby = {
+	on_actions = {
+		vptl_presidential_term_limits_startup
+	}
+}
+
+on_monthly_pulse_country = {
+	on_actions = {
+		vptl_presidential_term_limits_monthly
+	}
+}
+
+on_election_campaign_start = {
+	on_actions = {
+		vptl_presidential_term_limits_election_start
+	}
+}
+
+on_election_campaign_end = {
+	on_actions = {
+		vptl_presidential_term_limits_election_end
+	}
+}
+
+on_ruler_selected = {
+	on_actions = {
+		vptl_presidential_successor_ruler_selected
+	}
+}
+
+vptl_presidential_term_limits_startup = {
+	effect = {
+		every_country = {
+			limit = {
+				has_law_or_variant = law_type:law_presidential_republic
+				government_transfer_of_power = presidential_elective
+				NOT = { has_law_or_variant = law_type:law_single_party_state }
+			}
+			vptl_initialize_presidential_term_limits = yes
+		}
+	}
+}
+
+vptl_presidential_term_limits_monthly = {
+	trigger = {
+		has_law_or_variant = law_type:law_presidential_republic
+		government_transfer_of_power = presidential_elective
+		NOT = { has_law_or_variant = law_type:law_single_party_state }
+	}
+	effect = {
+		vptl_correct_unexpected_presidential_ruler_change = yes
+		vptl_initialize_presidential_term_limits = yes
+	}
+}
+
+vptl_presidential_term_limits_election_start = {
+	trigger = {
+		has_law_or_variant = law_type:law_presidential_republic
+		government_transfer_of_power = presidential_elective
+		NOT = { has_law_or_variant = law_type:law_single_party_state }
+	}
+	effect = {
+		vptl_prepare_presidential_term_limits_for_campaign = yes
+	}
+}
+
+vptl_presidential_term_limits_election_end = {
+	trigger = {
+		has_law_or_variant = law_type:law_presidential_republic
+		government_transfer_of_power = presidential_elective
+		NOT = { has_law_or_variant = law_type:law_single_party_state }
+	}
+	effect = {
+		vptl_apply_presidential_term_limits = yes
+	}
+}
+
+vptl_presidential_successor_ruler_selected = {
+	effect = {
+		root.owner = {
+			vptl_enforce_presidential_successor_for_non_election_transition = yes
+		}
+	}
+}

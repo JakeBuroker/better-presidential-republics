@@ -1,0 +1,555 @@
+﻿vptl_record_presidential_term_for_current_ruler = {
+	ruler ?= {
+		if = {
+			limit = {
+				NOT = { has_variable = vptl_presidential_term_limited }
+				has_variable = vptl_presidential_terms_served
+			}
+			change_variable = { name = vptl_presidential_terms_served add = 1 }
+		}
+		else_if = {
+			limit = {
+				NOT = { has_variable = vptl_presidential_term_limited }
+			}
+			set_variable = { name = vptl_presidential_terms_served value = 1 }
+		}
+
+		if = {
+			limit = {
+				NOT = { has_variable = vptl_presidential_term_limited }
+				var:vptl_presidential_terms_served >= 2
+			}
+			set_variable = vptl_presidential_term_limited
+			remove_modifier = modifier_vptl_presidential_first_term
+			remove_modifier = modifier_vptl_presidential_second_term
+			add_modifier = {
+				name = modifier_vptl_presidential_second_term
+				years = 4
+			}
+		}
+		else_if = {
+			limit = {
+				NOT = { has_variable = vptl_presidential_term_limited }
+			}
+			remove_modifier = modifier_vptl_presidential_first_term
+			remove_modifier = modifier_vptl_presidential_second_term
+			add_modifier = {
+				name = modifier_vptl_presidential_first_term
+				years = 4
+			}
+		}
+	}
+}
+
+vptl_sync_presidential_current_ruler = {
+	if = {
+		limit = {
+			ruler ?= {
+				is_character_alive = yes
+			}
+		}
+		ruler ?= {
+			save_scope_as = vptl_presidential_current_ruler_scope
+		}
+		set_variable = { name = vptl_presidential_current_ruler value = scope:vptl_presidential_current_ruler_scope }
+	}
+}
+
+vptl_initialize_presidential_term_limits = {
+	if = {
+		limit = {
+			has_law_or_variant = law_type:law_presidential_republic
+			government_transfer_of_power = presidential_elective
+			NOT = { has_law_or_variant = law_type:law_single_party_state }
+		}
+
+		ruler ?= {
+			if = {
+				limit = {
+					has_variable = is_andrew_jackson
+					NOT = { has_variable = vptl_presidential_terms_served }
+					NOT = { has_variable = vptl_presidential_term_limited }
+				}
+				set_variable = { name = vptl_presidential_terms_served value = 2 }
+				remove_modifier = modifier_vptl_presidential_first_term
+				remove_modifier = modifier_vptl_presidential_second_term
+				add_modifier = {
+					name = modifier_vptl_presidential_second_term
+					months = 12
+				}
+			}
+			else_if = {
+				limit = {
+					NOT = { has_variable = vptl_presidential_terms_served }
+					NOT = { has_variable = vptl_presidential_term_limited }
+				}
+				set_variable = { name = vptl_presidential_terms_served value = 1 }
+				remove_modifier = modifier_vptl_presidential_first_term
+				remove_modifier = modifier_vptl_presidential_second_term
+				add_modifier = {
+					name = modifier_vptl_presidential_first_term
+					years = 4
+				}
+			}
+
+			if = {
+				limit = {
+					has_variable = vptl_presidential_term_limited
+					NOT = { has_modifier = modifier_vptl_presidential_term_limited }
+				}
+				add_modifier = {
+					name = modifier_vptl_presidential_term_limited
+					years = 4
+				}
+			}
+			else_if = {
+				limit = {
+					NOT = { has_variable = vptl_presidential_term_limited }
+					var:vptl_presidential_terms_served >= 2
+					NOT = { has_modifier = modifier_vptl_presidential_second_term }
+				}
+				add_modifier = {
+					name = modifier_vptl_presidential_second_term
+					years = 4
+				}
+			}
+			else_if = {
+				limit = {
+					NOT = { has_variable = vptl_presidential_term_limited }
+					var:vptl_presidential_terms_served >= 1
+					NOT = { var:vptl_presidential_terms_served >= 2 }
+					NOT = { has_modifier = modifier_vptl_presidential_first_term }
+				}
+				add_modifier = {
+					name = modifier_vptl_presidential_first_term
+					years = 4
+				}
+			}
+		}
+	}
+	vptl_update_presidential_successor = yes
+}
+
+vptl_try_set_presidential_successor_by_template = {
+	if = {
+		limit = {
+			NOT = { has_variable = vptl_presidential_successor }
+			any_scope_character = {
+				is_character_alive = yes
+				has_template = $TEMPLATE$
+				is_ruler_of_own_country = no
+				is_heir_of_own_country = no
+				NOT = { has_variable = vptl_presidential_term_limited }
+				vptl_presidential_successor_candidate_eligible = yes
+			}
+		}
+		ordered_scope_character = {
+			limit = {
+				is_character_alive = yes
+				has_template = $TEMPLATE$
+				is_ruler_of_own_country = no
+				is_heir_of_own_country = no
+				NOT = { has_variable = vptl_presidential_term_limited }
+				vptl_presidential_successor_candidate_eligible = yes
+			}
+			order_by = prominence
+			position = 0
+			save_scope_as = vptl_presidential_successor_candidate
+		}
+		set_variable = { name = vptl_presidential_successor value = scope:vptl_presidential_successor_candidate }
+	}
+}
+
+vptl_update_presidential_successor = {
+	remove_variable = vptl_presidential_successor
+
+	if = {
+		limit = {
+			has_law_or_variant = law_type:law_presidential_republic
+			government_transfer_of_power = presidential_elective
+			NOT = { has_law_or_variant = law_type:law_single_party_state }
+		}
+		ruler ?= {
+			this.interest_group ?= {
+				save_scope_as = vptl_presidential_successor_ig
+				party ?= {
+					save_scope_as = vptl_presidential_successor_party
+				}
+			}
+		}
+
+		if = {
+			limit = {
+				c:USA ?= this
+				ruler ?= {
+					OR = {
+						has_variable = is_andrew_jackson
+						has_template = USA_john_calhoun
+					}
+				}
+			}
+			vptl_try_set_presidential_successor_by_template = { TEMPLATE = vptl_usa_martin_van_buren }
+		}
+		if = {
+			limit = {
+				c:MEX ?= this
+				ruler ?= {
+					OR = {
+						has_template = mex_miguel_barragan_template
+						has_template = MEX_antonio_lopez_de_santa_anna
+					}
+				}
+			}
+			vptl_try_set_presidential_successor_by_template = { TEMPLATE = MEX_valentin_gomez_farias }
+		}
+		if = {
+			limit = {
+				c:BOL ?= this
+				ruler ?= { has_template = BOL_Andres_de_Santa_Cruz }
+			}
+			vptl_try_set_presidential_successor_by_template = { TEMPLATE = BOL_Mariano_Enrique_Calvo }
+		}
+		if = {
+			limit = {
+				c:CLM ?= this
+				ruler ?= { has_template = CLM_Francisco_de_Paula_Santander }
+			}
+			vptl_try_set_presidential_successor_by_template = { TEMPLATE = CLM_Jose_Marquez }
+		}
+		if = {
+			limit = {
+				c:PRG ?= this
+				ruler ?= { has_template = PRG_jose_gaspar_rodriguez_de_francia }
+			}
+			vptl_try_set_presidential_successor_by_template = { TEMPLATE = PRG_policarpo_patino }
+			vptl_try_set_presidential_successor_by_template = { TEMPLATE = PRG_policarpo_patino_regular }
+		}
+		if = {
+			limit = {
+				c:TEX ?= this
+				ruler ?= { has_template = TEX_david_burnet }
+			}
+			vptl_try_set_presidential_successor_by_template = { TEMPLATE = vptl_tex_lorenzo_de_zavala }
+		}
+		if = {
+			limit = {
+				c:URU ?= this
+				ruler ?= { has_template = URU_Manuel_Oribe }
+			}
+			vptl_try_set_presidential_successor_by_template = { TEMPLATE = URU_joaquin_suarez }
+		}
+
+		if = {
+			limit = {
+				NOT = { has_variable = vptl_presidential_successor }
+				exists = scope:vptl_presidential_successor_party
+				any_scope_character = {
+					is_character_alive = yes
+					has_role_of_type = politician
+					is_ruler_of_own_country = no
+					is_heir_of_own_country = no
+					NOT = { has_variable = vptl_presidential_term_limited }
+					vptl_presidential_successor_candidate_eligible = yes
+					this.interest_group ?= {
+						is_member_of_party = scope:vptl_presidential_successor_party
+					}
+				}
+			}
+			ordered_scope_character = {
+				limit = {
+					is_character_alive = yes
+					has_role_of_type = politician
+					is_ruler_of_own_country = no
+					is_heir_of_own_country = no
+					NOT = { has_variable = vptl_presidential_term_limited }
+					vptl_presidential_successor_candidate_eligible = yes
+					this.interest_group ?= {
+						is_member_of_party = scope:vptl_presidential_successor_party
+					}
+				}
+				order_by = prominence
+				position = 0
+				save_scope_as = vptl_presidential_successor_candidate
+			}
+			set_variable = { name = vptl_presidential_successor value = scope:vptl_presidential_successor_candidate }
+		}
+		else_if = {
+			limit = {
+				NOT = { has_variable = vptl_presidential_successor }
+				exists = scope:vptl_presidential_successor_ig
+				any_scope_character = {
+					is_character_alive = yes
+					has_role_of_type = politician
+					is_ruler_of_own_country = no
+					is_heir_of_own_country = no
+					NOT = { has_variable = vptl_presidential_term_limited }
+					vptl_presidential_successor_candidate_eligible = yes
+					is_same_interest_group_type = scope:vptl_presidential_successor_ig
+				}
+			}
+			ordered_scope_character = {
+				limit = {
+					is_character_alive = yes
+					has_role_of_type = politician
+					is_ruler_of_own_country = no
+					is_heir_of_own_country = no
+					NOT = { has_variable = vptl_presidential_term_limited }
+					vptl_presidential_successor_candidate_eligible = yes
+					is_same_interest_group_type = scope:vptl_presidential_successor_ig
+				}
+				order_by = prominence
+				position = 0
+				save_scope_as = vptl_presidential_successor_candidate
+			}
+			set_variable = { name = vptl_presidential_successor value = scope:vptl_presidential_successor_candidate }
+		}
+	}
+	vptl_sync_presidential_current_ruler = yes
+}
+
+vptl_enforce_presidential_successor_for_non_election_transition = {
+	if = {
+		limit = {
+			has_law_or_variant = law_type:law_presidential_republic
+			government_transfer_of_power = presidential_elective
+			NOT = { has_law_or_variant = law_type:law_single_party_state }
+			OR = {
+				NOT = { has_variable = vptl_presidential_election_transition }
+				has_variable = vptl_presidential_force_successor_transition
+			}
+			has_variable = vptl_presidential_successor
+			var:vptl_presidential_successor ?= {
+				is_character_alive = yes
+				is_ruler_of_own_country = no
+				is_heir_of_own_country = no
+				NOT = { has_variable = vptl_presidential_term_limited }
+				vptl_presidential_successor_candidate_eligible = yes
+			}
+		}
+		remove_variable = vptl_presidential_force_successor_transition
+		var:vptl_presidential_successor ?= {
+			set_character_as_ruler = yes
+		}
+		vptl_initialize_presidential_term_limits = yes
+	}
+	else_if = {
+		limit = {
+			has_law_or_variant = law_type:law_presidential_republic
+			government_transfer_of_power = presidential_elective
+			NOT = { has_law_or_variant = law_type:law_single_party_state }
+			NOT = { has_variable = vptl_presidential_election_transition }
+		}
+		vptl_initialize_presidential_term_limits = yes
+	}
+}
+
+vptl_correct_unexpected_presidential_ruler_change = {
+	if = {
+		limit = {
+			has_law_or_variant = law_type:law_presidential_republic
+			government_transfer_of_power = presidential_elective
+			NOT = { has_law_or_variant = law_type:law_single_party_state }
+			NOT = { has_variable = vptl_presidential_election_transition }
+			has_variable = vptl_presidential_current_ruler
+			has_variable = vptl_presidential_successor
+			ruler ?= {
+				NOT = { ROOT.var:vptl_presidential_current_ruler ?= this }
+			}
+			var:vptl_presidential_successor ?= {
+				is_character_alive = yes
+				is_ruler_of_own_country = no
+				is_heir_of_own_country = no
+				NOT = { has_variable = vptl_presidential_term_limited }
+				vptl_presidential_successor_candidate_eligible = yes
+			}
+		}
+		var:vptl_presidential_successor ?= {
+			set_character_as_ruler = yes
+		}
+	}
+}
+
+vptl_set_presidential_successor_as_ig_leader_for_saved_ig = {
+	if = {
+		limit = {
+			exists = scope:vptl_term_limit_ig
+		}
+		if = {
+			limit = {
+				ROOT = {
+					c:USA ?= this
+					ruler ?= { has_variable = is_andrew_jackson }
+					any_scope_character = {
+						is_character_alive = yes
+						has_template = vptl_usa_martin_van_buren
+						is_ruler_of_own_country = no
+						is_heir_of_own_country = no
+						NOT = { has_variable = vptl_presidential_term_limited }
+						vptl_presidential_candidate_eligible = yes
+					}
+				}
+				is_interest_group_type = ig_rural_folk
+			}
+			ROOT = {
+				ordered_scope_character = {
+					limit = {
+						is_character_alive = yes
+						has_template = vptl_usa_martin_van_buren
+						is_ruler_of_own_country = no
+						is_heir_of_own_country = no
+						NOT = { has_variable = vptl_presidential_term_limited }
+						vptl_presidential_candidate_eligible = yes
+					}
+					order_by = prominence
+					position = 0
+					set_as_interest_group_leader = yes
+				}
+			}
+		}
+		else_if = {
+			limit = {
+				ROOT = {
+					any_scope_character = {
+						is_character_alive = yes
+						has_role_of_type = politician
+						is_interest_group_leader = no
+						is_ruler_of_own_country = no
+						is_heir_of_own_country = no
+						NOT = { has_variable = vptl_presidential_term_limited }
+						vptl_presidential_candidate_eligible = yes
+						is_same_interest_group_type = scope:vptl_term_limit_ig
+					}
+				}
+			}
+			ROOT = {
+				ordered_scope_character = {
+					limit = {
+						is_character_alive = yes
+						has_role_of_type = politician
+						is_interest_group_leader = no
+						is_ruler_of_own_country = no
+						is_heir_of_own_country = no
+						NOT = { has_variable = vptl_presidential_term_limited }
+						vptl_presidential_candidate_eligible = yes
+						is_same_interest_group_type = scope:vptl_term_limit_ig
+					}
+					order_by = prominence
+					position = 0
+					set_as_interest_group_leader = yes
+				}
+			}
+		}
+		else = {
+			ROOT = {
+				create_character = {
+					role = politician
+					interest_group = scope:vptl_term_limit_ig
+					ideology = ideology_moderate
+					age = 45
+					on_created = {
+						set_variable = vptl_presidential_backup_successor
+						set_as_interest_group_leader = yes
+					}
+				}
+			}
+		}
+	}
+}
+
+vptl_prepare_presidential_term_limits_for_campaign = {
+	set_variable = { name = vptl_presidential_election_transition months = 10 }
+	vptl_update_presidential_successor = yes
+
+	ruler ?= {
+		if = {
+			limit = {
+				NOT = { has_variable = vptl_presidential_term_limited }
+				var:vptl_presidential_terms_served >= 2
+			}
+			set_variable = vptl_presidential_term_limited
+		}
+	}
+
+	if = {
+		limit = {
+			has_variable = vptl_presidential_successor
+			ruler ?= {
+				has_variable = vptl_presidential_term_limited
+			}
+			var:vptl_presidential_successor ?= {
+				is_character_alive = yes
+				is_ruler_of_own_country = no
+				is_heir_of_own_country = no
+				NOT = { has_variable = vptl_presidential_term_limited }
+				vptl_presidential_successor_candidate_eligible = yes
+			}
+		}
+		ruler ?= {
+			save_scope_as = vptl_presidential_outgoing_ruler_scope
+		}
+		set_variable = { name = vptl_presidential_outgoing_ruler value = scope:vptl_presidential_outgoing_ruler_scope }
+		set_variable = { name = vptl_presidential_force_successor_transition days = 30 }
+	}
+
+	every_interest_group = {
+		limit = {
+			leader ?= {
+				OR = {
+					has_variable = vptl_presidential_term_limited
+					AND = {
+						ROOT = { c:USA ?= this }
+						NOT = { vptl_presidential_candidate_eligible = yes }
+					}
+				}
+			}
+		}
+		save_scope_as = vptl_term_limit_ig
+		leader ?= {
+			if = {
+				limit = { has_variable = vptl_presidential_term_limited }
+				add_modifier = {
+					name = modifier_vptl_presidential_term_limited
+					years = 4
+				}
+			}
+		}
+		vptl_set_presidential_successor_as_ig_leader_for_saved_ig = yes
+	}
+	if = {
+		limit = {
+			has_variable = vptl_presidential_force_successor_transition
+			has_variable = vptl_presidential_outgoing_ruler
+			has_variable = vptl_presidential_successor
+			ruler ?= {
+				NOT = { ROOT.var:vptl_presidential_outgoing_ruler ?= this }
+			}
+			var:vptl_presidential_successor ?= {
+				is_character_alive = yes
+				is_ruler_of_own_country = no
+				is_heir_of_own_country = no
+				NOT = { has_variable = vptl_presidential_term_limited }
+				vptl_presidential_successor_candidate_eligible = yes
+			}
+		}
+		remove_variable = vptl_presidential_force_successor_transition
+		var:vptl_presidential_successor ?= {
+			set_character_as_ruler = yes
+		}
+	}
+	remove_variable = vptl_presidential_outgoing_ruler
+	vptl_update_presidential_successor = yes
+}
+
+vptl_apply_presidential_term_limits = {
+	set_variable = { name = vptl_presidential_election_transition days = 7 }
+
+	if = {
+		limit = {
+			ruler ?= {
+				NOT = { has_variable = vptl_presidential_term_limited }
+			}
+		}
+		vptl_record_presidential_term_for_current_ruler = yes
+	}
+	vptl_update_presidential_successor = yes
+}

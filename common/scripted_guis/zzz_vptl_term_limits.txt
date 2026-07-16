@@ -1,0 +1,79 @@
+﻿vptl_show_presidential_term_first_sgui = {
+	scope = country
+	is_shown = {
+		has_law_or_variant = law_type:law_presidential_republic
+		government_transfer_of_power = presidential_elective
+		NOT = { has_law_or_variant = law_type:law_single_party_state }
+		ruler ?= {
+			NOT = { has_variable = vptl_presidential_term_limited }
+			has_variable = vptl_presidential_terms_served
+			var:vptl_presidential_terms_served >= 1
+			NOT = { var:vptl_presidential_terms_served >= 2 }
+		}
+	}
+}
+
+vptl_show_presidential_term_second_sgui = {
+	scope = country
+	is_shown = {
+		has_law_or_variant = law_type:law_presidential_republic
+		government_transfer_of_power = presidential_elective
+		NOT = { has_law_or_variant = law_type:law_single_party_state }
+		ruler ?= {
+			NOT = { has_variable = vptl_presidential_term_limited }
+			has_variable = vptl_presidential_terms_served
+			var:vptl_presidential_terms_served >= 2
+		}
+	}
+}
+
+vptl_show_presidential_term_limited_sgui = {
+	scope = country
+	is_shown = {
+		has_law_or_variant = law_type:law_presidential_republic
+		government_transfer_of_power = presidential_elective
+		NOT = { has_law_or_variant = law_type:law_single_party_state }
+		ruler ?= {
+			OR = {
+				has_variable = vptl_presidential_term_limited
+				has_modifier = modifier_vptl_presidential_term_limited
+			}
+		}
+	}
+}
+
+vptl_show_presidential_term_any_sgui = {
+	scope = country
+	is_shown = {
+		has_law_or_variant = law_type:law_presidential_republic
+		government_transfer_of_power = presidential_elective
+		NOT = { has_law_or_variant = law_type:law_single_party_state }
+		ruler ?= {
+			OR = {
+				has_variable = vptl_presidential_terms_served
+				has_variable = vptl_presidential_term_limited
+				has_modifier = modifier_vptl_presidential_first_term
+				has_modifier = modifier_vptl_presidential_second_term
+				has_modifier = modifier_vptl_presidential_term_limited
+			}
+		}
+	}
+}
+
+vptl_show_presidential_successor_sgui = {
+	scope = country
+	is_shown = {
+		has_law_or_variant = law_type:law_presidential_republic
+		government_transfer_of_power = presidential_elective
+		NOT = { has_law_or_variant = law_type:law_single_party_state }
+		has_variable = vptl_presidential_successor
+		var:vptl_presidential_successor ?= {
+			is_character_alive = yes
+			has_role_of_type = politician
+			is_ruler_of_own_country = no
+			is_heir_of_own_country = no
+			NOT = { has_variable = vptl_presidential_term_limited }
+			vptl_presidential_successor_candidate_eligible = yes
+		}
+	}
+}

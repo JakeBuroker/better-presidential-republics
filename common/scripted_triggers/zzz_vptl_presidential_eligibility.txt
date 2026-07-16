@@ -1,0 +1,18 @@
+﻿vptl_presidential_candidate_eligible = {
+	OR = {
+		NOT = { ROOT = { c:USA ?= this } }
+		AND = {
+			exists = home_country
+			home_country = {
+				exists = c:USA
+				c:USA = this
+			}
+		}
+	}
+}
+
+vptl_presidential_successor_candidate_eligible = {
+	vptl_presidential_candidate_eligible = yes
+	NOT = { has_variable = vptl_presidential_terms_served }
+	NOT = { has_variable = vptl_presidential_term_limited }
+}

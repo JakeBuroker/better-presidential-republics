@@ -1,0 +1,34 @@
+﻿vptl_usa_martin_van_buren = {
+	first_name = Martin
+	last_name = Van_Buren
+	historical = yes
+	culture = cu:yankee
+	religion = rel:protestant
+	role = character_role_politician
+	interest_group = ig_rural_folk
+	ideology = ideology_jacksonian_democrat
+	home_region = STATE_NEW_YORK
+	birth_date = 1782.12.5
+	traits = {
+		cautious
+		basic_diplomat
+	}
+}
+
+vptl_tex_lorenzo_de_zavala = {
+	first_name = Lorenzo
+	last_name = Zavala
+	historical = yes
+	culture = cu:mexican
+	religion = rel:catholic
+	role = character_role_politician
+	interest_group = ig_petty_bourgeoisie
+	ideology = ideology_republican_leader
+	home_region = STATE_YUCATAN
+	birth_date = 1788.10.3
+	traits = {
+		innovative
+		brave
+		experienced_political_operator
+	}
+}

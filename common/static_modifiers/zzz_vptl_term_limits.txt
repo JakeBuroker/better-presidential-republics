@@ -1,0 +1,11 @@
+﻿modifier_vptl_presidential_first_term = {
+	icon = gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds
+}
+
+modifier_vptl_presidential_second_term = {
+	icon = gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds
+}
+
+modifier_vptl_presidential_term_limited = {
+	icon = gfx/interface/icons/timed_modifier_icons/modifier_flag_negative.dds
+}
