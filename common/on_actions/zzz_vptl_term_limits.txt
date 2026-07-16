@@ -48,6 +48,7 @@ vptl_presidential_term_limits_monthly = {
 		NOT = { has_law_or_variant = law_type:law_single_party_state }
 	}
 	effect = {
+		vptl_replace_term_limited_presidential_ruler_with_successor = yes
 		vptl_correct_unexpected_presidential_ruler_change = yes
 		vptl_initialize_presidential_term_limits = yes
 	}
