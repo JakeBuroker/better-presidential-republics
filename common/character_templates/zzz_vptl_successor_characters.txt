@@ -15,6 +15,24 @@
 	}
 }
 
+vptl_usa_john_quincy_adams = {
+	first_name = John_Quincy
+	last_name = Adams
+	historical = yes
+	culture = cu:yankee
+	religion = rel:protestant
+	role = character_role_politician
+	interest_group = ig_intelligentsia
+	ideology = ideology_republican_leader
+	home_region = STATE_MASSACHUSETTS
+	birth_date = 1767.7.11
+	traits = {
+		erudite
+		meticulous
+		experienced_political_operator
+	}
+}
+
 vptl_tex_lorenzo_de_zavala = {
 	first_name = Lorenzo
 	last_name = Zavala

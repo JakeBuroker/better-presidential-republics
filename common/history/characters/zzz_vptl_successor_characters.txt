@@ -1,6 +1,9 @@
 ﻿CHARACTERS = {
 	c:USA ?= {
 		create_character = {
+			template = vptl_usa_john_quincy_adams
+		}
+		create_character = {
 			template = vptl_usa_martin_van_buren
 		}
 	}

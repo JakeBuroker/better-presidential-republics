@@ -1,6 +1,8 @@
 ﻿vptl_presidential_candidate_eligible = {
 	OR = {
-		NOT = { ROOT = { c:USA ?= this } }
+		NOT = {
+			owner = { c:USA ?= this }
+		}
 		AND = {
 			exists = home_country
 			home_country = {
@@ -13,6 +15,23 @@
 
 vptl_presidential_successor_candidate_eligible = {
 	vptl_presidential_candidate_eligible = yes
+	is_character_alive = yes
+	has_role_of_type = politician
+	is_ruler_of_own_country = no
+	is_heir_of_own_country = no
 	NOT = { has_variable = vptl_presidential_terms_served }
+	NOT = {
+		AND = {
+			has_variable = vptl_presidential_terms_served
+			var:vptl_presidential_terms_served >= 2
+		}
+	}
+	NOT = {
+		AND = {
+			has_variable = vptl_vice_presidential_terms_served
+			var:vptl_vice_presidential_terms_served >= 2
+		}
+	}
 	NOT = { has_variable = vptl_presidential_term_limited }
+	NOT = { has_variable = vptl_presidential_succeeded_to_office }
 }

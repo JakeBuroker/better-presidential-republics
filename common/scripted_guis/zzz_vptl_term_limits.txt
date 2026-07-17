@@ -1,4 +1,25 @@
-﻿vptl_show_presidential_term_first_sgui = {
+﻿vptl_show_presidential_order_number_sgui = {
+	scope = country
+	is_shown = {
+		has_law_or_variant = law_type:law_presidential_republic
+		government_transfer_of_power = presidential_elective
+		NOT = { has_law_or_variant = law_type:law_single_party_state }
+		ruler ?= {
+			has_variable = vptl_presidential_order_number
+		}
+	}
+}
+
+vptl_show_presidential_constitution_sgui = {
+	scope = country
+	is_shown = {
+		has_law_or_variant = law_type:law_presidential_republic
+		government_transfer_of_power = presidential_elective
+		NOT = { has_law_or_variant = law_type:law_single_party_state }
+	}
+}
+
+vptl_show_presidential_term_first_sgui = {
 	scope = country
 	is_shown = {
 		has_law_or_variant = law_type:law_presidential_republic
@@ -50,6 +71,7 @@ vptl_show_presidential_term_any_sgui = {
 		NOT = { has_law_or_variant = law_type:law_single_party_state }
 		ruler ?= {
 			OR = {
+				has_variable = vptl_presidential_order_number
 				has_variable = vptl_presidential_terms_served
 				has_variable = vptl_presidential_term_limited
 				has_modifier = modifier_vptl_presidential_first_term

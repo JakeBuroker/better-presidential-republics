@@ -410,12 +410,23 @@ types politics_panel_types
 						layoutpolicy_vertical = preferred
 
 						textbox = {
+							visible = "[Not(GetScriptedGui('vptl_show_presidential_order_number_sgui').IsShown( GuiScope.SetRoot( GetPlayer.MakeScope ).End ))]"
 							raw_text = "#title [Country.GetRuler.GetPrimaryRoleTitle]#!"
-							layoutpolicy_horizontal = expanding
-							size = { 0 16 }
+							layoutpolicy_horizontal = preferred
+							size = { 180 16 }
 							elide = right
 							align = left|nobaseline
 						}
+						textbox = {
+							visible = "[GetScriptedGui('vptl_show_presidential_order_number_sgui').IsShown( GuiScope.SetRoot( GetPlayer.MakeScope ).End )]"
+							raw_text = "#title [Country.GetRuler.GetPrimaryRoleTitle] No. #v [Character.MakeScope.Var('vptl_presidential_order_number').GetValue|0]#!#!"
+							layoutpolicy_horizontal = preferred
+							size = { 180 16 }
+							elide = right
+							align = left|nobaseline
+							fontsize_min = 10
+						}
+						expand = {}
 						block "additional_info_top_right" {}
 					}
 
@@ -427,6 +438,79 @@ types politics_panel_types
 						elide = right
 						align = left|nobaseline
 						using = fontsize_large
+					}
+					textbox = {
+						visible = "[GetScriptedGui('vptl_show_presidential_constitution_sgui').IsShown( GuiScope.SetRoot( GetPlayer.MakeScope ).End )]"
+						raw_text = "[GetPlayer.GetCustom('vptl_presidential_constitutional_summary')]"
+						tooltip = "vptl_presidential_constitutional_tooltip"
+						layoutpolicy_horizontal = expanding
+						size = { 0 15 }
+						fontsize_min = 9
+						elide = right
+						align = left|nobaseline
+						default_format = "#weak"
+					}
+
+					hbox = {
+						visible = "[GetScriptedGui('vptl_show_presidential_term_any_sgui').IsShown( GuiScope.SetRoot( GetPlayer.MakeScope ).End )]"
+						tooltip = "vptl_presidential_term_panel_tooltip"
+						layoutpolicy_horizontal = expanding
+						layoutpolicy_vertical = preferred
+						spacing = 6
+						margin_top = 2
+
+						icon = {
+							size = { 16 16 }
+							texture = "gfx/interface/icons/generic_icons/clock.dds"
+							parentanchor = vcenter
+						}
+
+						textbox = {
+							text = "vptl_presidential_term_label"
+							size = { 40 18 }
+							align = left|nobaseline
+							default_format = "#title"
+							fontsize_min = 10
+						}
+						textbox = {
+							visible = "[GetScriptedGui('vptl_show_presidential_term_first_sgui').IsShown( GuiScope.SetRoot( GetPlayer.MakeScope ).End )]"
+							text = "vptl_presidential_term_first_text"
+							size = { 54 18 }
+							align = left|nobaseline
+							default_format = "#v"
+							fontsize_min = 10
+						}
+						textbox = {
+							visible = "[GetScriptedGui('vptl_show_presidential_term_second_sgui').IsShown( GuiScope.SetRoot( GetPlayer.MakeScope ).End )]"
+							text = "vptl_presidential_term_second_text"
+							size = { 54 18 }
+							align = left|nobaseline
+							default_format = "#v"
+							fontsize_min = 10
+						}
+						textbox = {
+							visible = "[GetScriptedGui('vptl_show_presidential_term_limited_sgui').IsShown( GuiScope.SetRoot( GetPlayer.MakeScope ).End )]"
+							text = "vptl_presidential_term_limited_text"
+							size = { 54 18 }
+							align = left|nobaseline
+							default_format = "#v"
+							fontsize_min = 10
+						}
+						textbox = {
+							text = "vptl_presidential_leaves_office_label"
+							size = { 86 18 }
+							align = left|nobaseline
+							default_format = "#title"
+							fontsize_min = 10
+						}
+						textbox = {
+							raw_text = "#v [AccessPlayer.GetNextElectionDate]#!"
+							layoutpolicy_horizontal = expanding
+							size = { 0 18 }
+							align = left|nobaseline
+							elide = right
+							fontsize_min = 10
+						}
 					}
 				}
 
@@ -526,6 +610,7 @@ types politics_panel_types
 
 							textbox = {
 								raw_text = "[GetPlayer.GetCustom('vptl_presidential_successor_title')]"
+								tooltip = "vptl_presidential_successor_tooltip"
 								size = { 0 16 }
 								layoutpolicy_horizontal = expanding
 								align = left|nobaseline

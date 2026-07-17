@@ -9,3 +9,23 @@ modifier_vptl_presidential_second_term = {
 modifier_vptl_presidential_term_limited = {
 	icon = gfx/interface/icons/timed_modifier_icons/modifier_flag_negative.dds
 }
+
+modifier_vptl_presidential_service_partial_term = {
+	icon = gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds
+}
+
+modifier_vptl_presidential_service_one_term = {
+	icon = gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds
+}
+
+modifier_vptl_presidential_service_two_terms = {
+	icon = gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds
+}
+
+modifier_vptl_vice_presidential_service_one_term = {
+	icon = gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds
+}
+
+modifier_vptl_vice_presidential_service_two_terms = {
+	icon = gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds
+}

@@ -1,12 +1,29 @@
 ﻿vptl_presidential_successor_title = {
 	type = country
 	text = {
-		trigger = { c:PRG ?= this }
+		trigger = {
+			OR = {
+				c:PRG ?= this
+				c:HAI ?= this
+			}
+		}
 		localization_key = vptl_presidential_successor_secretary_state
 	}
 	text = {
-		trigger = { c:URU ?= this }
+		trigger = {
+			OR = {
+				c:URU ?= this
+			}
+		}
 		localization_key = vptl_presidential_successor_senate_president
+	}
+	text = {
+		trigger = {
+			OR = {
+				c:CHL ?= this
+			}
+		}
+		localization_key = vptl_presidential_successor_minister_interior
 	}
 	text = {
 		trigger = {
@@ -17,9 +34,7 @@
 				c:MEX ?= this
 				c:BRZ ?= this
 				c:ARG ?= this
-				c:URU ?= this
 				c:PAR ?= this
-				c:CHL ?= this
 				c:BOL ?= this
 				c:PEU ?= this
 				c:PER ?= this
@@ -27,6 +42,7 @@
 				c:VNZ ?= this
 				c:GCO ?= this
 				c:CLM ?= this
+				c:UCA ?= this
 				c:COS ?= this
 				c:GUA ?= this
 				c:ELS ?= this
@@ -34,8 +50,6 @@
 				c:NIC ?= this
 				c:DOM ?= this
 				c:CUB ?= this
-				c:HAI ?= this
-				c:CHI ?= this
 			}
 		}
 		localization_key = vptl_presidential_successor_vice_president

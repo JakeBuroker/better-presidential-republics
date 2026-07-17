@@ -10,6 +10,12 @@ on_monthly_pulse_country = {
 	}
 }
 
+on_monthly_pulse_country_elections = {
+	on_actions = {
+		vptl_presidential_term_limits_monthly_elections
+	}
+}
+
 on_election_campaign_start = {
 	on_actions = {
 		vptl_presidential_term_limits_election_start
@@ -25,6 +31,12 @@ on_election_campaign_end = {
 on_ruler_selected = {
 	on_actions = {
 		vptl_presidential_successor_ruler_selected
+	}
+}
+
+on_character_death = {
+	on_actions = {
+		vptl_presidential_character_death
 	}
 }
 
@@ -48,9 +60,35 @@ vptl_presidential_term_limits_monthly = {
 		NOT = { has_law_or_variant = law_type:law_single_party_state }
 	}
 	effect = {
-		vptl_replace_term_limited_presidential_ruler_with_successor = yes
+		vptl_finalize_presidential_election_transition_if_campaign_ended = yes
+		vptl_promote_presidential_successor_if_ruler_is_dead = yes
+		vptl_promote_presidential_successor_if_tracked_ruler_is_dead = yes
+		if = {
+			limit = {
+				NOT = { has_variable = vptl_presidential_election_transition }
+			}
+			vptl_replace_term_limited_presidential_ruler_with_successor = yes
+			vptl_replace_ineligible_usa_presidential_ruler_with_successor = yes
+		}
+		vptl_apply_presidential_successor_if_outgoing_ruler_died_during_campaign = yes
+		vptl_correct_presidential_ruler_change_during_campaign = yes
 		vptl_correct_unexpected_presidential_ruler_change = yes
 		vptl_initialize_presidential_term_limits = yes
+		vptl_record_presidential_service_time = yes
+	}
+}
+
+vptl_presidential_term_limits_monthly_elections = {
+	trigger = {
+		has_law_or_variant = law_type:law_presidential_republic
+		government_transfer_of_power = presidential_elective
+		NOT = { has_law_or_variant = law_type:law_single_party_state }
+	}
+	effect = {
+		vptl_finalize_presidential_election_transition_if_campaign_ended = yes
+		vptl_promote_presidential_successor_if_tracked_ruler_is_dead = yes
+		vptl_apply_presidential_successor_if_outgoing_ruler_died_during_campaign = yes
+		vptl_correct_presidential_ruler_change_during_campaign = yes
 	}
 }
 
@@ -79,7 +117,24 @@ vptl_presidential_term_limits_election_end = {
 vptl_presidential_successor_ruler_selected = {
 	effect = {
 		root.owner = {
+			vptl_finalize_presidential_election_transition_if_campaign_ended = yes
+			vptl_promote_presidential_successor_if_ruler_is_dead = yes
+			vptl_promote_presidential_successor_if_tracked_ruler_is_dead = yes
+			vptl_apply_presidential_successor_if_outgoing_ruler_died_during_campaign = yes
+			vptl_apply_presidential_successor_if_current_ruler_died_during_campaign = yes
 			vptl_enforce_presidential_successor_for_non_election_transition = yes
+		}
+	}
+}
+
+vptl_presidential_character_death = {
+	effect = {
+		owner = {
+			vptl_refresh_presidential_successor_if_ruler_is_stable = yes
+			vptl_promote_presidential_successor_if_ruler_is_dead = yes
+			vptl_promote_presidential_successor_if_tracked_ruler_is_dead = yes
+			vptl_apply_presidential_successor_if_outgoing_ruler_died_during_campaign = yes
+			vptl_apply_presidential_successor_if_current_ruler_died_during_campaign = yes
 		}
 	}
 }

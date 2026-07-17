@@ -1,0 +1,6 @@
+﻿vptl_presidential_transition = {
+	type = country
+	texture = "gfx/interface/icons/notification_icons/elections.dds"
+	notification_type = feed
+}
+

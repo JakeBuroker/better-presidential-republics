@@ -1,0 +1,149 @@
+﻿vptl_presidential_constitutional_summary = {
+	type = country
+	text = {
+		trigger = {
+			has_law_or_variant = law_type:law_presidential_republic
+			has_law_or_variant = law_type:law_autocracy
+		}
+		localization_key = vptl_presidential_constitutional_summary_concentrated
+	}
+	text = {
+		trigger = {
+			has_law_or_variant = law_type:law_presidential_republic
+		}
+		localization_key = vptl_presidential_constitutional_summary_fixed
+	}
+	text = {
+		trigger = { always = yes }
+		localization_key = vptl_presidential_constitutional_summary_default
+	}
+}
+
+vptl_presidential_constitutional_tooltip_note = {
+	type = country
+	text = {
+		trigger = {
+			has_law_or_variant = law_type:law_presidential_republic
+			has_law_or_variant = law_type:law_autocracy
+		}
+		localization_key = vptl_presidential_constitutional_tooltip_note_concentrated
+	}
+	text = {
+		trigger = {
+			has_law_or_variant = law_type:law_presidential_republic
+		}
+		localization_key = vptl_presidential_constitutional_tooltip_note_fixed
+	}
+	text = {
+		trigger = { always = yes }
+		localization_key = vptl_presidential_constitutional_tooltip_note_default
+	}
+}
+
+vptl_presidential_successor_office_type = {
+	type = country
+	text = {
+		trigger = {
+			OR = {
+				c:USA ?= this
+				c:CSA ?= this
+				c:TEX ?= this
+				c:MEX ?= this
+				c:BRZ ?= this
+				c:ARG ?= this
+				c:PAR ?= this
+				c:BOL ?= this
+				c:PEU ?= this
+				c:PER ?= this
+				c:ECU ?= this
+				c:VNZ ?= this
+				c:GCO ?= this
+				c:CLM ?= this
+				c:UCA ?= this
+				c:COS ?= this
+				c:GUA ?= this
+				c:ELS ?= this
+				c:HON ?= this
+				c:NIC ?= this
+				c:DOM ?= this
+				c:CUB ?= this
+			}
+		}
+		localization_key = vptl_presidential_successor_office_type_true_vp
+	}
+	text = {
+		trigger = {
+			OR = {
+				c:URU ?= this
+			}
+		}
+		localization_key = vptl_presidential_successor_office_type_legislative
+	}
+	text = {
+		trigger = {
+			OR = {
+				c:PRG ?= this
+				c:HAI ?= this
+				c:CHL ?= this
+			}
+		}
+		localization_key = vptl_presidential_successor_office_type_cabinet
+	}
+	text = {
+		trigger = { always = yes }
+		localization_key = vptl_presidential_successor_office_type_standin
+	}
+}
+
+vptl_presidential_office_status = {
+	type = character
+	text = {
+		trigger = {
+			is_ruler_of_own_country = yes
+		}
+		localization_key = vptl_presidential_office_status_current
+	}
+	text = {
+		trigger = { always = yes }
+		localization_key = vptl_presidential_office_status_former
+	}
+}
+
+vptl_presidential_accession_type = {
+	type = character
+	text = {
+		trigger = {
+			has_variable = vptl_presidential_accession_interim
+		}
+		localization_key = vptl_presidential_accession_type_interim
+	}
+	text = {
+		trigger = {
+			has_variable = vptl_presidential_accession_provisional
+		}
+		localization_key = vptl_presidential_accession_type_provisional
+	}
+	text = {
+		trigger = {
+			OR = {
+				has_variable = vptl_presidential_accession_succeeded
+				has_variable = vptl_presidential_succeeded_to_office
+			}
+		}
+		localization_key = vptl_presidential_accession_type_succeeded
+	}
+	text = {
+		trigger = {
+			OR = {
+				has_variable = vptl_presidential_accession_elected
+				has_variable = vptl_presidential_terms_served
+			}
+		}
+		localization_key = vptl_presidential_accession_type_elected
+	}
+	text = {
+		trigger = { always = yes }
+		localization_key = vptl_presidential_accession_type_unrecorded
+	}
+}
+

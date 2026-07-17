@@ -1,0 +1,15 @@
+﻿vptl_presidential_history_marker = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+
+vptl_vice_presidential_history_marker = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
