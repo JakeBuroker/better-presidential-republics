@@ -1,0 +1,420 @@
+﻿vptl_presidential_history_marker_no_1 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_2 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_3 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_4 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_5 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_6 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_7 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_8 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_9 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_10 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_11 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_12 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_13 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_14 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_15 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_16 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_17 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_18 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_19 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_20 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_21 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_22 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_23 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_24 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_25 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_26 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_27 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_28 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_29 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_30 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_31 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_32 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_33 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_34 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_35 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_36 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_37 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_38 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_39 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_40 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_41 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_42 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_43 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_44 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_45 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_46 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_47 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_48 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_49 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_50 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_51 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_52 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_53 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_54 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_55 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_56 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_57 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_58 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_59 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+vptl_presidential_history_marker_no_60 = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}

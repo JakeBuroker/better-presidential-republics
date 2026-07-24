@@ -1,0 +1,10 @@
+﻿character_role_vptl_presidential_successor = {
+	texture = "gfx/interface/icons/character_role_icons/politician.dds"
+
+	type = politician
+	priority = 60
+
+	should_use_title_in_name = yes
+	title_format = custom
+	title_preposition = PREP_IN
+}

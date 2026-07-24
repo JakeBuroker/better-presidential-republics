@@ -17,8 +17,12 @@ A lightweight Victoria 3 gameplay/UI mod that makes presidential republics feel 
 - Uses country-specific successor titles where easy: Vice President, Secretary of State, President of the Senate, Minister of the Interior, and fallback Designated Successor.
 - Adds constitutional flavor text for presidential republics and concentrated/caudillo-style presidencies.
 - Adds former/current president and vice president history markers with terms, years served, and accession type.
+- Adds numbered president history traits for president numbers 1-60, with a generic fallback beyond that.
+- Marks the current constitutional successor directly on their character.
+- Gives former presidents and vice presidents small visible service traits that mirror their tracked service.
 - Adds a presidential transition notification when a tracked president changes.
 - Seeds easy 1836 presidential numbering for several vanilla presidential republics.
+- Prefers eligible historical politicians over generated presidential rulers when the country has a same-IG candidate available.
 - Includes tiny vanilla-safe startup characters for John Quincy Adams, Martin Van Buren, and Lorenzo de Zavala, who are useful for start-date presidential succession flavor.
 
 ## Compatibility

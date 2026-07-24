@@ -1,0 +1,310 @@
+﻿vptl_refresh_presidential_number_trait = {
+	remove_trait = vptl_presidential_history_marker
+	remove_trait = vptl_presidential_history_marker_no_1
+	remove_trait = vptl_presidential_history_marker_no_2
+	remove_trait = vptl_presidential_history_marker_no_3
+	remove_trait = vptl_presidential_history_marker_no_4
+	remove_trait = vptl_presidential_history_marker_no_5
+	remove_trait = vptl_presidential_history_marker_no_6
+	remove_trait = vptl_presidential_history_marker_no_7
+	remove_trait = vptl_presidential_history_marker_no_8
+	remove_trait = vptl_presidential_history_marker_no_9
+	remove_trait = vptl_presidential_history_marker_no_10
+	remove_trait = vptl_presidential_history_marker_no_11
+	remove_trait = vptl_presidential_history_marker_no_12
+	remove_trait = vptl_presidential_history_marker_no_13
+	remove_trait = vptl_presidential_history_marker_no_14
+	remove_trait = vptl_presidential_history_marker_no_15
+	remove_trait = vptl_presidential_history_marker_no_16
+	remove_trait = vptl_presidential_history_marker_no_17
+	remove_trait = vptl_presidential_history_marker_no_18
+	remove_trait = vptl_presidential_history_marker_no_19
+	remove_trait = vptl_presidential_history_marker_no_20
+	remove_trait = vptl_presidential_history_marker_no_21
+	remove_trait = vptl_presidential_history_marker_no_22
+	remove_trait = vptl_presidential_history_marker_no_23
+	remove_trait = vptl_presidential_history_marker_no_24
+	remove_trait = vptl_presidential_history_marker_no_25
+	remove_trait = vptl_presidential_history_marker_no_26
+	remove_trait = vptl_presidential_history_marker_no_27
+	remove_trait = vptl_presidential_history_marker_no_28
+	remove_trait = vptl_presidential_history_marker_no_29
+	remove_trait = vptl_presidential_history_marker_no_30
+	remove_trait = vptl_presidential_history_marker_no_31
+	remove_trait = vptl_presidential_history_marker_no_32
+	remove_trait = vptl_presidential_history_marker_no_33
+	remove_trait = vptl_presidential_history_marker_no_34
+	remove_trait = vptl_presidential_history_marker_no_35
+	remove_trait = vptl_presidential_history_marker_no_36
+	remove_trait = vptl_presidential_history_marker_no_37
+	remove_trait = vptl_presidential_history_marker_no_38
+	remove_trait = vptl_presidential_history_marker_no_39
+	remove_trait = vptl_presidential_history_marker_no_40
+	remove_trait = vptl_presidential_history_marker_no_41
+	remove_trait = vptl_presidential_history_marker_no_42
+	remove_trait = vptl_presidential_history_marker_no_43
+	remove_trait = vptl_presidential_history_marker_no_44
+	remove_trait = vptl_presidential_history_marker_no_45
+	remove_trait = vptl_presidential_history_marker_no_46
+	remove_trait = vptl_presidential_history_marker_no_47
+	remove_trait = vptl_presidential_history_marker_no_48
+	remove_trait = vptl_presidential_history_marker_no_49
+	remove_trait = vptl_presidential_history_marker_no_50
+	remove_trait = vptl_presidential_history_marker_no_51
+	remove_trait = vptl_presidential_history_marker_no_52
+	remove_trait = vptl_presidential_history_marker_no_53
+	remove_trait = vptl_presidential_history_marker_no_54
+	remove_trait = vptl_presidential_history_marker_no_55
+	remove_trait = vptl_presidential_history_marker_no_56
+	remove_trait = vptl_presidential_history_marker_no_57
+	remove_trait = vptl_presidential_history_marker_no_58
+	remove_trait = vptl_presidential_history_marker_no_59
+	remove_trait = vptl_presidential_history_marker_no_60
+
+	if = {
+		limit = { has_variable = vptl_presidential_order_number }
+		if = {
+			limit = { var:vptl_presidential_order_number = 1 }
+			add_trait = vptl_presidential_history_marker_no_1
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 2 }
+			add_trait = vptl_presidential_history_marker_no_2
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 3 }
+			add_trait = vptl_presidential_history_marker_no_3
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 4 }
+			add_trait = vptl_presidential_history_marker_no_4
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 5 }
+			add_trait = vptl_presidential_history_marker_no_5
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 6 }
+			add_trait = vptl_presidential_history_marker_no_6
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 7 }
+			add_trait = vptl_presidential_history_marker_no_7
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 8 }
+			add_trait = vptl_presidential_history_marker_no_8
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 9 }
+			add_trait = vptl_presidential_history_marker_no_9
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 10 }
+			add_trait = vptl_presidential_history_marker_no_10
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 11 }
+			add_trait = vptl_presidential_history_marker_no_11
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 12 }
+			add_trait = vptl_presidential_history_marker_no_12
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 13 }
+			add_trait = vptl_presidential_history_marker_no_13
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 14 }
+			add_trait = vptl_presidential_history_marker_no_14
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 15 }
+			add_trait = vptl_presidential_history_marker_no_15
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 16 }
+			add_trait = vptl_presidential_history_marker_no_16
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 17 }
+			add_trait = vptl_presidential_history_marker_no_17
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 18 }
+			add_trait = vptl_presidential_history_marker_no_18
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 19 }
+			add_trait = vptl_presidential_history_marker_no_19
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 20 }
+			add_trait = vptl_presidential_history_marker_no_20
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 21 }
+			add_trait = vptl_presidential_history_marker_no_21
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 22 }
+			add_trait = vptl_presidential_history_marker_no_22
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 23 }
+			add_trait = vptl_presidential_history_marker_no_23
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 24 }
+			add_trait = vptl_presidential_history_marker_no_24
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 25 }
+			add_trait = vptl_presidential_history_marker_no_25
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 26 }
+			add_trait = vptl_presidential_history_marker_no_26
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 27 }
+			add_trait = vptl_presidential_history_marker_no_27
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 28 }
+			add_trait = vptl_presidential_history_marker_no_28
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 29 }
+			add_trait = vptl_presidential_history_marker_no_29
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 30 }
+			add_trait = vptl_presidential_history_marker_no_30
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 31 }
+			add_trait = vptl_presidential_history_marker_no_31
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 32 }
+			add_trait = vptl_presidential_history_marker_no_32
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 33 }
+			add_trait = vptl_presidential_history_marker_no_33
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 34 }
+			add_trait = vptl_presidential_history_marker_no_34
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 35 }
+			add_trait = vptl_presidential_history_marker_no_35
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 36 }
+			add_trait = vptl_presidential_history_marker_no_36
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 37 }
+			add_trait = vptl_presidential_history_marker_no_37
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 38 }
+			add_trait = vptl_presidential_history_marker_no_38
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 39 }
+			add_trait = vptl_presidential_history_marker_no_39
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 40 }
+			add_trait = vptl_presidential_history_marker_no_40
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 41 }
+			add_trait = vptl_presidential_history_marker_no_41
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 42 }
+			add_trait = vptl_presidential_history_marker_no_42
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 43 }
+			add_trait = vptl_presidential_history_marker_no_43
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 44 }
+			add_trait = vptl_presidential_history_marker_no_44
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 45 }
+			add_trait = vptl_presidential_history_marker_no_45
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 46 }
+			add_trait = vptl_presidential_history_marker_no_46
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 47 }
+			add_trait = vptl_presidential_history_marker_no_47
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 48 }
+			add_trait = vptl_presidential_history_marker_no_48
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 49 }
+			add_trait = vptl_presidential_history_marker_no_49
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 50 }
+			add_trait = vptl_presidential_history_marker_no_50
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 51 }
+			add_trait = vptl_presidential_history_marker_no_51
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 52 }
+			add_trait = vptl_presidential_history_marker_no_52
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 53 }
+			add_trait = vptl_presidential_history_marker_no_53
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 54 }
+			add_trait = vptl_presidential_history_marker_no_54
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 55 }
+			add_trait = vptl_presidential_history_marker_no_55
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 56 }
+			add_trait = vptl_presidential_history_marker_no_56
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 57 }
+			add_trait = vptl_presidential_history_marker_no_57
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 58 }
+			add_trait = vptl_presidential_history_marker_no_58
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 59 }
+			add_trait = vptl_presidential_history_marker_no_59
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_number = 60 }
+			add_trait = vptl_presidential_history_marker_no_60
+		}
+		else = {
+			add_trait = vptl_presidential_history_marker
+		}
+	}
+}

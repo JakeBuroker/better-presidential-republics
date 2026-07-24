@@ -13,3 +13,55 @@ vptl_vice_presidential_history_marker = {
 	weight = 0
 	value = 0
 }
+
+vptl_current_presidential_successor_trait = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+
+vptl_presidential_service_one_term_trait = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	character_modifier = {
+		character_prominence_add = 15
+	}
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+
+vptl_presidential_service_two_terms_trait = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	character_modifier = {
+		character_prominence_add = 30
+	}
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+
+vptl_vice_presidential_service_one_term_trait = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	character_modifier = {
+		character_prominence_add = 5
+	}
+	possible = { always = no }
+	weight = 0
+	value = 0
+}
+
+vptl_vice_presidential_service_two_terms_trait = {
+	type = condition
+	texture = "gfx/interface/icons/timed_modifier_icons/modifier_flag_positive.dds"
+	character_modifier = {
+		character_prominence_add = 10
+	}
+	possible = { always = no }
+	weight = 0
+	value = 0
+}

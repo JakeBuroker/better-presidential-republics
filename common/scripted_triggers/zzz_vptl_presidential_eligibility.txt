@@ -4,10 +4,22 @@
 			owner = { c:USA ?= this }
 		}
 		AND = {
-			exists = home_country
-			home_country = {
-				exists = c:USA
-				c:USA = this
+			OR = {
+				AND = {
+					exists = home_country
+					home_country = {
+						exists = c:USA
+						c:USA = this
+					}
+				}
+				AND = {
+					is_historical = yes
+					OR = {
+						culture = cu:yankee
+						culture = cu:dixie
+						culture = cu:afro_american
+					}
+				}
 			}
 		}
 	}
