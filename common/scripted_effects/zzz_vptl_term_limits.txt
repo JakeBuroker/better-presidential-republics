@@ -621,6 +621,7 @@ vptl_refresh_presidential_office_markers = {
 vptl_record_presidential_service_time = {
 	if = {
 		limit = {
+			c:USA ?= this
 			has_law_or_variant = law_type:law_presidential_republic
 			government_transfer_of_power = presidential_elective
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
