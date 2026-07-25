@@ -14,7 +14,6 @@
 - Constitutional flavor line: a small government-panel line explains the presidential system without adding gameplay weight.
 - Successor title coverage: uses true vice-president labels where appropriate and cabinet/legislative stand-ins for countries without a clean VP office.
 - Vanilla-safe startup additions: adds only a few missing start-date figures needed for recognizable presidential succession.
-- Historical candidate preference: if a generated politician becomes president while an eligible historical same-IG politician exists, the mod tries to promote the historical candidate.
 
 ## Low-CPU Follow-Up Ideas
 

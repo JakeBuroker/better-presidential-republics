@@ -1902,63 +1902,6 @@ vptl_prefer_historical_presidential_ig_leaders = {
 	}
 }
 
-vptl_replace_generated_presidential_ruler_with_historical_candidate = {
-	ruler ?= {
-		if = {
-			limit = {
-				is_character_alive = yes
-				NOT = { is_historical = yes }
-				NOT = { has_variable = vptl_presidential_term_limited }
-			}
-			this.interest_group ?= {
-				save_scope_as = vptl_generated_ruler_ig
-			}
-		}
-	}
-
-	if = {
-		limit = {
-			has_law_or_variant = law_type:law_presidential_republic
-			government_transfer_of_power = presidential_elective
-			NOT = { has_law_or_variant = law_type:law_single_party_state }
-			ruler ?= {
-				is_character_alive = yes
-				NOT = { is_historical = yes }
-				NOT = { has_variable = vptl_presidential_term_limited }
-			}
-			exists = scope:vptl_generated_ruler_ig
-			any_scope_character = {
-				is_historical = yes
-				is_character_alive = yes
-				has_role_of_type = politician
-				is_ruler_of_own_country = no
-				is_heir_of_own_country = no
-				NOT = { has_variable = vptl_presidential_term_limited }
-				vptl_presidential_candidate_eligible = yes
-				is_same_interest_group_type = scope:vptl_generated_ruler_ig
-			}
-		}
-		ordered_scope_character = {
-			limit = {
-				is_historical = yes
-				is_character_alive = yes
-				has_role_of_type = politician
-				is_ruler_of_own_country = no
-				is_heir_of_own_country = no
-				NOT = { has_variable = vptl_presidential_term_limited }
-				vptl_presidential_candidate_eligible = yes
-				is_same_interest_group_type = scope:vptl_generated_ruler_ig
-			}
-			order_by = prominence
-			position = 0
-			set_as_interest_group_leader = yes
-			vptl_set_presidential_accession_elected = yes
-			set_character_as_ruler = yes
-		}
-		vptl_sync_presidential_current_ruler = yes
-	}
-}
-
 vptl_prepare_presidential_term_limits_for_campaign = {
 	set_variable = { name = vptl_presidential_election_transition months = 10 }
 	remove_variable = vptl_presidential_force_successor_transition
@@ -2032,7 +1975,6 @@ vptl_prepare_presidential_term_limits_for_campaign = {
 
 vptl_apply_presidential_term_limits = {
 	vptl_prefer_historical_presidential_ig_leaders = yes
-	vptl_replace_generated_presidential_ruler_with_historical_candidate = yes
 
 	if = {
 		limit = {

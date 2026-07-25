@@ -22,7 +22,6 @@ A lightweight Victoria 3 gameplay/UI mod that makes presidential republics feel 
 - Gives former presidents and vice presidents small visible service traits that mirror their tracked service.
 - Adds a presidential transition notification when a tracked president changes.
 - Seeds easy 1836 presidential numbering for several vanilla presidential republics.
-- Prefers eligible historical politicians over generated presidential rulers when the country has a same-IG candidate available.
 - Includes tiny vanilla-safe startup characters for John Quincy Adams, Martin Van Buren, and Lorenzo de Zavala, who are useful for start-date presidential succession flavor.
 
 ## Compatibility
