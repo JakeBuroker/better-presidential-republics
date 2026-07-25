@@ -1,15 +1,4 @@
 ﻿CHARACTERS = {
-	c:USA ?= {
-		create_character = {
-			template = vptl_usa_john_quincy_adams
-		}
-		create_character = {
-			template = vptl_usa_martin_van_buren
-		}
-	}
-	c:TEX ?= {
-		create_character = {
-			template = vptl_tex_lorenzo_de_zavala
-		}
-	}
+	# Fallback templates are kept for save compatibility and internal checks, but are
+	# not spawned at startup because full character packs already provide these people.
 }
