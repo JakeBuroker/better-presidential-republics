@@ -52,6 +52,7 @@ vptl_clear_presidential_accession_markers = {
 	remove_variable = vptl_presidential_accession_succeeded
 	remove_variable = vptl_presidential_accession_interim
 	remove_variable = vptl_presidential_accession_provisional
+	remove_variable = vptl_presidential_accession_initial
 }
 
 vptl_set_presidential_accession_elected = {
@@ -72,6 +73,11 @@ vptl_set_presidential_accession_interim = {
 vptl_set_presidential_accession_provisional = {
 	vptl_clear_presidential_accession_markers = yes
 	set_variable = vptl_presidential_accession_provisional
+}
+
+vptl_set_presidential_accession_initial = {
+	vptl_clear_presidential_accession_markers = yes
+	set_variable = vptl_presidential_accession_initial
 }
 
 vptl_post_presidential_transition_notification = {
@@ -894,21 +900,18 @@ vptl_initialize_presidential_term_limits = {
 				}
 				vptl_refresh_presidential_office_markers = yes
 			}
-			else_if = {
-				limit = {
-					NOT = { has_variable = vptl_presidential_terms_served }
-					NOT = { has_variable = vptl_presidential_term_limited }
-					NOT = { has_variable = vptl_presidential_succeeded_to_office }
-				}
-				set_variable = { name = vptl_presidential_terms_served value = 1 }
-				remove_modifier = modifier_vptl_presidential_first_term
-				remove_modifier = modifier_vptl_presidential_second_term
-				add_modifier = {
-					name = modifier_vptl_presidential_first_term
-					years = 4
-				}
-				vptl_refresh_presidential_office_markers = yes
+		else_if = {
+			limit = {
+				NOT = { has_variable = vptl_presidential_terms_served }
+				NOT = { has_variable = vptl_presidential_term_limited }
+				NOT = { has_variable = vptl_presidential_succeeded_to_office }
+				NOT = { has_variable = vptl_presidential_accession_initial }
 			}
+			remove_modifier = modifier_vptl_presidential_first_term
+			remove_modifier = modifier_vptl_presidential_second_term
+			vptl_set_presidential_accession_initial = yes
+			vptl_refresh_presidential_office_markers = yes
+		}
 
 			if = {
 				limit = {
@@ -1849,6 +1852,12 @@ vptl_set_presidential_successor_as_ig_leader_for_saved_ig = {
 					age = 45
 					on_created = {
 						set_variable = vptl_presidential_backup_successor
+						if = {
+							limit = {
+								owner = { c:USA ?= this }
+							}
+							set_variable = vptl_usa_natural_born_presidential_eligible
+						}
 						set_as_interest_group_leader = yes
 					}
 				}
@@ -1999,8 +2008,7 @@ vptl_apply_presidential_term_limits = {
 			vptl_set_presidential_accession_elected = yes
 			set_character_as_ruler = yes
 		}
-		vptl_initialize_presidential_term_limits = yes
-		vptl_post_presidential_transition_notification = yes
+		vptl_record_presidential_term_for_current_ruler = yes
 	}
 	else_if = {
 		limit = {

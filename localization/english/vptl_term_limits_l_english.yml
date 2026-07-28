@@ -47,6 +47,7 @@
  vptl_presidential_accession_type_succeeded:0 "Succeeded to office"
  vptl_presidential_accession_type_interim:0 "Interim"
  vptl_presidential_accession_type_provisional:0 "Appointed/Provisional"
+ vptl_presidential_accession_type_initial:0 "First constitutional president"
  vptl_presidential_accession_type_unrecorded:0 "Unrecorded/Provisional"
  vptl_presidential_constitutional_summary_fixed:0 "Presidential Republic: fixed-term executive, separate mandate"
  vptl_presidential_constitutional_summary_concentrated:0 "Presidential Republic: authority concentrated in the presidency"

@@ -1,17 +1,21 @@
-﻿vptl_presidential_candidate_eligible = {
+﻿vptl_presidential_candidate_meets_age_requirement = {
+	OR = {
+		NOT = {
+			owner = { c:USA ?= this }
+		}
+		age >= 35
+	}
+}
+
+vptl_usa_presidential_origin_eligible = {
 	OR = {
 		NOT = {
 			owner = { c:USA ?= this }
 		}
 		AND = {
+			owner = { c:USA ?= this }
 			OR = {
-				AND = {
-					exists = home_country
-					home_country = {
-						exists = c:USA
-						c:USA = this
-					}
-				}
+				has_variable = vptl_usa_natural_born_presidential_eligible
 				AND = {
 					is_historical = yes
 					OR = {
@@ -20,9 +24,22 @@
 						culture = cu:afro_american
 					}
 				}
+				AND = {
+					NOT = { is_historical = yes }
+					exists = home_country
+					home_country = {
+						exists = c:USA
+						c:USA = this
+					}
+				}
 			}
 		}
 	}
+}
+
+vptl_presidential_candidate_eligible = {
+	vptl_presidential_candidate_meets_age_requirement = yes
+	vptl_usa_presidential_origin_eligible = yes
 }
 
 vptl_presidential_successor_candidate_eligible = {
@@ -31,19 +48,12 @@ vptl_presidential_successor_candidate_eligible = {
 	has_role_of_type = politician
 	is_ruler_of_own_country = no
 	is_heir_of_own_country = no
-	NOT = { has_variable = vptl_presidential_terms_served }
 	NOT = {
 		AND = {
 			has_variable = vptl_presidential_terms_served
 			var:vptl_presidential_terms_served >= 2
 		}
 	}
-	NOT = {
-		AND = {
-			has_variable = vptl_vice_presidential_terms_served
-			var:vptl_vice_presidential_terms_served >= 2
-		}
-	}
 	NOT = { has_variable = vptl_presidential_term_limited }
-	NOT = { has_variable = vptl_presidential_succeeded_to_office }
 }
+

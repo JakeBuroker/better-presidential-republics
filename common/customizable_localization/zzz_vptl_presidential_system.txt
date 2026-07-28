@@ -125,6 +125,12 @@ vptl_presidential_accession_type = {
 	}
 	text = {
 		trigger = {
+			has_variable = vptl_presidential_accession_initial
+		}
+		localization_key = vptl_presidential_accession_type_initial
+	}
+	text = {
+		trigger = {
 			OR = {
 				has_variable = vptl_presidential_accession_succeeded
 				has_variable = vptl_presidential_succeeded_to_office
