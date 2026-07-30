@@ -7,6 +7,43 @@
 	}
 }
 
+vptl_usa_presidential_origin_explicitly_blocked = {
+	OR = {
+		has_variable = vptl_usa_presidential_origin_ineligible
+		has_variable = vptl_presidential_origin_ineligible
+	}
+}
+
+vptl_usa_presidential_origin_explicitly_allowed = {
+	OR = {
+		has_variable = vptl_usa_natural_born_presidential_eligible
+		has_variable = vptl_presidential_origin_eligible
+		has_variable = vptl_usa_founder_presidential_eligible
+	}
+}
+
+vptl_usa_presidential_origin_generated_home_country_eligible = {
+	AND = {
+		NOT = { is_historical = yes }
+		exists = home_country
+		home_country = {
+			exists = c:USA
+			c:USA = this
+		}
+	}
+}
+
+vptl_usa_presidential_origin_historical_fallback_eligible = {
+	AND = {
+		is_historical = yes
+		OR = {
+			culture = cu:yankee
+			culture = cu:dixie
+			culture = cu:afro_american
+		}
+	}
+}
+
 vptl_usa_presidential_origin_eligible = {
 	OR = {
 		NOT = {
@@ -14,24 +51,11 @@ vptl_usa_presidential_origin_eligible = {
 		}
 		AND = {
 			owner = { c:USA ?= this }
+			NOT = { vptl_usa_presidential_origin_explicitly_blocked = yes }
 			OR = {
-				has_variable = vptl_usa_natural_born_presidential_eligible
-				AND = {
-					is_historical = yes
-					OR = {
-						culture = cu:yankee
-						culture = cu:dixie
-						culture = cu:afro_american
-					}
-				}
-				AND = {
-					NOT = { is_historical = yes }
-					exists = home_country
-					home_country = {
-						exists = c:USA
-						c:USA = this
-					}
-				}
+				vptl_usa_presidential_origin_explicitly_allowed = yes
+				vptl_usa_presidential_origin_generated_home_country_eligible = yes
+				vptl_usa_presidential_origin_historical_fallback_eligible = yes
 			}
 		}
 	}
@@ -57,3 +81,43 @@ vptl_presidential_successor_candidate_eligible = {
 	NOT = { has_variable = vptl_presidential_term_limited }
 }
 
+vptl_presidential_saved_successor_handoff_eligible = {
+	vptl_presidential_candidate_eligible = yes
+	is_character_alive = yes
+	has_role_of_type = politician
+	is_ruler_of_own_country = no
+	NOT = {
+		AND = {
+			has_variable = vptl_presidential_terms_served
+			var:vptl_presidential_terms_served >= 2
+		}
+	}
+	NOT = { has_variable = vptl_presidential_term_limited }
+}
+
+vptl_presidential_successor_uses_vice_president_title = {
+	OR = {
+		AND = { exists = c:USA c:USA ?= this }
+		AND = { exists = c:CSA c:CSA ?= this }
+		AND = { exists = c:TEX c:TEX ?= this }
+		AND = { exists = c:MEX c:MEX ?= this }
+		AND = { exists = c:BRZ c:BRZ ?= this }
+		AND = { exists = c:ARG c:ARG ?= this }
+		AND = { exists = c:PAR c:PAR ?= this }
+		AND = { exists = c:BOL c:BOL ?= this }
+		AND = { exists = c:PEU c:PEU ?= this }
+		AND = { exists = c:PER c:PER ?= this }
+		AND = { exists = c:ECU c:ECU ?= this }
+		AND = { exists = c:VNZ c:VNZ ?= this }
+		AND = { exists = c:GCO c:GCO ?= this }
+		AND = { exists = c:CLM c:CLM ?= this }
+		AND = { exists = c:UCA c:UCA ?= this }
+		AND = { exists = c:COS c:COS ?= this }
+		AND = { exists = c:GUA c:GUA ?= this }
+		AND = { exists = c:ELS c:ELS ?= this }
+		AND = { exists = c:HON c:HON ?= this }
+		AND = { exists = c:NIC c:NIC ?= this }
+		AND = { exists = c:DOM c:DOM ?= this }
+		AND = { exists = c:CUB c:CUB ?= this }
+	}
+}

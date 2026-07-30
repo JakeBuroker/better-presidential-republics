@@ -7,11 +7,11 @@
 			OR = {
 				AND = {
 					exists = c:PRG
-					owner = { c:PRG = THIS }
+					owner = { c:PRG ?= this }
 				}
 				AND = {
 					exists = c:HAI
-					owner = { c:HAI = THIS }
+					owner = { c:HAI ?= this }
 				}
 			}
 		}
@@ -20,42 +20,21 @@
 	text = {
 		trigger = {
 			exists = c:URU
-			owner = { c:URU = THIS }
+			owner = { c:URU ?= this }
 		}
 		localization_key = vptl_presidential_successor_senate_president
 	}
 	text = {
 		trigger = {
 			exists = c:CHL
-			owner = { c:CHL = THIS }
+			owner = { c:CHL ?= this }
 		}
 		localization_key = vptl_presidential_successor_minister_interior
 	}
 	text = {
 		trigger = {
-			OR = {
-				AND = { exists = c:USA owner = { c:USA = THIS } }
-				AND = { exists = c:CSA owner = { c:CSA = THIS } }
-				AND = { exists = c:TEX owner = { c:TEX = THIS } }
-				AND = { exists = c:MEX owner = { c:MEX = THIS } }
-				AND = { exists = c:BRZ owner = { c:BRZ = THIS } }
-				AND = { exists = c:ARG owner = { c:ARG = THIS } }
-				AND = { exists = c:PAR owner = { c:PAR = THIS } }
-				AND = { exists = c:BOL owner = { c:BOL = THIS } }
-				AND = { exists = c:PEU owner = { c:PEU = THIS } }
-				AND = { exists = c:PER owner = { c:PER = THIS } }
-				AND = { exists = c:ECU owner = { c:ECU = THIS } }
-				AND = { exists = c:VNZ owner = { c:VNZ = THIS } }
-				AND = { exists = c:GCO owner = { c:GCO = THIS } }
-				AND = { exists = c:CLM owner = { c:CLM = THIS } }
-				AND = { exists = c:UCA owner = { c:UCA = THIS } }
-				AND = { exists = c:COS owner = { c:COS = THIS } }
-				AND = { exists = c:GUA owner = { c:GUA = THIS } }
-				AND = { exists = c:ELS owner = { c:ELS = THIS } }
-				AND = { exists = c:HON owner = { c:HON = THIS } }
-				AND = { exists = c:NIC owner = { c:NIC = THIS } }
-				AND = { exists = c:DOM owner = { c:DOM = THIS } }
-				AND = { exists = c:CUB owner = { c:CUB = THIS } }
+			owner ?= {
+				vptl_presidential_successor_uses_vice_president_title = yes
 			}
 		}
 		localization_key = vptl_presidential_successor_vice_president

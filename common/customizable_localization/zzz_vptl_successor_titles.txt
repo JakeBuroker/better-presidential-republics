@@ -1,5 +1,6 @@
 ﻿vptl_presidential_successor_title = {
 	type = country
+
 	text = {
 		trigger = {
 			OR = {
@@ -27,30 +28,7 @@
 	}
 	text = {
 		trigger = {
-			OR = {
-				c:USA ?= this
-				c:CSA ?= this
-				c:TEX ?= this
-				c:MEX ?= this
-				c:BRZ ?= this
-				c:ARG ?= this
-				c:PAR ?= this
-				c:BOL ?= this
-				c:PEU ?= this
-				c:PER ?= this
-				c:ECU ?= this
-				c:VNZ ?= this
-				c:GCO ?= this
-				c:CLM ?= this
-				c:UCA ?= this
-				c:COS ?= this
-				c:GUA ?= this
-				c:ELS ?= this
-				c:HON ?= this
-				c:NIC ?= this
-				c:DOM ?= this
-				c:CUB ?= this
-			}
+			vptl_presidential_successor_uses_vice_president_title = yes
 		}
 		localization_key = vptl_presidential_successor_vice_president
 	}
