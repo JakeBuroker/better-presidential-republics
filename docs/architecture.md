@@ -28,8 +28,9 @@ Game on-actions
 - Current successor: country variable `vptl_presidential_successor`; visible role `character_role_vptl_presidential_successor`; trait `vptl_current_presidential_successor_trait`.
 - Presidential term count: character variable `vptl_presidential_terms_served`.
 - President number: character variable `vptl_presidential_order_number`, backed by country counter `vptl_presidential_order_counter`.
-- Campaign winner / ticket display: campaign variables `vptl_presidential_ticket_candidate`, `vptl_presidential_ticket_running_mate`, `vptl_presidential_opposition_candidate`, and `vptl_presidential_opposition_running_mate`.
-- Election-transition state: country variable `vptl_presidential_election_transition`; forced handoff state uses `vptl_presidential_force_successor_transition` and `vptl_presidential_outgoing_ruler`.
+- Campaign ticket display: campaign variables `vptl_presidential_ticket_candidate`, `vptl_presidential_ticket_running_mate`, `vptl_presidential_opposition_candidate`, and `vptl_presidential_opposition_running_mate`.
+- Election settlement: `vptl_settle_presidential_election` captures `vptl_presidential_vanilla_selected_ruler`, classifies `vptl_presidential_winning_ticket_side`, installs `vptl_presidential_final_elected_ruler` and `vptl_presidential_final_running_mate`, and uses `vptl_presidential_election_settlement_in_progress` / `vptl_presidential_election_settled` as reentrancy guards.
+- Election-transition state: country variable `vptl_presidential_election_transition`; legacy forced-handoff variables remain limited to non-election succession compatibility.
 - Death-succession state: country variables `vptl_presidential_death_succession_lock` and `vptl_presidential_death_successor`.
 - Accession type: character variables `vptl_presidential_accession_elected`, `vptl_presidential_accession_succeeded`, `vptl_presidential_accession_interim`, `vptl_presidential_accession_provisional`, and `vptl_presidential_accession_initial`.
 - Former-president service history: character variables `vptl_presidential_terms_served`, `vptl_presidential_years_served`, `vptl_presidential_order_number`, traits `vptl_presidential_history_marker*`, and service modifiers/traits.
@@ -38,9 +39,8 @@ Game on-actions
 
 ## Current Behavior
 
-The current system has immediate handoff behavior. During campaigns it can remember an outgoing term-limited ruler and a recognized successor, but there is no real delayed inauguration period yet. Any "president-elect" wording should be treated as future roadmap language unless backed by a dedicated delayed-handoff implementation.
+The current system has immediate handoff behavior. Victoria 3 determines the winning political side, then BPR installs that side's final visible eligible ticket. There is no delayed inauguration period; any "president-elect" wording remains future roadmap language.
 
 ## Performance Notes
 
 The mod already uses monthly country and election hooks. New logic should avoid broad scans unless guarded by strict country triggers, campaign state, or one-time setup variables. Character scans should be limited to eligible presidential republics and should be explained in the change summary.
-

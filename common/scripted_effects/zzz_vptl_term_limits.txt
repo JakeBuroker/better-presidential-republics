@@ -104,9 +104,125 @@ vptl_post_presidential_transition_notification = {
 		ruler ?= {
 			save_scope_as = vptl_presidential_transition_ruler_scope
 		}
+		if = {
+			limit = { has_variable = vptl_presidential_debug_logging }
+			debug_log = "BPR checkpoint=post_notification source=vptl_presidential_transition [TimeKeeper.GetCurrentDate.GetString] country=[THIS.GetCountry.GetNameNoFormatting]"
+		}
 		post_notification = vptl_presidential_transition
 		set_variable = { name = vptl_presidential_last_transition_notification_ruler value = scope:vptl_presidential_transition_ruler_scope }
 		set_variable = { name = vptl_presidential_transition_notification_cooldown months = 2 }
+	}
+}
+
+vptl_suppress_next_presidential_ruler_notification = {
+	if = {
+		limit = {
+			NOT = { has_variable = hide_ruler_change_notification }
+		}
+		set_variable = { name = hide_ruler_change_notification days = 1 }
+	}
+}
+
+vptl_begin_presidential_election_ruler_notification_suppression = {
+	if = {
+		limit = { has_variable = vptl_presidential_election_ruler_notification_suppression }
+		set_variable = { name = hide_ruler_change_notification months = 12 }
+		set_variable = { name = vptl_presidential_election_ruler_notification_suppression months = 12 }
+	}
+	else_if = {
+		limit = { NOT = { has_variable = hide_ruler_change_notification } }
+		set_variable = { name = hide_ruler_change_notification months = 12 }
+		set_variable = { name = vptl_presidential_election_ruler_notification_suppression months = 12 }
+	}
+}
+
+vptl_finish_presidential_election_ruler_notification_suppression = {
+	if = {
+		limit = { has_variable = vptl_presidential_election_ruler_notification_suppression }
+		set_variable = { name = hide_ruler_change_notification days = 1 }
+		remove_variable = vptl_presidential_election_ruler_notification_suppression
+	}
+}
+
+vptl_debug_log_presidential_state = {
+	if = {
+		limit = { has_variable = vptl_presidential_debug_logging }
+		debug_log = "BPR state [TimeKeeper.GetCurrentDate.GetString] country=[THIS.GetCountry.GetNameNoFormatting]"
+		if = {
+			limit = { has_variable = vptl_presidential_election_transition }
+			debug_log = "BPR state election_transition=yes"
+		}
+		if = {
+			limit = { has_variable = vptl_presidential_election_settlement_in_progress }
+			debug_log = "BPR state settlement_in_progress=yes"
+		}
+		if = {
+			limit = { has_variable = vptl_presidential_election_settled }
+			debug_log = "BPR state settled=yes"
+		}
+		if = {
+			limit = { has_variable = vptl_presidential_transition_applied }
+			debug_log = "BPR state transition_applied=yes"
+		}
+		if = {
+			limit = { var:vptl_presidential_winning_ticket_side = 1 }
+			debug_log = "BPR state winning_ticket_side=incumbent"
+		}
+		else_if = {
+			limit = { var:vptl_presidential_winning_ticket_side = 2 }
+			debug_log = "BPR state winning_ticket_side=opposition"
+		}
+		else_if = {
+			limit = { has_variable = vptl_presidential_winning_side_ambiguous }
+			debug_log = "BPR state winning_ticket_side=ambiguous"
+		}
+		ruler ?= {
+			debug_log = "BPR ruler=[THIS.GetCharacter.GetFullNameNoFormatting]"
+			this.interest_group ?= {
+				debug_log = "BPR ruler_ig=[THIS.GetInterestGroup.GetNameNoFormatting]"
+				party ?= { debug_log = "BPR ruler_party=[THIS.GetParty.GetNameNoFormatting]" }
+			}
+		}
+		var:vptl_presidential_current_ruler ?= {
+			debug_log = "BPR tracked_ruler=[THIS.GetCharacter.GetFullNameNoFormatting]"
+		}
+		var:vptl_presidential_vanilla_selected_ruler ?= {
+			debug_log = "BPR vanilla_selected=[THIS.GetCharacter.GetFullNameNoFormatting]"
+		}
+		var:vptl_presidential_ticket_candidate ?= {
+			debug_log = "BPR incumbent_head=[THIS.GetCharacter.GetFullNameNoFormatting]"
+			this.interest_group ?= {
+				debug_log = "BPR incumbent_head_ig=[THIS.GetInterestGroup.GetNameNoFormatting]"
+				party ?= { debug_log = "BPR incumbent_head_party=[THIS.GetParty.GetNameNoFormatting]" }
+			}
+		}
+		var:vptl_presidential_ticket_running_mate ?= {
+			debug_log = "BPR incumbent_running_mate=[THIS.GetCharacter.GetFullNameNoFormatting]"
+			this.interest_group ?= {
+				debug_log = "BPR incumbent_running_mate_ig=[THIS.GetInterestGroup.GetNameNoFormatting]"
+				party ?= { debug_log = "BPR incumbent_running_mate_party=[THIS.GetParty.GetNameNoFormatting]" }
+			}
+		}
+		var:vptl_presidential_opposition_candidate ?= {
+			debug_log = "BPR opposition_head=[THIS.GetCharacter.GetFullNameNoFormatting]"
+			this.interest_group ?= {
+				debug_log = "BPR opposition_head_ig=[THIS.GetInterestGroup.GetNameNoFormatting]"
+				party ?= { debug_log = "BPR opposition_head_party=[THIS.GetParty.GetNameNoFormatting]" }
+			}
+		}
+		var:vptl_presidential_opposition_running_mate ?= {
+			debug_log = "BPR opposition_running_mate=[THIS.GetCharacter.GetFullNameNoFormatting]"
+			this.interest_group ?= {
+				debug_log = "BPR opposition_running_mate_ig=[THIS.GetInterestGroup.GetNameNoFormatting]"
+				party ?= { debug_log = "BPR opposition_running_mate_party=[THIS.GetParty.GetNameNoFormatting]" }
+			}
+		}
+		var:vptl_presidential_final_elected_ruler ?= {
+			debug_log = "BPR final_elected=[THIS.GetCharacter.GetFullNameNoFormatting]"
+		}
+		var:vptl_presidential_final_running_mate ?= {
+			debug_log = "BPR final_running_mate=[THIS.GetCharacter.GetFullNameNoFormatting]"
+		}
 	}
 }
 
@@ -734,8 +850,13 @@ vptl_promote_presidential_successor_to_ruler = {
 		}
 		remove_variable = vptl_presidential_force_successor_transition
 		remove_variable = vptl_presidential_outgoing_ruler
+		vptl_suppress_next_presidential_ruler_notification = yes
 		var:vptl_presidential_successor ?= {
 			vptl_mark_presidential_successor_as_succeeded_to_office = yes
+			if = {
+				limit = { owner ?= { has_variable = vptl_presidential_debug_logging } }
+				debug_log = "BPR checkpoint=set_character_as_ruler source=successor_handoff target=[THIS.GetCharacter.GetFullNameNoFormatting]"
+			}
 			set_character_as_ruler = yes
 		}
 		vptl_sync_presidential_current_ruler = yes
@@ -794,8 +915,10 @@ vptl_finalize_presidential_election_transition_if_campaign_ended = {
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
 			has_variable = vptl_presidential_election_transition
 			in_election_campaign = no
+			NOT = { has_variable = vptl_presidential_election_settlement_in_progress }
+			NOT = { has_variable = vptl_presidential_election_settled }
 		}
-		vptl_apply_presidential_term_limits = yes
+		vptl_settle_presidential_election = yes
 	}
 }
 
@@ -1036,6 +1159,7 @@ vptl_update_presidential_ticket_candidates = {
 						is_character_alive = yes
 						NOT = { has_variable = vptl_presidential_term_limited }
 						vptl_presidential_candidate_eligible = yes
+						NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
 						NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
 						NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
 					}
@@ -1052,6 +1176,7 @@ vptl_update_presidential_ticket_candidates = {
 					scope:vptl_presidential_incumbent_ig = {
 						leader ?= {
 							vptl_presidential_successor_candidate_eligible = yes
+							NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
 							NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
 							NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
 						}
@@ -1072,6 +1197,7 @@ vptl_update_presidential_ticket_candidates = {
 						is_member_of_party = scope:vptl_presidential_incumbent_party
 						leader ?= {
 							vptl_presidential_successor_candidate_eligible = yes
+							NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
 							NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
 							NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
 						}
@@ -1082,6 +1208,7 @@ vptl_update_presidential_ticket_candidates = {
 						is_member_of_party = scope:vptl_presidential_incumbent_party
 						leader ?= {
 							vptl_presidential_successor_candidate_eligible = yes
+							NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
 							NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
 							NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
 						}
@@ -1100,6 +1227,7 @@ vptl_update_presidential_ticket_candidates = {
 					exists = scope:vptl_presidential_incumbent_party
 					any_scope_character = {
 						vptl_presidential_successor_candidate_eligible = yes
+						NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
 						NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
 						NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
 						this.interest_group ?= {
@@ -1110,6 +1238,7 @@ vptl_update_presidential_ticket_candidates = {
 				ordered_scope_character = {
 					limit = {
 						vptl_presidential_successor_candidate_eligible = yes
+						NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
 						NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
 						NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
 						this.interest_group ?= {
@@ -1128,6 +1257,7 @@ vptl_update_presidential_ticket_candidates = {
 					exists = scope:vptl_presidential_incumbent_ig
 					any_scope_character = {
 						vptl_presidential_successor_candidate_eligible = yes
+						NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
 						NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
 						NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
 						this.interest_group ?= {
@@ -1138,6 +1268,7 @@ vptl_update_presidential_ticket_candidates = {
 				ordered_scope_character = {
 					limit = {
 						vptl_presidential_successor_candidate_eligible = yes
+						NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
 						NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
 						NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
 						this.interest_group ?= {
@@ -1155,6 +1286,7 @@ vptl_update_presidential_ticket_candidates = {
 					NOT = { has_variable = vptl_presidential_ticket_candidate }
 					any_scope_character = {
 						vptl_presidential_successor_candidate_eligible = yes
+						NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
 						NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
 						NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
 					}
@@ -1162,6 +1294,7 @@ vptl_update_presidential_ticket_candidates = {
 				ordered_scope_character = {
 					limit = {
 						vptl_presidential_successor_candidate_eligible = yes
+						NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
 						NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
 						NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
 					}
@@ -1195,6 +1328,7 @@ vptl_update_presidential_ticket_candidates = {
 							vptl_presidential_successor_candidate_eligible = yes
 							NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
 							NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
+							NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
 						}
 					}
 				}
@@ -1205,6 +1339,7 @@ vptl_update_presidential_ticket_candidates = {
 							vptl_presidential_successor_candidate_eligible = yes
 							NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
 							NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
+							NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
 						}
 					}
 					order_by = ig_clout
@@ -1224,6 +1359,7 @@ vptl_update_presidential_ticket_candidates = {
 						is_interest_group_leader = yes
 						NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
 						NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
+						NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
 						this.interest_group ?= {
 							NOT = { is_same_interest_group_type = scope:vptl_presidential_ticket_candidate_ig }
 						}
@@ -1235,6 +1371,7 @@ vptl_update_presidential_ticket_candidates = {
 						is_interest_group_leader = yes
 						NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
 						NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
+						NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
 						this.interest_group ?= {
 							NOT = { is_same_interest_group_type = scope:vptl_presidential_ticket_candidate_ig }
 						}
@@ -1252,6 +1389,7 @@ vptl_update_presidential_ticket_candidates = {
 						vptl_presidential_successor_candidate_eligible = yes
 						NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
 						NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
+						NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
 					}
 				}
 				ordered_scope_character = {
@@ -1259,6 +1397,7 @@ vptl_update_presidential_ticket_candidates = {
 						vptl_presidential_successor_candidate_eligible = yes
 						NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
 						NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
+						NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
 					}
 					order_by = prominence
 					position = 0
@@ -1949,7 +2088,12 @@ vptl_enforce_presidential_successor_for_non_election_transition = {
 				is_character_alive = yes
 			}
 		}
+		vptl_suppress_next_presidential_ruler_notification = yes
 		var:vptl_presidential_death_successor ?= {
+			if = {
+				limit = { owner ?= { has_variable = vptl_presidential_debug_logging } }
+				debug_log = "BPR checkpoint=set_character_as_ruler source=non_election_death_lock target=[THIS.GetCharacter.GetFullNameNoFormatting]"
+			}
 			set_character_as_ruler = yes
 		}
 		vptl_sync_presidential_current_ruler = yes
@@ -2029,8 +2173,13 @@ vptl_replace_ineligible_usa_presidential_ruler_with_successor = {
 			vptl_preserve_current_ruler_as_former_president = yes
 			remove_variable = vptl_presidential_force_successor_transition
 			remove_variable = vptl_presidential_outgoing_ruler
+			vptl_suppress_next_presidential_ruler_notification = yes
 			var:vptl_presidential_successor ?= {
 				vptl_set_presidential_accession_interim = yes
+				if = {
+					limit = { owner ?= { has_variable = vptl_presidential_debug_logging } }
+					debug_log = "BPR checkpoint=set_character_as_ruler source=ineligible_ruler_replacement target=[THIS.GetCharacter.GetFullNameNoFormatting]"
+				}
 				set_character_as_ruler = yes
 			}
 			vptl_initialize_presidential_term_limits = yes
@@ -2056,7 +2205,12 @@ vptl_correct_unexpected_presidential_ruler_change = {
 				is_character_alive = yes
 			}
 		}
+		vptl_suppress_next_presidential_ruler_notification = yes
 		var:vptl_presidential_death_successor ?= {
+			if = {
+				limit = { owner ?= { has_variable = vptl_presidential_debug_logging } }
+				debug_log = "BPR checkpoint=set_character_as_ruler source=unexpected_death_lock_repair target=[THIS.GetCharacter.GetFullNameNoFormatting]"
+			}
 			set_character_as_ruler = yes
 		}
 		vptl_sync_presidential_current_ruler = yes
@@ -2122,7 +2276,12 @@ vptl_correct_presidential_ruler_change_during_campaign = {
 				is_character_alive = yes
 			}
 		}
+		vptl_suppress_next_presidential_ruler_notification = yes
 		var:vptl_presidential_death_successor ?= {
+			if = {
+				limit = { owner ?= { has_variable = vptl_presidential_debug_logging } }
+				debug_log = "BPR checkpoint=set_character_as_ruler source=campaign_death_lock_repair target=[THIS.GetCharacter.GetFullNameNoFormatting]"
+			}
 			set_character_as_ruler = yes
 		}
 		vptl_sync_presidential_current_ruler = yes
@@ -2142,7 +2301,12 @@ vptl_correct_presidential_ruler_change_during_campaign = {
 				is_character_alive = yes
 			}
 		}
+		vptl_suppress_next_presidential_ruler_notification = yes
 		var:vptl_presidential_current_ruler ?= {
+			if = {
+				limit = { owner ?= { has_variable = vptl_presidential_debug_logging } }
+				debug_log = "BPR checkpoint=set_character_as_ruler source=campaign_unexpected_ruler_repair target=[THIS.GetCharacter.GetFullNameNoFormatting]"
+			}
 			set_character_as_ruler = yes
 		}
 	}
@@ -2351,6 +2515,14 @@ vptl_prefer_historical_presidential_ig_leaders = {
 
 vptl_prepare_presidential_term_limits_for_campaign = {
 	set_variable = { name = vptl_presidential_election_transition months = 10 }
+	vptl_begin_presidential_election_ruler_notification_suppression = yes
+	remove_variable = vptl_presidential_election_settlement_in_progress
+	remove_variable = vptl_presidential_election_settled
+	remove_variable = vptl_presidential_vanilla_selected_ruler
+	remove_variable = vptl_presidential_final_elected_ruler
+	remove_variable = vptl_presidential_final_running_mate
+	remove_variable = vptl_presidential_winning_ticket_side
+	remove_variable = vptl_presidential_winning_side_ambiguous
 	remove_variable = vptl_presidential_transition_applied
 	remove_variable = vptl_presidential_successor_term_recorded_for_transition
 	remove_variable = vptl_presidential_force_successor_transition
@@ -2474,7 +2646,13 @@ vptl_rebuild_presidential_campaign_ticket = {
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
 			in_election_campaign = yes
 			has_variable = vptl_presidential_election_transition
+			NOT = { has_variable = vptl_presidential_election_settlement_in_progress }
 		}
+		if = {
+			limit = { has_variable = vptl_presidential_debug_logging }
+			debug_log = "BPR checkpoint=ticket_rebuild entry [TimeKeeper.GetCurrentDate.GetString] country=[THIS.GetCountry.GetNameNoFormatting]"
+		}
+		vptl_debug_log_presidential_state = yes
 		if = {
 			limit = {
 				has_variable = vptl_presidential_successor
@@ -2492,6 +2670,11 @@ vptl_rebuild_presidential_campaign_ticket = {
 		vptl_update_presidential_ticket_candidates = yes
 		remove_variable = vptl_presidential_ticket_repair_in_progress
 		vptl_refresh_presidential_successor_display_marker = yes
+		if = {
+			limit = { has_variable = vptl_presidential_debug_logging }
+			debug_log = "BPR checkpoint=ticket_rebuild complete [TimeKeeper.GetCurrentDate.GetString] country=[THIS.GetCountry.GetNameNoFormatting]"
+		}
+		vptl_debug_log_presidential_state = yes
 	}
 }
 
@@ -2502,6 +2685,7 @@ vptl_repair_presidential_campaign_ticket_if_needed = {
 			government_transfer_of_power = presidential_elective
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
 			in_election_campaign = yes
+			NOT = { has_variable = vptl_presidential_election_settlement_in_progress }
 			NOT = { has_variable = vptl_presidential_election_transition }
 		}
 		vptl_prepare_presidential_term_limits_for_campaign = yes
@@ -2513,138 +2697,507 @@ vptl_repair_presidential_campaign_ticket_if_needed = {
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
 			in_election_campaign = yes
 			has_variable = vptl_presidential_election_transition
+			NOT = { has_variable = vptl_presidential_election_settlement_in_progress }
 			NOT = { vptl_presidential_campaign_ticket_valid = yes }
 		}
 		vptl_rebuild_presidential_campaign_ticket = yes
 	}
 }
 
-vptl_correct_invalid_elected_presidential_ruler = {
+vptl_identify_presidential_winning_ticket_side = {
+	remove_variable = vptl_presidential_winning_ticket_side
+	remove_variable = vptl_presidential_incumbent_party_match
+	remove_variable = vptl_presidential_opposition_party_match
+	remove_variable = vptl_presidential_incumbent_ig_match
+	remove_variable = vptl_presidential_opposition_ig_match
+	remove_variable = vptl_presidential_winning_side_ambiguous
+
+	ruler ?= { save_scope_as = vptl_presidential_vanilla_selected_ruler_scope }
+	set_variable = { name = vptl_presidential_vanilla_selected_ruler value = scope:vptl_presidential_vanilla_selected_ruler_scope }
+
+	if = {
+		limit = {
+			has_variable = vptl_presidential_ticket_candidate
+			ruler ?= { owner.var:vptl_presidential_ticket_candidate ?= this }
+		}
+		set_variable = { name = vptl_presidential_winning_ticket_side value = 1 }
+	}
+	else_if = {
+		limit = {
+			has_variable = vptl_presidential_opposition_candidate
+			ruler ?= { owner.var:vptl_presidential_opposition_candidate ?= this }
+		}
+		set_variable = { name = vptl_presidential_winning_ticket_side value = 2 }
+	}
+	else = {
+		ruler ?= {
+			this.interest_group ?= {
+				save_scope_as = vptl_presidential_vanilla_selected_ig
+				party ?= { save_scope_as = vptl_presidential_vanilla_selected_party }
+			}
+		}
+
+		if = {
+			limit = {
+				exists = scope:vptl_presidential_vanilla_selected_party
+				has_variable = vptl_presidential_ticket_candidate
+				var:vptl_presidential_ticket_candidate ?= {
+					this.interest_group ?= {
+						is_member_of_party = scope:vptl_presidential_vanilla_selected_party
+					}
+				}
+			}
+			set_variable = vptl_presidential_incumbent_party_match
+		}
+		if = {
+			limit = {
+				exists = scope:vptl_presidential_vanilla_selected_party
+				has_variable = vptl_presidential_opposition_candidate
+				var:vptl_presidential_opposition_candidate ?= {
+					this.interest_group ?= {
+						is_member_of_party = scope:vptl_presidential_vanilla_selected_party
+					}
+				}
+			}
+			set_variable = vptl_presidential_opposition_party_match
+		}
+		if = {
+			limit = {
+				has_variable = vptl_presidential_incumbent_party_match
+				NOT = { has_variable = vptl_presidential_opposition_party_match }
+			}
+			set_variable = { name = vptl_presidential_winning_ticket_side value = 1 }
+		}
+		else_if = {
+			limit = {
+				has_variable = vptl_presidential_opposition_party_match
+				NOT = { has_variable = vptl_presidential_incumbent_party_match }
+			}
+			set_variable = { name = vptl_presidential_winning_ticket_side value = 2 }
+		}
+
+		if = {
+			limit = {
+				NOT = { has_variable = vptl_presidential_winning_ticket_side }
+				exists = scope:vptl_presidential_vanilla_selected_ig
+				has_variable = vptl_presidential_ticket_candidate
+				var:vptl_presidential_ticket_candidate ?= {
+					this.interest_group ?= {
+						is_same_interest_group_type = scope:vptl_presidential_vanilla_selected_ig
+					}
+				}
+			}
+			set_variable = vptl_presidential_incumbent_ig_match
+		}
+		if = {
+			limit = {
+				NOT = { has_variable = vptl_presidential_winning_ticket_side }
+				exists = scope:vptl_presidential_vanilla_selected_ig
+				has_variable = vptl_presidential_opposition_candidate
+				var:vptl_presidential_opposition_candidate ?= {
+					this.interest_group ?= {
+						is_same_interest_group_type = scope:vptl_presidential_vanilla_selected_ig
+					}
+				}
+			}
+			set_variable = vptl_presidential_opposition_ig_match
+		}
+		if = {
+			limit = {
+				NOT = { has_variable = vptl_presidential_winning_ticket_side }
+				has_variable = vptl_presidential_incumbent_ig_match
+				NOT = { has_variable = vptl_presidential_opposition_ig_match }
+			}
+			set_variable = { name = vptl_presidential_winning_ticket_side value = 1 }
+		}
+		else_if = {
+			limit = {
+				NOT = { has_variable = vptl_presidential_winning_ticket_side }
+				has_variable = vptl_presidential_opposition_ig_match
+				NOT = { has_variable = vptl_presidential_incumbent_ig_match }
+			}
+			set_variable = { name = vptl_presidential_winning_ticket_side value = 2 }
+		}
+	}
+
+	if = {
+		limit = { NOT = { has_variable = vptl_presidential_winning_ticket_side } }
+		set_variable = { name = vptl_presidential_winning_side_ambiguous days = 30 }
+	}
+}
+
+vptl_select_final_president_from_winning_ticket = {
+	remove_variable = vptl_presidential_final_elected_ruler
+	save_scope_as = vptl_presidential_settlement_country
+
+	if = {
+		limit = {
+			var:vptl_presidential_winning_ticket_side = 1
+			has_variable = vptl_presidential_ticket_candidate
+			var:vptl_presidential_ticket_candidate ?= {
+				owner ?= scope:vptl_presidential_settlement_country
+				vptl_presidential_final_candidate_eligible = yes
+			}
+		}
+		set_variable = { name = vptl_presidential_final_elected_ruler value = var:vptl_presidential_ticket_candidate }
+	}
+	else_if = {
+		limit = {
+			var:vptl_presidential_winning_ticket_side = 2
+			has_variable = vptl_presidential_opposition_candidate
+			var:vptl_presidential_opposition_candidate ?= {
+				owner ?= scope:vptl_presidential_settlement_country
+				vptl_presidential_final_candidate_eligible = yes
+			}
+		}
+		set_variable = { name = vptl_presidential_final_elected_ruler value = var:vptl_presidential_opposition_candidate }
+	}
+
+	if = {
+		limit = {
+			NOT = { has_variable = vptl_presidential_final_elected_ruler }
+			var:vptl_presidential_winning_ticket_side = 1
+			has_variable = vptl_presidential_ticket_candidate
+		}
+		var:vptl_presidential_ticket_candidate ?= {
+			this.interest_group ?= {
+				save_scope_as = vptl_presidential_winning_ticket_ig
+				party ?= { save_scope_as = vptl_presidential_winning_ticket_party }
+			}
+		}
+	}
+	else_if = {
+		limit = {
+			NOT = { has_variable = vptl_presidential_final_elected_ruler }
+			var:vptl_presidential_winning_ticket_side = 2
+			has_variable = vptl_presidential_opposition_candidate
+		}
+		var:vptl_presidential_opposition_candidate ?= {
+			this.interest_group ?= {
+				save_scope_as = vptl_presidential_winning_ticket_ig
+				party ?= { save_scope_as = vptl_presidential_winning_ticket_party }
+			}
+		}
+	}
+
+	if = {
+		limit = {
+			NOT = { has_variable = vptl_presidential_final_elected_ruler }
+			exists = scope:vptl_presidential_winning_ticket_party
+			any_interest_group = {
+				is_member_of_party = scope:vptl_presidential_winning_ticket_party
+				leader ?= {
+					owner ?= scope:vptl_presidential_settlement_country
+					vptl_presidential_final_candidate_eligible = yes
+				}
+			}
+		}
+		ordered_interest_group = {
+			limit = {
+				is_member_of_party = scope:vptl_presidential_winning_ticket_party
+				leader ?= {
+					owner ?= scope:vptl_presidential_settlement_country
+					vptl_presidential_final_candidate_eligible = yes
+				}
+			}
+			order_by = ig_clout
+			position = 0
+			leader ?= { save_scope_as = vptl_presidential_final_elected_ruler_scope }
+		}
+		set_variable = { name = vptl_presidential_final_elected_ruler value = scope:vptl_presidential_final_elected_ruler_scope }
+	}
+	if = {
+		limit = {
+			NOT = { has_variable = vptl_presidential_final_elected_ruler }
+			exists = scope:vptl_presidential_winning_ticket_party
+			any_scope_character = {
+				vptl_presidential_final_candidate_eligible = yes
+				this.interest_group ?= { is_member_of_party = scope:vptl_presidential_winning_ticket_party }
+			}
+		}
+		ordered_scope_character = {
+			limit = {
+				vptl_presidential_final_candidate_eligible = yes
+				this.interest_group ?= { is_member_of_party = scope:vptl_presidential_winning_ticket_party }
+			}
+			order_by = prominence
+			position = 0
+			save_scope_as = vptl_presidential_final_elected_ruler_scope
+		}
+		set_variable = { name = vptl_presidential_final_elected_ruler value = scope:vptl_presidential_final_elected_ruler_scope }
+	}
+	if = {
+		limit = {
+			NOT = { has_variable = vptl_presidential_final_elected_ruler }
+			exists = scope:vptl_presidential_winning_ticket_ig
+			scope:vptl_presidential_winning_ticket_ig = {
+				leader ?= {
+					owner ?= scope:vptl_presidential_settlement_country
+					vptl_presidential_final_candidate_eligible = yes
+				}
+			}
+		}
+		scope:vptl_presidential_winning_ticket_ig = {
+			leader ?= { save_scope_as = vptl_presidential_final_elected_ruler_scope }
+		}
+		set_variable = { name = vptl_presidential_final_elected_ruler value = scope:vptl_presidential_final_elected_ruler_scope }
+	}
+	if = {
+		limit = {
+			NOT = { has_variable = vptl_presidential_final_elected_ruler }
+			exists = scope:vptl_presidential_winning_ticket_ig
+			any_scope_character = {
+				vptl_presidential_final_candidate_eligible = yes
+				this.interest_group ?= { is_same_interest_group_type = scope:vptl_presidential_winning_ticket_ig }
+			}
+		}
+		ordered_scope_character = {
+			limit = {
+				vptl_presidential_final_candidate_eligible = yes
+				this.interest_group ?= { is_same_interest_group_type = scope:vptl_presidential_winning_ticket_ig }
+			}
+			order_by = prominence
+			position = 0
+			save_scope_as = vptl_presidential_final_elected_ruler_scope
+		}
+		set_variable = { name = vptl_presidential_final_elected_ruler value = scope:vptl_presidential_final_elected_ruler_scope }
+	}
+
+	if = {
+		limit = {
+			NOT = { has_variable = vptl_presidential_final_elected_ruler }
+			has_variable = vptl_presidential_vanilla_selected_ruler
+			var:vptl_presidential_vanilla_selected_ruler ?= {
+				owner ?= scope:vptl_presidential_settlement_country
+				vptl_presidential_final_candidate_eligible = yes
+			}
+		}
+		set_variable = { name = vptl_presidential_final_elected_ruler value = var:vptl_presidential_vanilla_selected_ruler }
+	}
+	if = {
+		limit = {
+			NOT = { has_variable = vptl_presidential_final_elected_ruler }
+			has_variable = vptl_presidential_successor
+			var:vptl_presidential_successor ?= {
+				owner ?= scope:vptl_presidential_settlement_country
+				vptl_presidential_saved_successor_handoff_eligible = yes
+				OR = {
+					AND = {
+						owner ?= { var:vptl_presidential_winning_ticket_side = 1 }
+						NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
+						NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
+					}
+					AND = {
+						owner ?= { var:vptl_presidential_winning_ticket_side = 2 }
+						NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
+						NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
+					}
+					owner ?= { NOT = { has_variable = vptl_presidential_winning_ticket_side } }
+				}
+			}
+		}
+		set_variable = { name = vptl_presidential_final_elected_ruler value = var:vptl_presidential_successor }
+	}
+	if = {
+		limit = {
+			NOT = { has_variable = vptl_presidential_final_elected_ruler }
+			any_scope_character = {
+				vptl_presidential_final_candidate_eligible = yes
+				NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
+				NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
+				NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
+				NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
+			}
+		}
+		ordered_scope_character = {
+			limit = {
+				vptl_presidential_final_candidate_eligible = yes
+				NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
+				NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
+				NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
+				NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
+			}
+			order_by = prominence
+			position = 0
+			save_scope_as = vptl_presidential_final_elected_ruler_scope
+		}
+		set_variable = { name = vptl_presidential_final_elected_ruler value = scope:vptl_presidential_final_elected_ruler_scope }
+	}
+	if = {
+		limit = {
+			NOT = { has_variable = vptl_presidential_final_elected_ruler }
+			ruler ?= { is_character_alive = yes }
+		}
+		set_variable = { name = vptl_presidential_final_elected_ruler value = ruler }
+	}
+}
+
+vptl_select_final_running_mate_from_winning_ticket = {
+	remove_variable = vptl_presidential_final_running_mate
+	save_scope_as = vptl_presidential_settlement_country
+
+	if = {
+		limit = {
+			var:vptl_presidential_winning_ticket_side = 1
+			has_variable = vptl_presidential_ticket_running_mate
+			var:vptl_presidential_ticket_running_mate ?= {
+				owner ?= scope:vptl_presidential_settlement_country
+				vptl_presidential_successor_candidate_eligible = yes
+				NOT = { owner.var:vptl_presidential_final_elected_ruler ?= this }
+			}
+		}
+		set_variable = { name = vptl_presidential_final_running_mate value = var:vptl_presidential_ticket_running_mate }
+	}
+	else_if = {
+		limit = {
+			var:vptl_presidential_winning_ticket_side = 2
+			has_variable = vptl_presidential_opposition_running_mate
+			var:vptl_presidential_opposition_running_mate ?= {
+				owner ?= scope:vptl_presidential_settlement_country
+				vptl_presidential_successor_candidate_eligible = yes
+				NOT = { owner.var:vptl_presidential_final_elected_ruler ?= this }
+			}
+		}
+		set_variable = { name = vptl_presidential_final_running_mate value = var:vptl_presidential_opposition_running_mate }
+	}
+
+	var:vptl_presidential_final_elected_ruler ?= {
+		this.interest_group ?= {
+			save_scope_as = vptl_presidential_final_ruler_ig
+			party ?= { save_scope_as = vptl_presidential_final_ruler_party }
+		}
+	}
+	if = {
+		limit = {
+			NOT = { has_variable = vptl_presidential_final_running_mate }
+			exists = scope:vptl_presidential_final_ruler_party
+			any_scope_character = {
+				vptl_presidential_successor_candidate_eligible = yes
+				NOT = { owner.var:vptl_presidential_final_elected_ruler ?= this }
+				this.interest_group ?= { is_member_of_party = scope:vptl_presidential_final_ruler_party }
+			}
+		}
+		ordered_scope_character = {
+			limit = {
+				vptl_presidential_successor_candidate_eligible = yes
+				NOT = { owner.var:vptl_presidential_final_elected_ruler ?= this }
+				this.interest_group ?= { is_member_of_party = scope:vptl_presidential_final_ruler_party }
+			}
+			order_by = prominence
+			position = 0
+			save_scope_as = vptl_presidential_final_running_mate_scope
+		}
+		set_variable = { name = vptl_presidential_final_running_mate value = scope:vptl_presidential_final_running_mate_scope }
+	}
+	if = {
+		limit = {
+			NOT = { has_variable = vptl_presidential_final_running_mate }
+			exists = scope:vptl_presidential_final_ruler_ig
+			any_scope_character = {
+				vptl_presidential_successor_candidate_eligible = yes
+				NOT = { owner.var:vptl_presidential_final_elected_ruler ?= this }
+				this.interest_group ?= { is_same_interest_group_type = scope:vptl_presidential_final_ruler_ig }
+			}
+		}
+		ordered_scope_character = {
+			limit = {
+				vptl_presidential_successor_candidate_eligible = yes
+				NOT = { owner.var:vptl_presidential_final_elected_ruler ?= this }
+				this.interest_group ?= { is_same_interest_group_type = scope:vptl_presidential_final_ruler_ig }
+			}
+			order_by = prominence
+			position = 0
+			save_scope_as = vptl_presidential_final_running_mate_scope
+		}
+		set_variable = { name = vptl_presidential_final_running_mate value = scope:vptl_presidential_final_running_mate_scope }
+	}
+}
+
+vptl_install_final_presidential_ticket = {
+	if = {
+		limit = { has_variable = vptl_presidential_final_elected_ruler }
+		var:vptl_presidential_current_ruler ?= {
+			if = {
+				limit = {
+					is_character_alive = yes
+					NOT = { owner.var:vptl_presidential_final_elected_ruler ?= this }
+					NOT = { has_role = character_role_vptl_former_president }
+				}
+				add_character_role = character_role_vptl_former_president
+			}
+		}
+		if = {
+			limit = {
+				ruler ?= { NOT = { owner.var:vptl_presidential_final_elected_ruler ?= this } }
+			}
+			vptl_suppress_next_presidential_ruler_notification = yes
+			var:vptl_presidential_final_elected_ruler ?= {
+				vptl_set_presidential_accession_elected = yes
+				if = {
+					limit = { owner ?= { has_variable = vptl_presidential_debug_logging } }
+					debug_log = "BPR checkpoint=set_character_as_ruler source=election_settlement target=[THIS.GetCharacter.GetFullNameNoFormatting]"
+				}
+				set_character_as_ruler = yes
+			}
+		}
+		else = {
+			ruler ?= { vptl_set_presidential_accession_elected = yes }
+		}
+		vptl_sync_presidential_current_ruler = yes
+		vptl_record_presidential_term_for_current_ruler = yes
+		vptl_select_final_running_mate_from_winning_ticket = yes
+		remove_variable = vptl_presidential_successor
+		if = {
+			limit = { has_variable = vptl_presidential_final_running_mate }
+			set_variable = { name = vptl_presidential_successor value = var:vptl_presidential_final_running_mate }
+		}
+		else = { vptl_update_presidential_successor = yes }
+		vptl_refresh_presidential_successor_display_marker = yes
+		vptl_record_vice_presidential_term_for_current_successor = yes
+	}
+}
+
+vptl_settle_presidential_election = {
 	if = {
 		limit = {
 			has_law_or_variant = law_type:law_presidential_republic
 			government_transfer_of_power = presidential_elective
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
-			ruler ?= {
-				OR = {
-					NOT = { is_character_alive = yes }
-					has_variable = vptl_presidential_term_limited
-					AND = {
-						owner = { c:USA ?= this }
-						NOT = { vptl_presidential_candidate_eligible = yes }
-					}
-				}
-			}
+			has_variable = vptl_presidential_election_transition
+			in_election_campaign = no
+			NOT = { has_variable = vptl_presidential_election_settlement_in_progress }
+			NOT = { has_variable = vptl_presidential_election_settled }
 		}
-		vptl_preserve_current_ruler_as_former_president = yes
+		set_variable = vptl_presidential_election_settlement_in_progress
 		if = {
-			limit = {
-				has_variable = vptl_presidential_ticket_candidate
-				var:vptl_presidential_ticket_candidate ?= {
-					vptl_presidential_successor_candidate_eligible = yes
-				}
-			}
-			var:vptl_presidential_ticket_candidate ?= {
-				vptl_set_presidential_accession_elected = yes
-				set_character_as_ruler = yes
-			}
-			vptl_record_presidential_term_for_current_ruler = yes
-			vptl_post_presidential_transition_notification = yes
+			limit = { has_variable = vptl_presidential_debug_logging }
+			debug_log = "BPR checkpoint=vptl_settle_presidential_election entry [TimeKeeper.GetCurrentDate.GetString] country=[THIS.GetCountry.GetNameNoFormatting]"
 		}
-		else_if = {
-			limit = {
-				has_variable = vptl_presidential_opposition_candidate
-				var:vptl_presidential_opposition_candidate ?= {
-					vptl_presidential_successor_candidate_eligible = yes
-				}
-			}
-			var:vptl_presidential_opposition_candidate ?= {
-				vptl_set_presidential_accession_elected = yes
-				set_character_as_ruler = yes
-			}
-			vptl_record_presidential_term_for_current_ruler = yes
-			vptl_post_presidential_transition_notification = yes
-		}
-		else_if = {
-			limit = {
-				has_variable = vptl_presidential_successor
-				var:vptl_presidential_successor ?= {
-					vptl_presidential_saved_successor_handoff_eligible = yes
-				}
-			}
-			var:vptl_presidential_successor ?= {
-				vptl_set_presidential_accession_elected = yes
-				set_character_as_ruler = yes
-			}
-			vptl_record_presidential_term_for_current_ruler = yes
-			vptl_post_presidential_transition_notification = yes
-		}
-	}
-}
-
-vptl_apply_presidential_term_limits = {
-	vptl_prefer_historical_presidential_ig_leaders = yes
-
-	if = {
-		limit = {
-			has_variable = vptl_presidential_death_succession_lock
-			has_variable = vptl_presidential_death_successor
-			var:vptl_presidential_death_successor ?= {
-				is_character_alive = yes
-			}
-		}
-		if = {
-			limit = {
-				ruler ?= {
-					NOT = { owner.var:vptl_presidential_death_successor ?= this }
-				}
-			}
-			var:vptl_presidential_death_successor ?= {
-				set_character_as_ruler = yes
-			}
-		}
-		vptl_sync_presidential_current_ruler = yes
+		vptl_debug_log_presidential_state = yes
+		vptl_prefer_historical_presidential_ig_leaders = yes
+		vptl_identify_presidential_winning_ticket_side = yes
+		vptl_select_final_president_from_winning_ticket = yes
+		vptl_install_final_presidential_ticket = yes
+		vptl_finish_presidential_election_ruler_notification_suppression = yes
 		remove_variable = vptl_presidential_death_succession_lock
 		remove_variable = vptl_presidential_death_successor
 		remove_variable = vptl_presidential_force_successor_transition
 		remove_variable = vptl_presidential_outgoing_ruler
-	}
-	else_if = {
-		limit = {
-			ruler ?= {
-				is_character_alive = yes
-				NOT = { has_variable = vptl_presidential_term_limited }
-				OR = {
-					owner = { NOT = { c:USA ?= this } }
-					vptl_presidential_candidate_eligible = yes
-				}
-			}
+		remove_variable = vptl_presidential_ticket_candidate
+		remove_variable = vptl_presidential_ticket_running_mate
+		remove_variable = vptl_presidential_opposition_candidate
+		remove_variable = vptl_presidential_opposition_running_mate
+		remove_variable = vptl_presidential_election_transition
+		set_variable = { name = vptl_presidential_election_settled days = 30 }
+		if = {
+			limit = { has_variable = vptl_presidential_debug_logging }
+			debug_log = "BPR checkpoint=election_settlement_complete [TimeKeeper.GetCurrentDate.GetString] country=[THIS.GetCountry.GetNameNoFormatting]"
 		}
-		remove_variable = vptl_presidential_force_successor_transition
-		remove_variable = vptl_presidential_outgoing_ruler
-		vptl_record_presidential_term_for_current_ruler = yes
+		vptl_debug_log_presidential_state = yes
+		remove_variable = vptl_presidential_election_settlement_in_progress
 	}
-	else_if = {
-		limit = {
-			ruler ?= {
-				OR = {
-					NOT = { is_character_alive = yes }
-					has_variable = vptl_presidential_term_limited
-					AND = {
-						owner = { c:USA ?= this }
-						NOT = { vptl_presidential_candidate_eligible = yes }
-					}
-				}
-			}
-		}
-		vptl_correct_invalid_elected_presidential_ruler = yes
-	}
-	vptl_update_presidential_successor = yes
-	vptl_update_presidential_ticket_candidates = yes
-	vptl_record_vice_presidential_term_for_current_successor = yes
-	remove_variable = vptl_presidential_ticket_candidate
-	remove_variable = vptl_presidential_ticket_running_mate
-	remove_variable = vptl_presidential_opposition_candidate
-	remove_variable = vptl_presidential_opposition_running_mate
-	remove_variable = vptl_presidential_election_transition
+}
+
+vptl_apply_presidential_term_limits = {
+	vptl_settle_presidential_election = yes
 }

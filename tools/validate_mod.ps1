@@ -300,6 +300,78 @@ if (Test-Path $templateDir) {
 	}
 }
 
+function Get-TopLevelBlockText {
+	param(
+		[string]$Path,
+		[string]$Name
+	)
+	$lines = [System.IO.File]::ReadAllLines($Path)
+	$capturing = $false
+	$depth = 0
+	$captured = New-Object System.Collections.Generic.List[string]
+	foreach ($line in $lines) {
+		$scriptLine = Remove-InlineComment $line
+		if (-not $capturing -and $scriptLine -match "^\s*$([regex]::Escape($Name))\s*=\s*\{") {
+			$capturing = $true
+		}
+		if ($capturing) {
+			$captured.Add($line)
+			$depth += ([regex]::Matches($scriptLine, "\{")).Count - ([regex]::Matches($scriptLine, "\}")).Count
+			if ($depth -eq 0) {
+				break
+			}
+		}
+	}
+	return ($captured -join "`n")
+}
+
+$presidentialEffectsPath = Join-Path $resolvedModPath "common\scripted_effects\zzz_vptl_term_limits.txt"
+$presidentialOnActionsPath = Join-Path $resolvedModPath "common\on_actions\zzz_vptl_term_limits.txt"
+if ((Test-Path $presidentialEffectsPath) -and (Test-Path $presidentialOnActionsPath)) {
+	$settlementBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_settle_presidential_election"
+	if ([string]::IsNullOrWhiteSpace($settlementBlock)) {
+		Add-Issue "election-settlement" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Missing the bounded presidential election settlement effect."
+	}
+	else {
+		if ($settlementBlock -match '\bvptl_post_presidential_transition_notification\s*=') {
+			Add-Issue "election-notification" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Normal election settlement must not post the BPR transition notification."
+		}
+		if ($settlementBlock -notmatch '\bvptl_finish_presidential_election_ruler_notification_suppression\s*=\s*yes') {
+			Add-Issue "election-notification" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Election settlement must finish its campaign-scoped vanilla ruler-notification suppression."
+		}
+		$installIndex = $settlementBlock.IndexOf("vptl_install_final_presidential_ticket = yes")
+		$clearIndex = $settlementBlock.IndexOf("remove_variable = vptl_presidential_ticket_candidate")
+		if ($installIndex -lt 0 -or $clearIndex -lt 0 -or $clearIndex -lt $installIndex) {
+			Add-Issue "election-settlement-order" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Campaign ticket variables must be cleared only after the final ticket is installed."
+		}
+	}
+	$onActionText = [System.IO.File]::ReadAllText($presidentialOnActionsPath)
+	$electionEndBlock = Get-TopLevelBlockText $presidentialOnActionsPath "vptl_presidential_term_limits_election_end"
+	$campaignPreparationBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_prepare_presidential_term_limits_for_campaign"
+	if ($campaignPreparationBlock -notmatch '\bvptl_begin_presidential_election_ruler_notification_suppression\s*=\s*yes') {
+		Add-Issue "election-notification" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Campaign preparation must suppress vanilla's temporary election-ruler notification before election resolution."
+	}
+	if ($electionEndBlock -notmatch '\bvptl_settle_presidential_election\s*=\s*yes') {
+		Add-Issue "election-settlement" "common\on_actions\zzz_vptl_term_limits.txt" 0 "Election end must enter the single settlement effect."
+	}
+	if ($electionEndBlock -match '\bvptl_post_presidential_transition_notification\s*=') {
+		Add-Issue "election-notification" "common\on_actions\zzz_vptl_term_limits.txt" 0 "Election end must not post a separate BPR transition notification."
+	}
+}
+
+$obsoleteTicketTextPatterns = @(
+	'incumbent-party candidate is the current president if still eligible, otherwise the eligible successor',
+	'automatic(?:ally)?[- ](?:vice president|vp)'
+)
+foreach ($file in $localizationFiles) {
+	$text = [System.IO.File]::ReadAllText($file.FullName)
+	foreach ($pattern in $obsoleteTicketTextPatterns) {
+		if ($text -match $pattern) {
+			Add-Issue "obsolete-ticket-text" (Get-DisplayPath $file.FullName) 0 "Obsolete automatic-successor ticket wording is present."
+		}
+	}
+}
+
 if ($issues.Count -eq 0) {
 	Write-Host "Validation passed for $resolvedModPath"
 	exit 0

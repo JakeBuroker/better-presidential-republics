@@ -61,6 +61,14 @@ vptl_presidential_term_limits_monthly = {
 		NOT = { has_law_or_variant = law_type:law_single_party_state }
 	}
 	effect = {
+		if = {
+			limit = {
+				in_election_campaign = yes
+				has_variable = vptl_presidential_debug_logging
+			}
+			debug_log = "BPR checkpoint=campaign_tick [TimeKeeper.GetCurrentDate.GetString] country=[THIS.GetCountry.GetNameNoFormatting]"
+			vptl_debug_log_presidential_state = yes
+		}
 		vptl_repair_presidential_campaign_ticket_if_needed = yes
 		vptl_finalize_presidential_election_transition_if_campaign_ended = yes
 		vptl_promote_presidential_successor_if_ruler_is_dead = yes
@@ -99,7 +107,12 @@ vptl_presidential_term_limits_election_start = {
 		NOT = { has_law_or_variant = law_type:law_single_party_state }
 	}
 	effect = {
+		if = {
+			limit = { has_variable = vptl_presidential_debug_logging }
+			debug_log = "BPR checkpoint=on_election_campaign_start [TimeKeeper.GetCurrentDate.GetString] country=[THIS.GetCountry.GetNameNoFormatting]"
+		}
 		vptl_prepare_presidential_term_limits_for_campaign = yes
+		vptl_debug_log_presidential_state = yes
 	}
 }
 
@@ -110,19 +123,41 @@ vptl_presidential_term_limits_election_end = {
 		NOT = { has_law_or_variant = law_type:law_single_party_state }
 	}
 	effect = {
-		vptl_apply_presidential_term_limits = yes
+		if = {
+			limit = { has_variable = vptl_presidential_debug_logging }
+			debug_log = "BPR checkpoint=on_election_campaign_end [TimeKeeper.GetCurrentDate.GetString] country=[THIS.GetCountry.GetNameNoFormatting]"
+		}
+		vptl_debug_log_presidential_state = yes
+		vptl_settle_presidential_election = yes
 	}
 }
 
 vptl_presidential_successor_ruler_selected = {
 	effect = {
 		root.owner = {
-			vptl_correct_presidential_ruler_change_during_campaign = yes
-			vptl_finalize_presidential_election_transition_if_campaign_ended = yes
-			vptl_promote_presidential_successor_if_ruler_is_dead = yes
-			vptl_promote_presidential_successor_if_tracked_ruler_is_dead = yes
-			vptl_apply_presidential_successor_if_current_ruler_died_during_campaign = yes
-			vptl_enforce_presidential_successor_for_non_election_transition = yes
+			if = {
+				limit = { has_variable = vptl_presidential_debug_logging }
+				debug_log = "BPR checkpoint=on_ruler_selected [TimeKeeper.GetCurrentDate.GetString] country=[THIS.GetCountry.GetNameNoFormatting]"
+				vptl_debug_log_presidential_state = yes
+			}
+			if = {
+				limit = { has_variable = vptl_presidential_election_settlement_in_progress }
+				vptl_sync_presidential_current_ruler = yes
+			}
+			else_if = {
+				limit = {
+					has_variable = vptl_presidential_election_transition
+					in_election_campaign = no
+				}
+				vptl_settle_presidential_election = yes
+			}
+			else = {
+				vptl_correct_presidential_ruler_change_during_campaign = yes
+				vptl_promote_presidential_successor_if_ruler_is_dead = yes
+				vptl_promote_presidential_successor_if_tracked_ruler_is_dead = yes
+				vptl_apply_presidential_successor_if_current_ruler_died_during_campaign = yes
+				vptl_enforce_presidential_successor_for_non_election_transition = yes
+			}
 		}
 	}
 }
@@ -130,6 +165,7 @@ vptl_presidential_successor_ruler_selected = {
 vptl_presidential_character_death = {
 	effect = {
 		owner = {
+			save_scope_as = vptl_presidential_death_owner_country
 			vptl_refresh_presidential_successor_if_ruler_is_stable = yes
 			vptl_promote_presidential_successor_if_ruler_is_dead = yes
 			vptl_promote_presidential_successor_if_tracked_ruler_is_dead = yes
@@ -141,6 +177,9 @@ vptl_presidential_character_death = {
 		if = {
 			limit = {
 				exists = home_country
+				home_country = {
+					NOT = { this = scope:vptl_presidential_death_owner_country }
+				}
 			}
 			home_country = {
 				vptl_refresh_presidential_successor_if_ruler_is_stable = yes

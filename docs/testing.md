@@ -32,6 +32,8 @@ Use a presidential republic with an active election campaign, then test these in
 
 Expected result for each case: the custom election panel remains usable or immediately repopulates, dead portraits disappear, blank character scopes are not shown, the election-transition state is not restarted, and the election can still finish normally.
 
+Only the dead or invalid slot should change. In particular, replacing either presidential candidate must not promote or reroll that side's surviving running mate, and a character whose owner and home country are identical must not cause two repair passes.
+
 ## Vanilla-Aligned Election Regression Checklist
 
 Test these in order:
@@ -43,7 +45,21 @@ Test these in order:
 5. Kill each ticket position separately during a campaign.
 6. Force or reproduce an invalid vanilla winner: term-limited incumbent, dead candidate, or USA-ineligible candidate.
 
-Expected result: the custom ticket follows the eligible party or IG leader Victoria 3 is likely to select, the VP/successor is a running mate unless they naturally hold the relevant leadership, valid vanilla winners are accepted, BPR does not force the VP into office after a normal election, and normal elections do not create a third BPR presidential-transition notification.
+Expected result: Victoria 3's selected ruler identifies the winning political side, the displayed eligible ticket head for that side becomes president, its running mate becomes VP/successor, the losing ticket remains out of office, and normal elections do not create a BPR presidential-transition notification.
+
+## Ticket-Authoritative Settlement Checklist
+
+Run each case with `vptl_presidential_debug_logging` enabled when diagnosing ordering or notification problems.
+
+| Case | Visible final ticket | Vanilla-selected ruler | Expected final BPR ruler | Expected successor | Maximum popups |
+| --- | --- | --- | --- | --- | --- |
+| Incumbent-party mismatch | Record both incumbent ticket names | Different politician from the same incumbent party | Displayed incumbent head | Displayed incumbent running mate | Prefer 1; never more than 2 |
+| Opposition-party mismatch | Record both opposition ticket names | Different politician from the same opposition party | Displayed opposition head | Displayed opposition running mate | Prefer 1; never more than 2 |
+| Direct candidate match | Record winning ticket | Same as displayed head | Vanilla-selected/displayed head, with no second ruler assignment | Displayed running mate | Prefer 1; never more than 2 |
+| Invalid winner | Record winning ticket after any death reroll | Dead, term-limited, or USA-ineligible politician | Eligible replacement from the same winning party | Winning running mate or same-side replacement | Prefer 1; never more than 2 |
+| Ambiguous side | Record both tickets | Party and IG match neither or both tickets | Valid vanilla-selected ruler | Normal eligible successor | Prefer 1; never more than 2 |
+
+For notification checks, record the visible title, named ruler, source key, and order. A normal election should now show only the accurate election-results card. Death succession should produce the BPR Presidential Transition card without a generic new-ruler card. Non-presidential ruler changes must retain vanilla behavior.
 
 ## Repeated Succession Regression Checklist
 
