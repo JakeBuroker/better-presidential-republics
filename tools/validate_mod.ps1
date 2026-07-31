@@ -36,6 +36,15 @@ function Test-Utf8Bom {
 	return $bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF
 }
 
+function Remove-InlineComment {
+	param([string]$Line)
+	$commentIndex = $Line.IndexOf("#")
+	if ($commentIndex -ge 0) {
+		return $Line.Substring(0, $commentIndex)
+	}
+	return $Line
+}
+
 $resolvedModPath = (Resolve-Path $ModPath).Path
 if (-not (Test-Path (Join-Path $resolvedModPath "descriptor.mod"))) {
 	throw "ModPath does not look like a Victoria 3 mod root: $resolvedModPath"
@@ -61,8 +70,26 @@ foreach ($file in $bomTargets) {
 $scanFiles = Get-ChildItem -LiteralPath $resolvedModPath -Recurse -File |
 	Where-Object { $_.Extension -in @(".txt", ".yml", ".gui") }
 
+$descriptorPath = Join-Path $resolvedModPath "descriptor.mod"
+$descriptorText = [System.IO.File]::ReadAllText($descriptorPath)
+foreach ($field in @("name", "version", "supported_version", "path")) {
+	if ($descriptorText -notmatch "(?m)^\s*$field\s*=") {
+		Add-Issue "descriptor" "descriptor.mod" 0 "Missing descriptor field '$field'."
+	}
+}
+if ($descriptorText -match '(?m)^\s*version\s*=\s*"([^"]+)"') {
+	$descriptorVersion = $matches[1]
+	$changelogPath = Join-Path $resolvedModPath "CHANGELOG.md"
+	if ((Test-Path $changelogPath) -and (([System.IO.File]::ReadAllText($changelogPath)) -notmatch "(?m)^##\s+$([regex]::Escape($descriptorVersion))\b")) {
+		Add-Issue "version-docs" "CHANGELOG.md" 0 "CHANGELOG.md does not contain an entry for descriptor version $descriptorVersion."
+	}
+}
+
 $literalPatterns = @(
 	@{ Kind = "placeholder-name"; Pattern = "ruler_title_firstname"; Message = "Raw ruler/heir placeholder token is present." },
+	@{ Kind = "debug-token"; Pattern = "\bcodex_"; Message = "Raw codex_ debug/personal namespace token is present." },
+	@{ Kind = "debug-token"; Pattern = "\bTODO_DEBUG\b|\bTEMP_DEBUG\b"; Message = "Raw temporary debug token is present." },
+	@{ Kind = "donor-mod-template"; Pattern = "\b(ecchi_|joi_)"; Message = "Standalone mod should not reference donor-mod character template namespaces." },
 	@{ Kind = "bad-name-token"; Pattern = "first_name\s*=\s*É"; Message = "Accented first_name token should be ASCII key plus localization." },
 	@{ Kind = "bad-name-token"; Pattern = "first_name\s*=\s*Sebastián"; Message = "Accented first_name token should be ASCII key plus localization." },
 	@{ Kind = "bad-name-token"; Pattern = 'first_name\s*=\s*"Louis-Mathieu"'; Message = "Hyphenated quoted first name should be ASCII key plus localization." },
@@ -73,10 +100,172 @@ $literalPatterns = @(
 
 foreach ($file in $scanFiles) {
 	$lines = [System.IO.File]::ReadAllLines($file.FullName)
+	$displayPath = Get-DisplayPath $file.FullName
 	for ($i = 0; $i -lt $lines.Count; $i++) {
 		foreach ($patternInfo in $literalPatterns) {
 			if ($lines[$i] -match $patternInfo.Pattern) {
-				Add-Issue $patternInfo.Kind (Get-DisplayPath $file.FullName) ($i + 1) $patternInfo.Message
+				Add-Issue $patternInfo.Kind $displayPath ($i + 1) $patternInfo.Message
+			}
+		}
+		if ($displayPath -match '^(common|gui|localization)\\' -and $lines[$i] -match '(?i)\bpresident-elect\b') {
+			Add-Issue "future-feature-text" $displayPath ($i + 1) "President-elect text is present in script, GUI, or localization, but delayed handoff is not implemented."
+		}
+		if ($displayPath -match '^(common|gui|localization)\\' -and $lines[$i] -match '\b(PLACEHOLDER|UNRESOLVED|FIXME)\b') {
+			Add-Issue "placeholder-text" $displayPath ($i + 1) "Obvious unresolved placeholder text is present."
+		}
+		if ($displayPath -match '^common\\scripted_effects\\' -and $lines[$i] -match '\bvptl_usa_martin_van_buren\b') {
+			Add-Issue "fallback-template-target" $displayPath ($i + 1) "Active scripted effects should not target BPR's non-vanilla Martin Van Buren fallback template."
+		}
+	}
+}
+
+$braceFiles = $scanFiles | Where-Object { $_.Extension -in @(".txt", ".gui") }
+foreach ($file in $braceFiles) {
+	$depth = 0
+	$lines = [System.IO.File]::ReadAllLines($file.FullName)
+	for ($i = 0; $i -lt $lines.Count; $i++) {
+		$line = Remove-InlineComment $lines[$i]
+		$opens = ([regex]::Matches($line, "\{")).Count
+		$closes = ([regex]::Matches($line, "\}")).Count
+		$depth += $opens - $closes
+		if ($depth -lt 0) {
+			Add-Issue "brace-balance" (Get-DisplayPath $file.FullName) ($i + 1) "Closing brace appears before a matching opening brace."
+			$depth = 0
+		}
+	}
+	if ($depth -ne 0) {
+		Add-Issue "brace-balance" (Get-DisplayPath $file.FullName) $lines.Count "File ends with unbalanced braces."
+	}
+}
+
+$localizationKeys = @{}
+$localizationFiles = $scanFiles | Where-Object { $_.Extension -eq ".yml" }
+foreach ($file in $localizationFiles) {
+	$lines = [System.IO.File]::ReadAllLines($file.FullName)
+	for ($i = 0; $i -lt $lines.Count; $i++) {
+		if ($lines[$i] -match '^\s*([A-Za-z0-9_.-]+):\d+\s+') {
+			$key = $matches[1]
+			if ($localizationKeys.ContainsKey($key)) {
+				$first = $localizationKeys[$key]
+				Add-Issue "duplicate-localization" (Get-DisplayPath $file.FullName) ($i + 1) "Duplicate localization key '$key'; first seen at $($first.Path):$($first.Line)."
+			}
+			else {
+				$localizationKeys[$key] = [pscustomobject]@{
+					Path = Get-DisplayPath $file.FullName
+					Line = $i + 1
+				}
+			}
+		}
+	}
+}
+
+function Test-LocalizedKey {
+	param(
+		[string]$Key,
+		[string]$Kind,
+		[string]$Path,
+		[int]$Line
+	)
+	if (-not $localizationKeys.ContainsKey($Key)) {
+		Add-Issue $Kind $Path $Line "Visible key '$Key' has no English localization."
+	}
+}
+
+function Get-TopLevelDefinitions {
+	param([string]$RelativeDir)
+	$dir = Join-Path $resolvedModPath $RelativeDir
+	if (-not (Test-Path $dir)) {
+		return
+	}
+	Get-ChildItem -LiteralPath $dir -Recurse -File -Filter "*.txt" | ForEach-Object {
+		$file = $_
+		$depth = 0
+		$lines = [System.IO.File]::ReadAllLines($file.FullName)
+		for ($i = 0; $i -lt $lines.Count; $i++) {
+			$line = Remove-InlineComment $lines[$i]
+			if ($depth -eq 0 -and $line -match '^\s*([A-Za-z0-9_]+)\s*=\s*\{') {
+				[pscustomobject]@{
+					Name = $matches[1]
+					Path = Get-DisplayPath $file.FullName
+					Line = $i + 1
+				}
+			}
+			$depth += ([regex]::Matches($line, "\{")).Count - ([regex]::Matches($line, "\}")).Count
+			if ($depth -lt 0) {
+				$depth = 0
+			}
+		}
+	}
+}
+
+# Heuristic localization coverage for visible vptl_ assets. This intentionally avoids internal variables/effects.
+foreach ($definition in Get-TopLevelDefinitions "common\character_traits") {
+	if ($definition.Name -match '^vptl_') {
+		Test-LocalizedKey $definition.Name "missing-localization" $definition.Path $definition.Line
+		Test-LocalizedKey "$($definition.Name)_desc" "missing-localization" $definition.Path $definition.Line
+	}
+}
+foreach ($definition in Get-TopLevelDefinitions "common\static_modifiers") {
+	if ($definition.Name -match '^modifier_vptl_') {
+		Test-LocalizedKey $definition.Name "missing-localization" $definition.Path $definition.Line
+		Test-LocalizedKey "$($definition.Name)_desc" "missing-localization" $definition.Path $definition.Line
+	}
+}
+foreach ($definition in Get-TopLevelDefinitions "common\character_roles") {
+	if ($definition.Name -match '^character_role_vptl_') {
+		Test-LocalizedKey $definition.Name "missing-localization" $definition.Path $definition.Line
+		Test-LocalizedKey "$($definition.Name)_title" "missing-localization" $definition.Path $definition.Line
+	}
+}
+foreach ($definition in Get-TopLevelDefinitions "common\messages") {
+	if ($definition.Name -match '^vptl_') {
+		Test-LocalizedKey "notification_$($definition.Name)_name" "missing-localization" $definition.Path $definition.Line
+		Test-LocalizedKey "notification_$($definition.Name)_desc" "missing-localization" $definition.Path $definition.Line
+	}
+}
+foreach ($file in $scanFiles | Where-Object { (Get-DisplayPath $_.FullName) -match '^(common\\customizable_localization|gui)\\' }) {
+	$displayPath = Get-DisplayPath $file.FullName
+	$lines = [System.IO.File]::ReadAllLines($file.FullName)
+	for ($i = 0; $i -lt $lines.Count; $i++) {
+		$line = Remove-InlineComment $lines[$i]
+		foreach ($match in [regex]::Matches($line, '(?:localization_key|text|tooltip)\s*=\s*"?((?:vptl|character_role_vptl)_[A-Za-z0-9_]+)"?')) {
+			Test-LocalizedKey $match.Groups[1].Value "missing-localization" $displayPath ($i + 1)
+		}
+	}
+}
+
+$scriptedDefinitionDirs = @("common\scripted_effects", "common\scripted_triggers", "common\customizable_localization")
+foreach ($relativeDir in $scriptedDefinitionDirs) {
+	$dir = Join-Path $resolvedModPath $relativeDir
+	if (-not (Test-Path $dir)) {
+		continue
+	}
+	$definitions = @{}
+	Get-ChildItem -LiteralPath $dir -Recurse -File -Filter "*.txt" | ForEach-Object {
+		$file = $_
+		$depth = 0
+		$lines = [System.IO.File]::ReadAllLines($file.FullName)
+		for ($i = 0; $i -lt $lines.Count; $i++) {
+			$line = Remove-InlineComment $lines[$i]
+			if ($depth -eq 0 -and $line -match '^\s*([A-Za-z0-9_]+)\s*=\s*\{') {
+				$name = $matches[1]
+				if ($name -notmatch '^(vptl_|character_role_vptl_)') {
+					Add-Issue "namespace" (Get-DisplayPath $file.FullName) ($i + 1) "Top-level scripted identifier '$name' should use the vptl_ prefix."
+				}
+				if ($definitions.ContainsKey($name)) {
+					$first = $definitions[$name]
+					Add-Issue "duplicate-scripted-identifier" (Get-DisplayPath $file.FullName) ($i + 1) "Duplicate top-level scripted identifier '$name'; first seen at $($first.Path):$($first.Line)."
+				}
+				else {
+					$definitions[$name] = [pscustomobject]@{
+						Path = Get-DisplayPath $file.FullName
+						Line = $i + 1
+					}
+				}
+			}
+			$depth += ([regex]::Matches($line, "\{")).Count - ([regex]::Matches($line, "\}")).Count
+			if ($depth -lt 0) {
+				$depth = 0
 			}
 		}
 	}

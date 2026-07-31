@@ -15,7 +15,7 @@ A lightweight Victoria 3 gameplay/UI mod that makes presidential republics feel 
 - Shows current term status and expected office-leaving date in the government panel.
 - Shows a vice president, constitutional successor, or designated successor in the government panel.
 - Shows presidential candidates in the election campaign panel, including the current president and recognized handoff candidate/successor.
-- Shows a term-limited president's successor as president-elect during the forced handoff window.
+- Keeps the normal successor or vice-president title during campaigns. President-elect is reserved for a future delayed-handoff and inauguration system.
 - Uses country-specific successor titles where easy: Vice President, Secretary of State, President of the Senate, Minister of the Interior, and fallback Designated Successor.
 - Adds constitutional flavor text for presidential republics and concentrated/caudillo-style presidencies.
 - Adds former/current president and vice president history markers with terms, years served, and accession type.
@@ -24,7 +24,7 @@ A lightweight Victoria 3 gameplay/UI mod that makes presidential republics feel 
 - Gives former presidents and vice presidents small visible service traits that mirror their tracked service.
 - Adds a presidential transition notification when a tracked president changes.
 - Seeds easy 1836 presidential numbering for several vanilla presidential republics.
-- Keeps tiny vanilla-safe fallback templates for John Quincy Adams, Martin Van Buren, and Lorenzo de Zavala without spawning duplicates at startup when a full character pack is enabled.
+- Uses vanilla character templates for startup and succession handling. Legacy fallback templates are kept inert for save compatibility, but the live startup logic does not create or target non-vanilla fallback politicians.
 
 ## Compatibility
 
@@ -41,11 +41,20 @@ Run:
 powershell -ExecutionPolicy Bypass -File tools\validate_mod.ps1 -ModPath .
 ```
 
+Static validation is required before testing, but it is not a substitute for an in-game boot and campaign run.
+
+## Documentation
+
+- `AGENTS.md` contains repo-specific instructions for future Codex work.
+- `docs/architecture.md` explains the current state model and implementation flow.
+- `docs/testing.md` lists repeatable in-game test cases.
+- `docs/roadmap.md` separates planned features from current behavior.
+
 ## Current Testing Priorities
 
 - USA 1836 start: Andrew Jackson should show as President No. 7 and term tracked.
-- USA 1836 succession/election path: Martin Van Buren should remain eligible through explicit origin markers.
-- USA 1836 startup: Martin Van Buren should show as Vice President rather than generic Presidential Successor.
+- USA 1836 succession/election path: generated and historical candidates should respect USA origin and age rules.
+- USA 1836 startup: BPR should not create a non-vanilla Martin Van Buren fallback; the visible successor should come from the available vanilla eligible politician pool.
 - Open election campaign panel: presidential republics with a tracked successor should show the Presidential Candidates strip above the poll graph.
 - USA 1836 campaign: Andrew Jackson can be marked term-limited, but should remain president until the December 7, 1836 election resolves unless he dies or is removed.
 - Term-limited election campaign: the successor should keep the normal successor or vice-president title during the campaign. President-elect is reserved for the future delayed-handoff system.

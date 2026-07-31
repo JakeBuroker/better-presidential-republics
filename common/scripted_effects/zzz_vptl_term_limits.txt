@@ -1,5 +1,10 @@
 ﻿vptl_record_presidential_term_for_current_ruler = {
-	vptl_assign_presidential_order_number_to_current_ruler = yes
+	if = {
+		limit = {
+			NOT = { has_variable = vptl_presidential_transition_applied }
+		}
+		set_variable = vptl_presidential_transition_applied
+		vptl_assign_presidential_order_number_to_current_ruler = yes
 
 	ruler ?= {
 		vptl_set_presidential_accession_elected = yes
@@ -44,7 +49,8 @@
 		vptl_refresh_presidential_office_markers = yes
 		remove_variable = vptl_presidential_succeeded_to_office
 	}
-	vptl_post_presidential_transition_notification = yes
+		vptl_post_presidential_transition_notification = yes
+	}
 }
 
 vptl_clear_presidential_accession_markers = {
@@ -84,6 +90,7 @@ vptl_post_presidential_transition_notification = {
 	if = {
 		limit = {
 			is_player = yes
+			NOT = { has_variable = vptl_presidential_transition_notification_cooldown }
 			ruler ?= {
 				is_character_alive = yes
 				has_variable = vptl_presidential_order_number
@@ -94,6 +101,7 @@ vptl_post_presidential_transition_notification = {
 			save_scope_as = vptl_presidential_transition_ruler_scope
 		}
 		post_notification = vptl_presidential_transition
+		set_variable = { name = vptl_presidential_transition_notification_cooldown months = 2 }
 	}
 }
 
@@ -139,21 +147,6 @@ vptl_seed_usa_presidential_order_numbers = {
 			}
 			set_variable = { name = vptl_vice_presidential_terms_served value = 2 }
 			set_variable = { name = vptl_vice_presidential_years_served value = 8 }
-			vptl_refresh_presidential_office_markers = yes
-		}
-		every_scope_character = {
-			limit = {
-				has_template = vptl_usa_martin_van_buren
-			}
-			set_variable = vptl_presidential_origin_eligible
-			set_variable = vptl_usa_natural_born_presidential_eligible
-			if = {
-				limit = {
-					NOT = { has_variable = vptl_vice_presidential_terms_served }
-				}
-				set_variable = { name = vptl_vice_presidential_terms_served value = 1 }
-				set_variable = { name = vptl_vice_presidential_years_served value = 3 }
-			}
 			vptl_refresh_presidential_office_markers = yes
 		}
 		ruler ?= {
@@ -549,8 +542,14 @@ vptl_seed_1836_presidential_order_numbers = {
 }
 
 vptl_assign_presidential_order_number_to_current_ruler = {
-	vptl_seed_usa_presidential_order_numbers = yes
-	vptl_seed_1836_presidential_order_numbers = yes
+	if = {
+		limit = {
+			NOT = { has_variable = vptl_presidential_historical_order_numbers_initialized }
+		}
+		vptl_seed_usa_presidential_order_numbers = yes
+		vptl_seed_1836_presidential_order_numbers = yes
+		set_variable = vptl_presidential_historical_order_numbers_initialized
+	}
 
 	if = {
 		limit = {
@@ -637,7 +636,6 @@ vptl_refresh_presidential_office_markers = {
 vptl_record_presidential_service_time = {
 	if = {
 		limit = {
-			c:USA ?= this
 			has_law_or_variant = law_type:law_presidential_republic
 			government_transfer_of_power = presidential_elective
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
@@ -649,6 +647,12 @@ vptl_record_presidential_service_time = {
 				limit = {
 					is_character_alive = yes
 					has_variable = vptl_presidential_order_number
+				}
+				if = {
+					limit = {
+						NOT = { has_variable = vptl_presidential_years_served }
+					}
+					set_variable = { name = vptl_presidential_years_served value = 0 }
 				}
 				change_variable = { name = vptl_presidential_years_served add = 0.083 }
 			}
@@ -680,6 +684,7 @@ vptl_record_vice_presidential_term_for_current_successor = {
 			has_law_or_variant = law_type:law_presidential_republic
 			government_transfer_of_power = presidential_elective
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
+			NOT = { has_variable = vptl_presidential_successor_term_recorded_for_transition }
 			has_variable = vptl_presidential_successor
 			var:vptl_presidential_successor ?= {
 				vptl_presidential_saved_successor_handoff_eligible = yes
@@ -695,6 +700,7 @@ vptl_record_vice_presidential_term_for_current_successor = {
 			}
 			vptl_refresh_presidential_office_markers = yes
 		}
+		set_variable = vptl_presidential_successor_term_recorded_for_transition
 	}
 }
 
@@ -738,7 +744,6 @@ vptl_promote_presidential_successor_to_ruler = {
 			vptl_mark_presidential_successor_as_succeeded_to_office = yes
 			set_character_as_ruler = yes
 		}
-		vptl_force_usa_1836_van_buren_party_leadership = yes
 		vptl_sync_presidential_current_ruler = yes
 		vptl_initialize_presidential_term_limits = yes
 		vptl_post_presidential_transition_notification = yes
@@ -889,9 +894,11 @@ vptl_initialize_presidential_term_limits = {
 		every_scope_character = {
 			limit = {
 				has_template = vptl_usa_john_quincy_adams
+				NOT = { has_variable = vptl_presidential_historical_service_initialized }
 			}
 			set_variable = { name = vptl_presidential_terms_served value = 2 }
 			set_variable = vptl_presidential_term_limited
+			set_variable = vptl_presidential_historical_service_initialized
 			remove_modifier = modifier_vptl_presidential_first_term
 			remove_modifier = modifier_vptl_presidential_second_term
 			remove_modifier = modifier_vptl_presidential_term_limited
@@ -966,10 +973,15 @@ vptl_initialize_presidential_term_limits = {
 				vptl_refresh_presidential_office_markers = yes
 			}
 		}
-		vptl_prefer_historical_presidential_ig_leaders = yes
+		if = {
+			limit = {
+				NOT = { has_variable = vptl_presidential_historical_ig_leaders_initialized }
+			}
+			vptl_prefer_historical_presidential_ig_leaders = yes
+			set_variable = vptl_presidential_historical_ig_leaders_initialized
+		}
 	}
 	vptl_update_presidential_successor = yes
-	vptl_force_usa_1836_successor = yes
 	vptl_refresh_presidential_successor_display_marker = yes
 }
 
@@ -1000,77 +1012,6 @@ vptl_try_set_presidential_successor_by_template = {
 			save_scope_as = vptl_presidential_successor_candidate
 		}
 		set_variable = { name = vptl_presidential_successor value = scope:vptl_presidential_successor_candidate }
-	}
-}
-
-vptl_force_usa_1836_successor = {
-	if = {
-		limit = {
-			c:USA ?= this
-			has_law_or_variant = law_type:law_presidential_republic
-			government_transfer_of_power = presidential_elective
-			NOT = { has_law_or_variant = law_type:law_single_party_state }
-			ruler ?= {
-				OR = {
-					has_variable = is_andrew_jackson
-					has_template = USA_john_calhoun
-				}
-			}
-			any_scope_character = {
-				has_template = vptl_usa_martin_van_buren
-				vptl_presidential_saved_successor_handoff_eligible = yes
-			}
-		}
-		ordered_scope_character = {
-			limit = {
-				has_template = vptl_usa_martin_van_buren
-				vptl_presidential_saved_successor_handoff_eligible = yes
-			}
-			order_by = prominence
-			position = 0
-			save_scope_as = vptl_presidential_successor_candidate
-		}
-		set_variable = { name = vptl_presidential_successor value = scope:vptl_presidential_successor_candidate }
-	}
-}
-
-vptl_force_usa_1836_van_buren_party_leadership = {
-	if = {
-		limit = {
-			c:USA ?= this
-			has_law_or_variant = law_type:law_presidential_republic
-			government_transfer_of_power = presidential_elective
-			NOT = { has_law_or_variant = law_type:law_single_party_state }
-			any_scope_character = {
-				has_template = vptl_usa_martin_van_buren
-				is_character_alive = yes
-				NOT = { has_variable = vptl_presidential_term_limited }
-				vptl_presidential_candidate_eligible = yes
-			}
-		}
-		every_interest_group = {
-			limit = {
-				leader ?= {
-					has_template = USA_john_calhoun
-					NOT = { is_ruler_of_own_country = yes }
-				}
-			}
-			save_scope_as = vptl_term_limit_ig
-			owner = {
-				ordered_scope_character = {
-					limit = {
-						has_template = vptl_usa_martin_van_buren
-						is_character_alive = yes
-						NOT = { has_variable = vptl_presidential_term_limited }
-						vptl_presidential_candidate_eligible = yes
-					}
-					order_by = prominence
-					position = 0
-					set_interest_group = scope:vptl_term_limit_ig
-					set_as_interest_group_leader = yes
-				}
-			}
-		}
 	}
 }
 
@@ -1467,7 +1408,6 @@ vptl_update_presidential_successor = {
 						}
 					}
 				}
-				vptl_try_set_presidential_successor_by_template = { TEMPLATE = vptl_usa_martin_van_buren }
 			}
 			if = {
 				limit = {
@@ -2120,6 +2060,7 @@ vptl_correct_presidential_ruler_change_during_campaign = {
 			has_law_or_variant = law_type:law_presidential_republic
 			government_transfer_of_power = presidential_elective
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
+			in_election_campaign = yes
 			has_variable = vptl_presidential_election_transition
 			has_variable = vptl_presidential_death_succession_lock
 			has_variable = vptl_presidential_death_successor
@@ -2140,6 +2081,7 @@ vptl_correct_presidential_ruler_change_during_campaign = {
 			has_law_or_variant = law_type:law_presidential_republic
 			government_transfer_of_power = presidential_elective
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
+			in_election_campaign = yes
 			has_variable = vptl_presidential_election_transition
 			has_variable = vptl_presidential_current_ruler
 			ruler ?= {
@@ -2158,6 +2100,7 @@ vptl_correct_presidential_ruler_change_during_campaign = {
 			has_law_or_variant = law_type:law_presidential_republic
 			government_transfer_of_power = presidential_elective
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
+			in_election_campaign = yes
 			has_variable = vptl_presidential_election_transition
 			has_variable = vptl_presidential_current_ruler
 			has_variable = vptl_presidential_successor
@@ -2230,38 +2173,6 @@ vptl_set_presidential_successor_as_ig_leader_for_saved_ig = {
 			exists = scope:vptl_term_limit_ig
 		}
 		if = {
-			limit = {
-				owner = {
-					c:USA ?= this
-					ruler ?= { has_variable = is_andrew_jackson }
-					any_scope_character = {
-						is_character_alive = yes
-						has_template = vptl_usa_martin_van_buren
-						is_ruler_of_own_country = no
-						is_heir_of_own_country = no
-						NOT = { has_variable = vptl_presidential_term_limited }
-						vptl_presidential_candidate_eligible = yes
-					}
-				}
-				is_interest_group_type = ig_rural_folk
-			}
-			owner = {
-				ordered_scope_character = {
-					limit = {
-						is_character_alive = yes
-						has_template = vptl_usa_martin_van_buren
-						is_ruler_of_own_country = no
-						is_heir_of_own_country = no
-						NOT = { has_variable = vptl_presidential_term_limited }
-						vptl_presidential_candidate_eligible = yes
-					}
-					order_by = prominence
-					position = 0
-					set_as_interest_group_leader = yes
-				}
-			}
-		}
-		else_if = {
 			limit = {
 				owner = {
 					any_scope_character = {
@@ -2366,6 +2277,7 @@ vptl_prefer_historical_presidential_ig_leaders = {
 			has_law_or_variant = law_type:law_presidential_republic
 			government_transfer_of_power = presidential_elective
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
+			NOT = { has_variable = vptl_presidential_historical_ig_leaders_initialized }
 		}
 		every_interest_group = {
 			save_scope_as = vptl_term_limit_ig
@@ -2407,11 +2319,14 @@ vptl_prefer_historical_presidential_ig_leaders = {
 				}
 			}
 		}
+		set_variable = vptl_presidential_historical_ig_leaders_initialized
 	}
 }
 
 vptl_prepare_presidential_term_limits_for_campaign = {
 	set_variable = { name = vptl_presidential_election_transition months = 10 }
+	remove_variable = vptl_presidential_transition_applied
+	remove_variable = vptl_presidential_successor_term_recorded_for_transition
 	remove_variable = vptl_presidential_force_successor_transition
 	remove_variable = vptl_presidential_outgoing_ruler
 	remove_variable = vptl_presidential_ticket_candidate
@@ -2420,8 +2335,6 @@ vptl_prepare_presidential_term_limits_for_campaign = {
 	remove_variable = vptl_presidential_opposition_running_mate
 	vptl_prefer_historical_presidential_ig_leaders = yes
 	vptl_update_presidential_successor = yes
-	vptl_force_usa_1836_successor = yes
-	vptl_force_usa_1836_van_buren_party_leadership = yes
 
 	ruler ?= {
 		if = {
@@ -2481,8 +2394,6 @@ vptl_prepare_presidential_term_limits_for_campaign = {
 		vptl_set_presidential_successor_as_ig_leader_for_saved_ig = yes
 	}
 	vptl_update_presidential_successor = yes
-	vptl_force_usa_1836_successor = yes
-	vptl_force_usa_1836_van_buren_party_leadership = yes
 	vptl_update_presidential_ticket_candidates = yes
 }
 
@@ -2507,12 +2418,10 @@ vptl_repair_presidential_campaign_ticket_if_needed = {
 		}
 		vptl_prepare_presidential_term_limits_for_campaign = yes
 	}
-	vptl_force_usa_1836_van_buren_party_leadership = yes
 }
 
 vptl_apply_presidential_term_limits = {
 	vptl_prefer_historical_presidential_ig_leaders = yes
-	vptl_correct_presidential_ruler_change_during_campaign = yes
 
 	if = {
 		limit = {

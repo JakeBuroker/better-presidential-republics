@@ -86,6 +86,7 @@ vptl_presidential_saved_successor_handoff_eligible = {
 	is_character_alive = yes
 	has_role_of_type = politician
 	is_ruler_of_own_country = no
+	is_heir_of_own_country = no
 	NOT = {
 		AND = {
 			has_variable = vptl_presidential_terms_served
