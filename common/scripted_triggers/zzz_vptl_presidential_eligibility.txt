@@ -96,6 +96,68 @@ vptl_presidential_saved_successor_handoff_eligible = {
 	NOT = { has_variable = vptl_presidential_term_limited }
 }
 
+vptl_presidential_successor_is_current_ruler = {
+	has_variable = vptl_presidential_successor
+	ruler ?= {
+		is_character_alive = yes
+		owner.var:vptl_presidential_successor ?= this
+	}
+}
+
+vptl_presidential_same_handoff_in_progress = {
+	has_variable = vptl_presidential_handoff_in_progress
+	has_variable = vptl_presidential_handoff_target
+	has_variable = vptl_presidential_successor
+	var:vptl_presidential_successor ?= {
+		owner.var:vptl_presidential_handoff_target ?= this
+	}
+}
+
+vptl_presidential_campaign_ticket_valid = {
+	has_variable = vptl_presidential_election_transition
+	has_variable = vptl_presidential_ticket_candidate
+	var:vptl_presidential_ticket_candidate ?= {
+		is_character_alive = yes
+		vptl_presidential_candidate_eligible = yes
+		NOT = { has_variable = vptl_presidential_term_limited }
+		NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
+		NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
+		NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
+	}
+	OR = {
+		NOT = { has_variable = vptl_presidential_ticket_running_mate }
+		var:vptl_presidential_ticket_running_mate ?= {
+			vptl_presidential_successor_candidate_eligible = yes
+			NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
+			NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
+			NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
+		}
+	}
+	OR = {
+		NOT = { has_variable = vptl_presidential_opposition_candidate }
+		var:vptl_presidential_opposition_candidate ?= {
+			is_character_alive = yes
+			vptl_presidential_candidate_eligible = yes
+			has_role_of_type = politician
+			is_ruler_of_own_country = no
+			is_heir_of_own_country = no
+			NOT = { has_variable = vptl_presidential_term_limited }
+			NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
+			NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
+			NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
+		}
+	}
+	OR = {
+		NOT = { has_variable = vptl_presidential_opposition_running_mate }
+		var:vptl_presidential_opposition_running_mate ?= {
+			vptl_presidential_successor_candidate_eligible = yes
+			NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
+			NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
+			NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
+		}
+	}
+}
+
 vptl_presidential_successor_uses_vice_president_title = {
 	OR = {
 		AND = { exists = c:USA c:USA ?= this }

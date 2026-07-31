@@ -138,6 +138,19 @@ vptl_presidential_character_death = {
 			vptl_promote_presidential_successor_if_tracked_ruler_is_dead = yes
 			vptl_apply_presidential_successor_if_outgoing_ruler_died_during_campaign = yes
 			vptl_apply_presidential_successor_if_current_ruler_died_during_campaign = yes
+			vptl_refresh_presidential_successor_if_ruler_is_stable = yes
+			vptl_repair_presidential_campaign_ticket_if_needed = yes
+			vptl_refresh_presidential_successor_display_marker = yes
+		}
+		if = {
+			limit = {
+				exists = home_country
+			}
+			home_country = {
+				vptl_refresh_presidential_successor_if_ruler_is_stable = yes
+				vptl_repair_presidential_campaign_ticket_if_needed = yes
+				vptl_refresh_presidential_successor_display_marker = yes
+			}
 		}
 	}
 }

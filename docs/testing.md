@@ -20,6 +20,31 @@ Static validation passing means the files are structurally cleaner; it does not 
 | BPR-NON-US | Any non-USA presidential republic | Vanilla plus BPR | Run several years through election | Normal presidential behavior continues | Successor tracking should not apply USA natural-born age/origin rules | President number and successor UI should remain stable where supported | Country-specific rules are not fully implemented yet | 1.13.* | Untested in this checklist |
 | BPR-GUI-COMPAT | Any presidential republic | Add one known GUI-overriding mod at a time | Open Government and Election panels | No crash; ruler and successor still visible | No duplicate/overlapping text | Whole-file GUI overrides may require a compatibility patch | Load order matters | 1.13.* | Untested in this checklist |
 
+## Campaign Death Regression Checklist
+
+Use a presidential republic with an active election campaign, then test these in separate reloads or separate campaigns:
+
+1. Kill the incumbent-side presidential candidate.
+2. Kill the incumbent-side running mate.
+3. Kill the opposition presidential candidate.
+4. Kill the opposition running mate.
+5. Kill the tracked successor when that character is also displayed on the ticket.
+
+Expected result for each case: the custom election panel remains usable or immediately repopulates, dead portraits disappear, blank character scopes are not shown, the election-transition state is not restarted, and the election can still finish normally.
+
+## Repeated Succession Regression Checklist
+
+Test these in order:
+
+1. Kill the incumbent outside a campaign.
+2. Kill the incumbent during a campaign.
+3. Kill the newly promoted president shortly afterward.
+4. Kill several successive presidents and successors.
+5. Kill a ticket member without killing the ruler.
+6. Let the election finish after one or more campaign deaths.
+
+Expected result for each actual presidential death: one final intended successor becomes ruler, president numbering changes at most once, accession type is `Succeeded to office`, current-ruler and successor variables resynchronize, the previous successor role is removed from the new president, no more than one BPR transition notification posts for that ruler, and the custom election ticket remains usable.
+
 ## Reporting Template
 
 When reporting a manual test, include:
