@@ -71,7 +71,6 @@ vptl_presidential_term_limits_monthly = {
 			}
 			vptl_replace_ineligible_usa_presidential_ruler_with_successor = yes
 		}
-		vptl_apply_presidential_successor_if_outgoing_ruler_died_during_campaign = yes
 		vptl_correct_presidential_ruler_change_during_campaign = yes
 		vptl_correct_unexpected_presidential_ruler_change = yes
 		vptl_initialize_presidential_term_limits = yes
@@ -89,7 +88,6 @@ vptl_presidential_term_limits_monthly_elections = {
 		vptl_repair_presidential_campaign_ticket_if_needed = yes
 		vptl_finalize_presidential_election_transition_if_campaign_ended = yes
 		vptl_promote_presidential_successor_if_tracked_ruler_is_dead = yes
-		vptl_apply_presidential_successor_if_outgoing_ruler_died_during_campaign = yes
 		vptl_correct_presidential_ruler_change_during_campaign = yes
 	}
 }
@@ -123,7 +121,6 @@ vptl_presidential_successor_ruler_selected = {
 			vptl_finalize_presidential_election_transition_if_campaign_ended = yes
 			vptl_promote_presidential_successor_if_ruler_is_dead = yes
 			vptl_promote_presidential_successor_if_tracked_ruler_is_dead = yes
-			vptl_apply_presidential_successor_if_outgoing_ruler_died_during_campaign = yes
 			vptl_apply_presidential_successor_if_current_ruler_died_during_campaign = yes
 			vptl_enforce_presidential_successor_for_non_election_transition = yes
 		}
@@ -136,10 +133,9 @@ vptl_presidential_character_death = {
 			vptl_refresh_presidential_successor_if_ruler_is_stable = yes
 			vptl_promote_presidential_successor_if_ruler_is_dead = yes
 			vptl_promote_presidential_successor_if_tracked_ruler_is_dead = yes
-			vptl_apply_presidential_successor_if_outgoing_ruler_died_during_campaign = yes
 			vptl_apply_presidential_successor_if_current_ruler_died_during_campaign = yes
 			vptl_refresh_presidential_successor_if_ruler_is_stable = yes
-			vptl_repair_presidential_campaign_ticket_if_needed = yes
+			vptl_rebuild_presidential_campaign_ticket = yes
 			vptl_refresh_presidential_successor_display_marker = yes
 		}
 		if = {
@@ -148,7 +144,7 @@ vptl_presidential_character_death = {
 			}
 			home_country = {
 				vptl_refresh_presidential_successor_if_ruler_is_stable = yes
-				vptl_repair_presidential_campaign_ticket_if_needed = yes
+				vptl_rebuild_presidential_campaign_ticket = yes
 				vptl_refresh_presidential_successor_display_marker = yes
 			}
 		}

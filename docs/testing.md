@@ -32,6 +32,19 @@ Use a presidential republic with an active election campaign, then test these in
 
 Expected result for each case: the custom election panel remains usable or immediately repopulates, dead portraits disappear, blank character scopes are not shown, the election-transition state is not restarted, and the election can still finish normally.
 
+## Vanilla-Aligned Election Regression Checklist
+
+Test these in order:
+
+1. Reproduce the Winfield Scott / John C. Calhoun case: the prior VP/successor is Winfield Scott, the relevant eligible incumbent-party or IG leader is John C. Calhoun, and the incumbent cannot run.
+2. Run an eligible-incumbent election.
+3. Run a term-limited-incumbent election.
+4. Run an opposition victory.
+5. Kill each ticket position separately during a campaign.
+6. Force or reproduce an invalid vanilla winner: term-limited incumbent, dead candidate, or USA-ineligible candidate.
+
+Expected result: the custom ticket follows the eligible party or IG leader Victoria 3 is likely to select, the VP/successor is a running mate unless they naturally hold the relevant leadership, valid vanilla winners are accepted, BPR does not force the VP into office after a normal election, and normal elections do not create a third BPR presidential-transition notification.
+
 ## Repeated Succession Regression Checklist
 
 Test these in order:
