@@ -24,7 +24,7 @@ A lightweight Victoria 3 gameplay/UI mod that makes presidential republics feel 
 - Gives former presidents and vice presidents small visible service traits that mirror their tracked service.
 - Adds a presidential transition notification when a tracked president changes.
 - Seeds easy 1836 presidential numbering for several vanilla presidential republics.
-- Uses vanilla character templates for startup and succession handling. Legacy fallback templates are kept inert for save compatibility, but the live startup logic does not create or target non-vanilla fallback politicians.
+- Uses vanilla character templates for startup and succession handling and does not ship character-pack stand-ins for missing historical politicians.
 
 ## Compatibility
 
@@ -54,11 +54,10 @@ Static validation is required before testing, but it is not a substitute for an 
 
 - USA 1836 start: Andrew Jackson should show as President No. 7 and term tracked.
 - USA 1836 succession/election path: generated and historical candidates should respect USA origin and age rules.
-- USA 1836 startup: BPR should not create a non-vanilla Martin Van Buren fallback; the visible successor should come from the available vanilla eligible politician pool.
+- USA 1836 startup: BPR should not create non-vanilla historical stand-ins; the visible successor should come from the available vanilla eligible politician pool.
 - Open election campaign panel: presidential republics with a tracked successor should show the Presidential Candidates strip above the poll graph.
 - USA 1836 campaign: Andrew Jackson can be marked term-limited, but should remain president until the December 7, 1836 election resolves unless he dies or is removed.
 - Term-limited election campaign: the successor should keep the normal successor or vice-president title during the campaign. President-elect is reserved for the future delayed-handoff system.
-- USA former president handling: John Quincy Adams should remain recorded as President No. 6 and term-limited.
 - Generated USA politicians: eligible only when their home country is the USA and age is at least 35.
 - Non-USA presidential republics: should ignore USA age/origin rules and keep normal presidential behavior.
 - USA edge cases: a manually blocked character with `vptl_presidential_origin_ineligible` should not be selected even if they are Yankee/Dixie/Afro-American.

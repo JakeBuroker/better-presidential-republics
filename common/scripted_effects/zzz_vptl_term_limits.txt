@@ -124,24 +124,6 @@ vptl_seed_usa_presidential_order_numbers = {
 		}
 		every_scope_character = {
 			limit = {
-				has_template = vptl_usa_john_quincy_adams
-			}
-			set_variable = vptl_presidential_origin_eligible
-			set_variable = vptl_usa_natural_born_presidential_eligible
-			set_variable = { name = vptl_presidential_order_number value = 6 }
-			if = {
-				limit = {
-					OR = {
-						NOT = { has_variable = vptl_presidential_years_served }
-						var:vptl_presidential_years_served < 4
-					}
-				}
-				set_variable = { name = vptl_presidential_years_served value = 4 }
-			}
-			vptl_refresh_presidential_office_markers = yes
-		}
-		every_scope_character = {
-			limit = {
 				has_template = USA_john_calhoun
 				NOT = { has_variable = vptl_vice_presidential_terms_served }
 			}
@@ -891,22 +873,6 @@ vptl_initialize_presidential_term_limits = {
 		}
 		vptl_assign_presidential_order_number_to_current_ruler = yes
 
-		every_scope_character = {
-			limit = {
-				has_template = vptl_usa_john_quincy_adams
-				NOT = { has_variable = vptl_presidential_historical_service_initialized }
-			}
-			set_variable = { name = vptl_presidential_terms_served value = 2 }
-			set_variable = vptl_presidential_term_limited
-			set_variable = vptl_presidential_historical_service_initialized
-			remove_modifier = modifier_vptl_presidential_first_term
-			remove_modifier = modifier_vptl_presidential_second_term
-			remove_modifier = modifier_vptl_presidential_term_limited
-			add_modifier = {
-				name = modifier_vptl_presidential_term_limited
-			}
-			vptl_refresh_presidential_office_markers = yes
-		}
 		ruler ?= {
 			if = {
 				limit = {
@@ -1442,13 +1408,6 @@ vptl_update_presidential_successor = {
 				}
 				vptl_try_set_presidential_successor_by_template = { TEMPLATE = PRG_policarpo_patino }
 				vptl_try_set_presidential_successor_by_template = { TEMPLATE = PRG_policarpo_patino_regular }
-			}
-			if = {
-				limit = {
-					c:TEX ?= this
-					ruler ?= { has_template = TEX_david_burnet }
-				}
-				vptl_try_set_presidential_successor_by_template = { TEMPLATE = vptl_tex_lorenzo_de_zavala }
 			}
 			if = {
 				limit = {

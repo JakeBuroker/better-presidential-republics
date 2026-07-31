@@ -113,8 +113,8 @@ foreach ($file in $scanFiles) {
 		if ($displayPath -match '^(common|gui|localization)\\' -and $lines[$i] -match '\b(PLACEHOLDER|UNRESOLVED|FIXME)\b') {
 			Add-Issue "placeholder-text" $displayPath ($i + 1) "Obvious unresolved placeholder text is present."
 		}
-		if ($displayPath -match '^common\\scripted_effects\\' -and $lines[$i] -match '\bvptl_usa_martin_van_buren\b') {
-			Add-Issue "fallback-template-target" $displayPath ($i + 1) "Active scripted effects should not target BPR's non-vanilla Martin Van Buren fallback template."
+		if ($displayPath -match '^common\\scripted_effects\\' -and $lines[$i] -match '\bhas_template\s*=\s*vptl_|\bTEMPLATE\s*=\s*vptl_') {
+			Add-Issue "fallback-template-target" $displayPath ($i + 1) "Active scripted effects should not target BPR-owned character templates; use vanilla templates or generic eligibility."
 		}
 	}
 }
