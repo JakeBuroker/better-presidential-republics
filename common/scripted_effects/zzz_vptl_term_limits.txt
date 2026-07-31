@@ -2638,6 +2638,60 @@ vptl_prune_invalid_presidential_campaign_ticket_slots = {
 	}
 }
 
+vptl_promote_running_mate_for_dead_presidential_ticket_head = {
+	if = {
+		limit = {
+			in_election_campaign = yes
+			has_variable = vptl_presidential_election_transition
+			NOT = { has_variable = vptl_presidential_election_settlement_in_progress }
+			exists = scope:vptl_presidential_dead_character
+			has_variable = vptl_presidential_ticket_candidate
+			has_variable = vptl_presidential_ticket_running_mate
+			var:vptl_presidential_ticket_candidate ?= {
+				this = scope:vptl_presidential_dead_character
+				NOT = { is_character_alive = yes }
+			}
+			var:vptl_presidential_ticket_running_mate ?= {
+				vptl_presidential_successor_candidate_eligible = yes
+				NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
+				NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
+			}
+		}
+		set_variable = { name = vptl_presidential_ticket_candidate value = var:vptl_presidential_ticket_running_mate }
+		remove_variable = vptl_presidential_ticket_running_mate
+		if = {
+			limit = { has_variable = vptl_presidential_debug_logging }
+			debug_log = "BPR checkpoint=ticket_death_promote side=incumbent [TimeKeeper.GetCurrentDate.GetString] country=[THIS.GetCountry.GetNameNoFormatting]"
+		}
+	}
+
+	if = {
+		limit = {
+			in_election_campaign = yes
+			has_variable = vptl_presidential_election_transition
+			NOT = { has_variable = vptl_presidential_election_settlement_in_progress }
+			exists = scope:vptl_presidential_dead_character
+			has_variable = vptl_presidential_opposition_candidate
+			has_variable = vptl_presidential_opposition_running_mate
+			var:vptl_presidential_opposition_candidate ?= {
+				this = scope:vptl_presidential_dead_character
+				NOT = { is_character_alive = yes }
+			}
+			var:vptl_presidential_opposition_running_mate ?= {
+				vptl_presidential_successor_candidate_eligible = yes
+				NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
+				NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
+			}
+		}
+		set_variable = { name = vptl_presidential_opposition_candidate value = var:vptl_presidential_opposition_running_mate }
+		remove_variable = vptl_presidential_opposition_running_mate
+		if = {
+			limit = { has_variable = vptl_presidential_debug_logging }
+			debug_log = "BPR checkpoint=ticket_death_promote side=opposition [TimeKeeper.GetCurrentDate.GetString] country=[THIS.GetCountry.GetNameNoFormatting]"
+		}
+	}
+}
+
 vptl_rebuild_presidential_campaign_ticket = {
 	if = {
 		limit = {

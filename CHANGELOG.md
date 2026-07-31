@@ -9,4 +9,4 @@
 - Makes the final visible winning ticket authoritative after vanilla determines the winning political side.
 - Guards election settlement against nested ruler-selection callbacks and suppresses duplicate ruler notifications only around BPR-directed handoffs.
 - Suppresses vanilla's temporary election-ruler toast for the duration of a BPR presidential campaign so the finalized results card is authoritative.
-- Prevents duplicate owner/home-country death repairs and keeps surviving running mates out of presidential-slot rerolls.
+- Prevents duplicate owner/home-country death repairs and promotes only a dead ticket head's own surviving running mate before filling that ticket's new VP vacancy.

@@ -32,7 +32,7 @@ Use a presidential republic with an active election campaign, then test these in
 
 Expected result for each case: the custom election panel remains usable or immediately repopulates, dead portraits disappear, blank character scopes are not shown, the election-transition state is not restarted, and the election can still finish normally.
 
-Only the dead or invalid slot should change. In particular, replacing either presidential candidate must not promote or reroll that side's surviving running mate, and a character whose owner and home country are identical must not cause two repair passes.
+When a presidential candidate dies, that same ticket's surviving running mate should move into the presidential slot and only its newly vacant running-mate slot should refill. Killing a running mate should refill only that running-mate slot. The opposite ticket must remain unchanged, and a character whose owner and home country are identical must not cause two repair passes.
 
 ## Vanilla-Aligned Election Regression Checklist
 
