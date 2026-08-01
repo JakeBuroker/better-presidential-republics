@@ -341,8 +341,23 @@ if ((Test-Path $presidentialEffectsPath) -and (Test-Path $presidentialOnActionsP
 		}
 		$installIndex = $settlementBlock.IndexOf("vptl_install_final_presidential_ticket = yes")
 		$clearIndex = $settlementBlock.IndexOf("remove_variable = vptl_presidential_ticket_candidate")
+		$termRecordIndex = $settlementBlock.IndexOf("vptl_record_presidential_term_for_current_ruler = yes")
 		if ($installIndex -lt 0 -or $clearIndex -lt 0 -or $clearIndex -lt $installIndex) {
 			Add-Issue "election-settlement-order" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Campaign ticket variables must be cleared only after the final ticket is installed."
+		}
+		if ($termRecordIndex -lt 0 -or $termRecordIndex -lt $clearIndex) {
+			Add-Issue "election-term-order" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "The elected presidential term must be recorded only after the completed campaign ticket is cleared."
+		}
+	}
+
+	$effectLines = [System.IO.File]::ReadAllLines($presidentialEffectsPath)
+	for ($i = 0; $i -lt $effectLines.Count; $i++) {
+		if ($effectLines[$i] -match '^\s*var:vptl_presidential_winning_ticket_side\s*=') {
+			$windowStart = [Math]::Max(0, $i - 4)
+			$guardWindow = ($effectLines[$windowStart..$i] -join "`n")
+			if ($guardWindow -notmatch 'has_variable\s*=\s*vptl_presidential_winning_ticket_side') {
+				Add-Issue "winning-side-guard" "common\scripted_effects\zzz_vptl_term_limits.txt" ($i + 1) "Winning-ticket-side comparisons must be guarded when ambiguous settlement leaves the variable unset."
+			}
 		}
 	}
 	$onActionText = [System.IO.File]::ReadAllText($presidentialOnActionsPath)
@@ -356,6 +371,57 @@ if ((Test-Path $presidentialEffectsPath) -and (Test-Path $presidentialOnActionsP
 	}
 	if ($electionEndBlock -match '\bvptl_post_presidential_transition_notification\s*=') {
 		Add-Issue "election-notification" "common\on_actions\zzz_vptl_term_limits.txt" 0 "Election end must not post a separate BPR transition notification."
+	}
+
+	$initializationBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_initialize_presidential_term_limits"
+	if ($initializationBlock -notmatch 'NOT\s*=\s*\{\s*has_variable\s*=\s*vptl_presidential_initial_term_seeded\s*\}' -or
+		$initializationBlock -notmatch 'set_variable\s*=\s*\{\s*name\s*=\s*vptl_presidential_terms_served\s+value\s*=\s*1\s*\}') {
+		Add-Issue "initial-term-seed" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Initial presidential term credit must be guarded and seed one term without repeated increments."
+	}
+	if ($initializationBlock -notmatch 'NOT\s*=\s*\{\s*has_variable\s*=\s*vptl_presidential_initial_successor_term_seeded\s*\}' -or
+		$initializationBlock -notmatch 'set_variable\s*=\s*vptl_presidential_initial_successor_term_seeded') {
+		Add-Issue "initial-successor-seed" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Initial successor term credit must use a country guard that is set only after a valid successor exists."
+	}
+}
+
+$presidentialTriggersPath = Join-Path $resolvedModPath "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt"
+$presidentialGuiPath = Join-Path $resolvedModPath "common\scripted_guis\zzz_vptl_term_limits.txt"
+if ((Test-Path $presidentialTriggersPath) -and (Test-Path $presidentialGuiPath)) {
+	$candidateEligibilityBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_candidate_eligible"
+	$newSuccessorEligibilityBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_new_successor_candidate_eligible"
+	$sittingSuccessorEligibilityBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_sitting_successor_handoff_eligible"
+	$ticketValidationBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_campaign_ticket_valid"
+	$incumbentRunningMateGuiBlock = Get-TopLevelBlockText $presidentialGuiPath "vptl_show_presidential_ticket_running_mate_sgui"
+	$oppositionRunningMateGuiBlock = Get-TopLevelBlockText $presidentialGuiPath "vptl_show_presidential_opposition_running_mate_sgui"
+
+	if ([string]::IsNullOrWhiteSpace($candidateEligibilityBlock) -or
+		[string]::IsNullOrWhiteSpace($newSuccessorEligibilityBlock) -or
+		[string]::IsNullOrWhiteSpace($sittingSuccessorEligibilityBlock)) {
+		Add-Issue "eligibility-layers" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Separate presidential-candidate, new-successor, and sitting-successor eligibility triggers are required."
+	}
+	if ($candidateEligibilityBlock -match 'vptl_vice_presidential_terms_served|character_role_vptl_former_president') {
+		Add-Issue "presidential-eligibility" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Presidential candidates must not be blocked by successor-term count or former-president history."
+	}
+	if ($newSuccessorEligibilityBlock -notmatch 'vptl_vice_presidential_terms_served' -or
+		$newSuccessorEligibilityBlock -notmatch 'character_role_vptl_former_president') {
+		Add-Issue "successor-selection-eligibility" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "New successor selection must cap recorded successor terms and block former presidents."
+	}
+	if ($sittingSuccessorEligibilityBlock -match 'vptl_vice_presidential_terms_served|character_role_vptl_former_president') {
+		Add-Issue "successor-handoff-eligibility" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Sitting successor handoff must not apply new-term or former-president selection restrictions."
+	}
+	foreach ($block in @($ticketValidationBlock, $incumbentRunningMateGuiBlock, $oppositionRunningMateGuiBlock)) {
+		if ($block -notmatch '\bvptl_presidential_new_successor_candidate_eligible\s*=\s*yes') {
+			Add-Issue "running-mate-eligibility" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Ticket validation and both running-mate GUI slots must use new-successor selection eligibility."
+			break
+		}
+	}
+}
+
+$roadmapPath = Join-Path $resolvedModPath "docs\roadmap.md"
+if (Test-Path $roadmapPath) {
+	$roadmapText = [System.IO.File]::ReadAllText($roadmapPath)
+	if ($roadmapText -match '(?i)incumbent reelection model|voluntary retirement|renomination loss|comeback (?:campaign|attempt)|incumbency.*(?:bonus|adjustment)|popularity.*election bonus') {
+		Add-Issue "scrapped-roadmap" "docs\roadmap.md" 0 "Scrapped incumbent-reelection or candidate-performance roadmap text remains."
 	}
 }
 

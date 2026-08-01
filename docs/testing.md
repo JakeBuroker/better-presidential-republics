@@ -74,6 +74,22 @@ Test these in order:
 
 Expected result for each actual presidential death: one final intended successor becomes ruler, president numbering changes at most once, accession type is `Succeeded to office`, current-ruler and successor variables resynchronize, the previous successor role is removed from the new president, no more than one BPR transition notification posts for that ruler, and the custom election ticket remains usable.
 
+## Term Accounting and Eligibility Checklist
+
+Run these cases in order and verify the character variables before and after one monthly tick or save reload:
+
+1. Start a non-USA presidential republic whose incumbent has no explicit BPR seed. Confirm `vptl_presidential_terms_served = 1`, initial-incumbent accession text, no new four-year first-term modifier, no ruler change or transition notification, and no second startup/monthly increment.
+2. Let that incumbent win the next election. Confirm the count becomes 2 exactly once, term-limited status appears, the count remains 2 after a monthly tick, and the incumbent is absent from the following campaign's presidential slots.
+3. Start the USA in 1836. Confirm Andrew Jackson remains at 2 presidential terms and John C. Calhoun remains at 2 successor terms; neither value is reset or incremented by startup.
+4. Start a country with a generic valid successor. Confirm `vptl_vice_presidential_terms_served = 1`, then reload and tick one month to confirm it remains 1.
+5. Give a sitting successor a second recorded successor term. Confirm they remain displayed and immediately succeed if the president dies, are rejected for a third running-mate term, and remain eligible for a presidential slot when otherwise qualified.
+6. Use a living one-term former president. Confirm they may run for president, cannot be selected as a new successor, lose the Former President role while restored to office, and increment their existing presidential count rather than resetting it.
+7. Test an incumbent reelection and a new-president victory. Each result must add exactly one presidential term and one successor term, with no nested `on_ruler_selected` or monthly duplicate.
+   For the incumbent case, confirm the winner remains installed while the completed campaign ticket clears, then verify the two-term service trait and term-limited marker both remain after a monthly tick.
+8. Kill a president outside a campaign and during a campaign. The sitting successor must take office with `Succeeded to office`, receive no elected presidential-term credit from succession, continue accumulating presidential years, and receive presidential term 1 only after later winning an election.
+
+Nonconsecutive presidencies currently reuse the character's one stored president-number variable; separate numbering for multiple service episodes is deferred.
+
 ## Reporting Template
 
 When reporting a manual test, include:

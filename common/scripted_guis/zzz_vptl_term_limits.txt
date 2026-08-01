@@ -90,7 +90,7 @@ vptl_show_presidential_successor_sgui = {
 		NOT = { has_law_or_variant = law_type:law_single_party_state }
 		has_variable = vptl_presidential_successor
 		var:vptl_presidential_successor ?= {
-			vptl_presidential_saved_successor_handoff_eligible = yes
+			vptl_presidential_sitting_successor_handoff_eligible = yes
 		}
 	}
 }
@@ -119,7 +119,7 @@ vptl_show_presidential_ticket_running_mate_sgui = {
 		has_variable = vptl_presidential_ticket_running_mate
 		var:vptl_presidential_ticket_running_mate ?= {
 			is_character_alive = yes
-			vptl_presidential_successor_candidate_eligible = yes
+			vptl_presidential_new_successor_candidate_eligible = yes
 		}
 	}
 }
@@ -155,7 +155,7 @@ vptl_show_presidential_opposition_running_mate_sgui = {
 			is_ruler_of_own_country = no
 			is_heir_of_own_country = no
 			NOT = { has_variable = vptl_presidential_term_limited }
-			vptl_presidential_successor_candidate_eligible = yes
+			vptl_presidential_new_successor_candidate_eligible = yes
 		}
 	}
 }

@@ -2,8 +2,8 @@
 
 ## Current Feature Set
 
-- Presidential term tracking: first term, second term, term-limited status, and expected office-leaving date.
-- Vice-president/successor tracking: visible successor in the government panel, with term counters and ineligibility after repeated service.
+- Presidential term tracking: first elected term, second elected term, term-limited status, expected office-leaving date, and one-time credit for the initial incumbent's underway term.
+- Vice-president/successor tracking: visible successor in the government panel, one-time credit for the initial successor, and ineligibility for selection to a third successor term without breaking sitting-successor handoff.
 - Stable succession handling: when a president dies, retires, or is removed, the tracked successor is promoted where possible instead of a random party/IG figure.
 - Election edge-case repair: catches campaign-period ruler swaps, term-limited winners, and ineligible USA winners.
 - President numbering: displays the president number in the government panel and stores it on the character history marker.
@@ -13,7 +13,9 @@
 - Current successor marker: the active vice president or constitutional successor is visibly tagged as a presidential successor.
 - Constitutional flavor line: a small government-panel line explains the presidential system without adding gameplay weight.
 - Successor title coverage: uses true vice-president labels where appropriate and cabinet/legislative stand-ins for countries without a clean VP office.
-- Vanilla-safe startup additions: adds only a few missing start-date figures needed for recognizable presidential succession.
+- Vanilla-safe character handling: uses available vanilla politicians and remains compatible with external character packs without shipping replacement historical templates.
+
+Former presidents remain eligible to run for president when otherwise qualified, but cannot be selected for a new vice-presidential or constitutional-successor term. Current presidents do not retain former-president, vice-president, or successor roles. Separate president numbers for nonconsecutive service episodes remain deferred.
 
 ## Low-CPU Follow-Up Ideas
 

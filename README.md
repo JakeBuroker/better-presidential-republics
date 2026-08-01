@@ -4,12 +4,13 @@ A lightweight Victoria 3 gameplay/UI mod that makes presidential republics feel 
 
 ## Features
 
-- Tracks presidential terms for elective presidential republics.
+- Tracks elected presidential terms for elective presidential republics, including the term already underway when BPR first begins tracking a country.
 - Marks second-term presidents as term-limited before the next election cycle.
-- Tracks vice-presidential/successor terms and blocks overused successors.
+- Tracks vice-presidential/constitutional-successor terms, credits the starting successor's term once, and blocks selection for a third successor term.
 - Blocks former presidents from being picked as vice presidents/successors.
 - Adds USA presidential origin checks using explicit historical markers, generated-character home country, and a conservative historical fallback.
 - Promotes the tracked vice president/successor when the president dies or is removed.
+- Keeps sitting successors eligible for constitutional handoff even after their second successor term, while leaving them eligible to run for president when otherwise qualified.
 - Corrects common election and campaign edge cases where the game promotes the wrong politician.
 - Shows the president number beside the ruler title in the Politics > Government panel.
 - Shows current term status and expected office-leaving date in the government panel.
@@ -25,6 +26,8 @@ A lightweight Victoria 3 gameplay/UI mod that makes presidential republics feel 
 - Adds a presidential transition notification when a tracked president changes.
 - Seeds easy 1836 presidential numbering for several vanilla presidential republics.
 - Uses vanilla character templates for startup and succession handling and does not ship character-pack stand-ins for missing historical politicians.
+
+The same character may return for a nonconsecutive presidency, but the current president-number state is stored once per character. Separate numbering for multiple nonconsecutive service episodes is deferred.
 
 ## Compatibility
 

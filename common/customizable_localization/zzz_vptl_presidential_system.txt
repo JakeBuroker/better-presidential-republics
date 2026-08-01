@@ -104,7 +104,7 @@ vptl_election_results_presidential_successor_line = {
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
 			has_variable = vptl_presidential_successor
 			var:vptl_presidential_successor ?= {
-				vptl_presidential_saved_successor_handoff_eligible = yes
+				vptl_presidential_sitting_successor_handoff_eligible = yes
 			}
 		}
 		localization_key = vptl_election_results_presidential_successor_line_text

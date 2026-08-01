@@ -24,8 +24,6 @@ This file separates planned features from current behavior. Do not treat roadmap
 - Delayed president-elect and inauguration period.
 - Constitution journal for presidential republic setup.
 - Country-specific term, age, and birthplace rules.
-- Incumbent reelection model distinguishing reelection, open election, renomination loss, and comeback attempts.
-- Candidate prominence adjustments based on incumbency and presidential popularity.
 - More country-specific successor offices and clearer succession-law labels.
 
 ## Release Discipline
