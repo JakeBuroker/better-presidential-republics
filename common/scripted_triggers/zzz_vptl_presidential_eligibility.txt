@@ -192,3 +192,53 @@ vptl_presidential_successor_uses_vice_president_title = {
 		AND = { exists = c:CUB c:CUB ?= this }
 	}
 }
+
+vptl_presidential_transition_qualifies = {
+	has_law_or_variant = law_type:law_presidential_republic
+	government_transfer_of_power = presidential_elective
+	NOT = { has_law_or_variant = law_type:law_single_party_state }
+}
+
+vptl_presidential_uses_delayed_inauguration = {
+	has_variable = vptl_presidential_inauguration_rule
+	var:vptl_presidential_inauguration_rule > 0
+}
+
+vptl_presidential_inauguration_is_due = {
+	has_variable = vptl_presidential_inauguration_pending
+	OR = {
+		has_variable = vptl_presidential_inauguration_due
+		NOT = { has_variable = vptl_presidential_inauguration_timer }
+	}
+}
+
+vptl_president_elect_is_valid = {
+	has_variable = vptl_president_elect
+	var:vptl_president_elect ?= {
+		owner ?= root
+		vptl_presidential_candidate_eligible = yes
+	}
+}
+
+# Former presidents remain eligible here until they reach the presidential term limit.
+vptl_presidential_transition_replacement_candidate_eligible = {
+	vptl_presidential_candidate_eligible = yes
+	is_ruler_of_own_country = no
+	NOT = { owner.var:vptl_presidential_transition_losing_candidate ?= this }
+	NOT = { owner.var:vptl_presidential_transition_losing_running_mate ?= this }
+	NOT = { owner.var:vptl_vice_president_elect ?= this }
+}
+
+# Vice-president-elect selection keeps the existing former-president and two-term restrictions.
+vptl_presidential_transition_replacement_running_mate_eligible = {
+	vptl_presidential_new_successor_candidate_eligible = yes
+	NOT = { owner.var:vptl_president_elect ?= this }
+	NOT = { owner.var:vptl_presidential_transition_losing_candidate ?= this }
+	NOT = { owner.var:vptl_presidential_transition_losing_running_mate ?= this }
+}
+
+vptl_presidential_transition_sitting_successor_replacement_eligible = {
+	vptl_presidential_new_successor_candidate_eligible = yes
+	NOT = { owner.var:vptl_president_elect ?= this }
+	NOT = { owner.var:vptl_vice_president_elect ?= this }
+}

@@ -95,7 +95,8 @@ $literalPatterns = @(
 	@{ Kind = "bad-name-token"; Pattern = 'first_name\s*=\s*"Louis-Mathieu"'; Message = "Hyphenated quoted first name should be ASCII key plus localization." },
 	@{ Kind = "bad-name-token"; Pattern = '(first_name|last_name)\s*=\s*"Molé"'; Message = "Accented quoted name should be ASCII key plus localization." },
 	@{ Kind = "usage-syntax"; Pattern = "^\s*[A-Za-z0-9_]+_usage\s*=\s*\("; Message = "Usage block opens with '(' instead of '{'." },
-	@{ Kind = "fake-template"; Pattern = "^\s*REPLACE_OR_CREATE:(commander_usage|interest_group_leader_usage)\s*="; Message = "Usage block was turned into a fake character template." }
+	@{ Kind = "fake-template"; Pattern = "^\s*REPLACE_OR_CREATE:(commander_usage|interest_group_leader_usage)\s*="; Message = "Usage block was turned into a fake character template." },
+	@{ Kind = "unknown-effect"; Pattern = "^\s*send_message\s*="; Message = "Victoria 3 does not support the send_message effect; use post_notification." }
 )
 
 foreach ($file in $scanFiles) {
@@ -106,9 +107,6 @@ foreach ($file in $scanFiles) {
 			if ($lines[$i] -match $patternInfo.Pattern) {
 				Add-Issue $patternInfo.Kind $displayPath ($i + 1) $patternInfo.Message
 			}
-		}
-		if ($displayPath -match '^(common|gui|localization)\\' -and $lines[$i] -match '(?i)\bpresident-elect\b') {
-			Add-Issue "future-feature-text" $displayPath ($i + 1) "President-elect text is present in script, GUI, or localization, but delayed handoff is not implemented."
 		}
 		if ($displayPath -match '^(common|gui|localization)\\' -and $lines[$i] -match '\b(PLACEHOLDER|UNRESOLVED|FIXME)\b') {
 			Add-Issue "placeholder-text" $displayPath ($i + 1) "Obvious unresolved placeholder text is present."
@@ -221,6 +219,12 @@ foreach ($definition in Get-TopLevelDefinitions "common\messages") {
 	if ($definition.Name -match '^vptl_') {
 		Test-LocalizedKey "notification_$($definition.Name)_name" "missing-localization" $definition.Path $definition.Line
 		Test-LocalizedKey "notification_$($definition.Name)_desc" "missing-localization" $definition.Path $definition.Line
+	}
+}
+foreach ($definition in Get-TopLevelDefinitions "common\journal_entries") {
+	if ($definition.Name -match '^je_vptl_') {
+		Test-LocalizedKey $definition.Name "missing-localization" $definition.Path $definition.Line
+		Test-LocalizedKey "$($definition.Name)_reason" "missing-localization" $definition.Path $definition.Line
 	}
 }
 foreach ($file in $scanFiles | Where-Object { (Get-DisplayPath $_.FullName) -match '^(common\\customizable_localization|gui)\\' }) {
@@ -336,23 +340,66 @@ if ((Test-Path $presidentialEffectsPath) -and (Test-Path $presidentialOnActionsP
 		if ($settlementBlock -match '\bvptl_post_presidential_transition_notification\s*=') {
 			Add-Issue "election-notification" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Normal election settlement must not post the BPR transition notification."
 		}
-		if ($settlementBlock -notmatch '\bvptl_finish_presidential_election_ruler_notification_suppression\s*=\s*yes') {
-			Add-Issue "election-notification" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Election settlement must finish its campaign-scoped vanilla ruler-notification suppression."
-		}
-		$installIndex = $settlementBlock.IndexOf("vptl_install_final_presidential_ticket = yes")
+		$certifyIndex = $settlementBlock.IndexOf("vptl_certify_presidential_election = yes")
 		$clearIndex = $settlementBlock.IndexOf("remove_variable = vptl_presidential_ticket_candidate")
-		$termRecordIndex = $settlementBlock.IndexOf("vptl_record_presidential_term_for_current_ruler = yes")
-		if ($installIndex -lt 0 -or $clearIndex -lt 0 -or $clearIndex -lt $installIndex) {
-			Add-Issue "election-settlement-order" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Campaign ticket variables must be cleared only after the final ticket is installed."
+		if ($certifyIndex -lt 0 -or $clearIndex -lt 0 -or $clearIndex -lt $certifyIndex) {
+			Add-Issue "election-settlement-order" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Campaign ticket variables must be cleared only after the final ticket is certified."
 		}
-		if ($termRecordIndex -lt 0 -or $termRecordIndex -lt $clearIndex) {
-			Add-Issue "election-term-order" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "The elected presidential term must be recorded only after the completed campaign ticket is cleared."
+		if ($settlementBlock -match '\b(vptl_record_presidential_term_for_current_ruler|vptl_record_vice_presidential_term_for_current_successor|set_character_as_ruler)\s*=') {
+			Add-Issue "election-certification-only" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Election settlement must certify the ticket without installing it or recording terms."
+		}
+	}
+
+	$certificationBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_certify_presidential_election"
+	$inaugurationBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_inaugurate_president_elect"
+	$schedulingBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_schedule_presidential_inauguration"
+	$cleanupBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_clear_presidential_transition_variables"
+	$cleanupWrapperBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_cleanup_presidential_inauguration_transition"
+	$journalBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_ensure_presidential_transition_journal"
+	foreach ($required in @('vptl_president_elect', 'vptl_presidential_inauguration_pending', 'vptl_presidential_certification_complete', 'vptl_schedule_presidential_inauguration', 'vptl_finish_presidential_election_ruler_notification_suppression')) {
+		if ($certificationBlock -notmatch "\b$([regex]::Escape($required))\b") {
+			Add-Issue "election-certification" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Certification is missing required state or routing '$required'."
+		}
+	}
+	if ($certificationBlock -match '\b(vptl_record_presidential_term_for_current_ruler|vptl_record_vice_presidential_term_for_current_successor|set_character_as_ruler)\s*=') {
+		Add-Issue "election-certification-only" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Certification must not install the winner or record elected service."
+	}
+	foreach ($guard in @('vptl_presidential_inauguration_pending', 'vptl_presidential_inauguration_is_due', 'vptl_presidential_inauguration_in_progress', 'vptl_presidential_inauguration_completed')) {
+		if ($inaugurationBlock -notmatch "\b$([regex]::Escape($guard))\b") {
+			Add-Issue "inauguration-guard" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Inauguration is missing guard '$guard'."
+		}
+	}
+	$allEffectText = [System.IO.File]::ReadAllText($presidentialEffectsPath)
+	foreach ($termEffect in @('vptl_record_presidential_term_for_current_ruler', 'vptl_record_vice_presidential_term_for_current_successor')) {
+		if (([regex]::Matches($inaugurationBlock, "\b$termEffect\s*=\s*yes")).Count -ne 1) {
+			Add-Issue "inauguration-term-recording" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Inauguration must call '$termEffect' exactly once."
+		}
+		if (([regex]::Matches($allEffectText, "(?m)^\s+$termEffect\s*=\s*yes\s*$")).Count -ne 1) {
+			Add-Issue "inauguration-term-recording" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "'$termEffect' must have inauguration as its sole call site."
+		}
+	}
+	if ($schedulingBlock -notmatch '(?s)else\s*=\s*\{.*set_variable\s*=\s*vptl_presidential_inauguration_due.*vptl_inaugurate_president_elect\s*=\s*yes') {
+		Add-Issue "instant-inauguration" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Rule 0 must mark the pending inauguration due and invoke the common inauguration effect synchronously."
+	}
+	foreach ($state in @('vptl_president_elect', 'vptl_vice_president_elect', 'vptl_presidential_inauguration_pending', 'vptl_presidential_inauguration_timer', 'vptl_presidential_inauguration_due', 'vptl_presidential_inauguration_completed', 'vptl_presidential_certification_complete', 'vptl_presidential_transition_outgoing_ruler', 'vptl_presidential_transition_winning_party', 'vptl_presidential_transition_winning_ig', 'vptl_presidential_transition_losing_candidate', 'vptl_presidential_transition_losing_running_mate', 'vptl_presidential_transition_incumbent_reelected', 'vptl_presidential_transition_lame_duck', 'vptl_presidential_inauguration_in_progress', 'vptl_presidential_transition_unusual_notification_posted', 'vptl_presidential_final_elected_ruler', 'vptl_presidential_final_running_mate', 'vptl_presidential_winning_ticket_side')) {
+		if ($cleanupBlock -notmatch "remove_variable\s*=\s*$([regex]::Escape($state))") {
+			Add-Issue "inauguration-cleanup" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Transition cleanup does not remove '$state'."
+		}
+	}
+	foreach ($cleanupAction in @('remove_modifier\s*=\s*modifier_vptl_lame_duck_administration', 'vptl_refresh_presidential_elect_roles\s*=\s*yes', 'vptl_finish_presidential_election_ruler_notification_suppression\s*=\s*yes')) {
+		if ($cleanupWrapperBlock -notmatch $cleanupAction) {
+			Add-Issue "inauguration-cleanup" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Transition cleanup is missing a required role, modifier, or suppression cleanup action."
+		}
+	}
+	foreach ($days in @(30, 60, 90, 120)) {
+		if (([regex]::Matches($journalBlock, "add_journal_entry\s*=\s*\{\s*type\s*=\s*je_vptl_presidential_transition_$days\s*\}")).Count -ne 1) {
+			Add-Issue "inauguration-journal-routing" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "The $days-day configuration must schedule exactly one matching journal variant."
 		}
 	}
 
 	$effectLines = [System.IO.File]::ReadAllLines($presidentialEffectsPath)
 	for ($i = 0; $i -lt $effectLines.Count; $i++) {
-		if ($effectLines[$i] -match '^\s*var:vptl_presidential_winning_ticket_side\s*=') {
+		if ($effectLines[$i] -match '\bvar:vptl_presidential_winning_ticket_side\s*=') {
 			$windowStart = [Math]::Max(0, $i - 4)
 			$guardWindow = ($effectLines[$windowStart..$i] -join "`n")
 			if ($guardWindow -notmatch 'has_variable\s*=\s*vptl_presidential_winning_ticket_side') {
@@ -365,6 +412,14 @@ if ((Test-Path $presidentialEffectsPath) -and (Test-Path $presidentialOnActionsP
 	$campaignPreparationBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_prepare_presidential_term_limits_for_campaign"
 	if ($campaignPreparationBlock -notmatch '\bvptl_begin_presidential_election_ruler_notification_suppression\s*=\s*yes') {
 		Add-Issue "election-notification" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Campaign preparation must suppress vanilla's temporary election-ruler notification before election resolution."
+	}
+	$actualRulerCaptureIndex = $campaignPreparationBlock.IndexOf("set_variable = { name = vptl_presidential_transition_outgoing_ruler value = ruler }")
+	$trackedRulerCaptureIndex = $campaignPreparationBlock.IndexOf("set_variable = { name = vptl_presidential_transition_outgoing_ruler value = var:vptl_presidential_current_ruler }")
+	$syncRulerIndex = $campaignPreparationBlock.IndexOf("vptl_sync_presidential_current_ruler = yes")
+	if ($actualRulerCaptureIndex -lt 0 -or $trackedRulerCaptureIndex -lt 0 -or
+		$actualRulerCaptureIndex -gt $trackedRulerCaptureIndex -or
+		$syncRulerIndex -lt 0 -or $syncRulerIndex -gt $actualRulerCaptureIndex) {
+		Add-Issue "campaign-outgoing-ruler" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Campaign preparation must synchronize and capture the actual living ruler before using the tracked-ruler fallback."
 	}
 	if ($electionEndBlock -notmatch '\bvptl_settle_presidential_election\s*=\s*yes') {
 		Add-Issue "election-settlement" "common\on_actions\zzz_vptl_term_limits.txt" 0 "Election end must enter the single settlement effect."
@@ -393,6 +448,9 @@ if ((Test-Path $presidentialTriggersPath) -and (Test-Path $presidentialGuiPath))
 	$ticketValidationBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_campaign_ticket_valid"
 	$incumbentRunningMateGuiBlock = Get-TopLevelBlockText $presidentialGuiPath "vptl_show_presidential_ticket_running_mate_sgui"
 	$oppositionRunningMateGuiBlock = Get-TopLevelBlockText $presidentialGuiPath "vptl_show_presidential_opposition_running_mate_sgui"
+	$replacementPresidentBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_transition_replacement_candidate_eligible"
+	$replacementVicePresidentBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_transition_replacement_running_mate_eligible"
+	$transitionSuccessorBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_transition_sitting_successor_replacement_eligible"
 
 	if ([string]::IsNullOrWhiteSpace($candidateEligibilityBlock) -or
 		[string]::IsNullOrWhiteSpace($newSuccessorEligibilityBlock) -or
@@ -414,6 +472,103 @@ if ((Test-Path $presidentialTriggersPath) -and (Test-Path $presidentialGuiPath))
 			Add-Issue "running-mate-eligibility" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Ticket validation and both running-mate GUI slots must use new-successor selection eligibility."
 			break
 		}
+	}
+	if ($replacementPresidentBlock -notmatch '\bvptl_presidential_candidate_eligible\s*=\s*yes' -or
+		$replacementPresidentBlock -match 'character_role_vptl_former_president|vptl_vice_presidential_terms_served') {
+		Add-Issue "transition-president-eligibility" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Replacement presidents-elect must allow non-term-limited former presidents while retaining presidential term limits."
+	}
+	if ($replacementVicePresidentBlock -notmatch '\bvptl_presidential_new_successor_candidate_eligible\s*=\s*yes') {
+		Add-Issue "transition-vice-president-eligibility" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Replacement vice presidents-elect must retain former-president and two-term vice-president exclusions."
+	}
+	if ($transitionSuccessorBlock -notmatch 'owner\.var:vptl_president_elect' -or
+		$transitionSuccessorBlock -notmatch 'owner\.var:vptl_vice_president_elect') {
+		Add-Issue "transition-sitting-successor-eligibility" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Pending-transition sitting-successor selection must exclude both certified elects."
+	}
+}
+
+$electRolesPath = Join-Path $resolvedModPath "common\character_roles\zzz_vptl_successor_roles.txt"
+$journalEntriesPath = Join-Path $resolvedModPath "common\journal_entries\zzz_vptl_presidential_inauguration.txt"
+$journalGroupsPath = Join-Path $resolvedModPath "common\journal_entry_groups\zzz_vptl_presidential_inauguration.txt"
+$presidentialMessagesPath = Join-Path $resolvedModPath "common\messages\zzz_vptl_presidential_messages.txt"
+$presidentialModifiersPath = Join-Path $resolvedModPath "common\static_modifiers\zzz_vptl_term_limits.txt"
+foreach ($definition in @(
+	@($electRolesPath, 'character_role_vptl_president_elect'),
+	@($electRolesPath, 'character_role_vptl_vice_president_elect'),
+	@($presidentialMessagesPath, 'vptl_presidential_inauguration'),
+	@($presidentialMessagesPath, 'vptl_presidential_transition_unusual'),
+	@($presidentialModifiersPath, 'modifier_vptl_lame_duck_administration')
+)) {
+	if (-not (Test-Path $definition[0]) -or [string]::IsNullOrWhiteSpace((Get-TopLevelBlockText $definition[0] $definition[1]))) {
+		Add-Issue "inauguration-assets" $definition[0] 0 "Missing required inauguration definition '$($definition[1])'."
+	}
+}
+
+foreach ($effectName in @('vptl_initialize_presidential_constitution_defaults', 'vptl_certify_presidential_election', 'vptl_schedule_presidential_inauguration', 'vptl_inaugurate_president_elect', 'vptl_cleanup_presidential_inauguration_transition', 'vptl_maintain_presidential_inauguration_transition', 'vptl_handle_presidential_inauguration_character_death', 'vptl_repair_transition_sitting_successor', 'vptl_update_presidential_successor_unrestricted')) {
+	if ([string]::IsNullOrWhiteSpace((Get-TopLevelBlockText $presidentialEffectsPath $effectName))) {
+		Add-Issue "inauguration-effects" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Missing required inauguration effect '$effectName'."
+	}
+}
+
+$successorWrapperBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_update_presidential_successor"
+$transitionSuccessorRepairBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_repair_transition_sitting_successor"
+$transitionMaintenanceBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_maintain_presidential_inauguration_transition"
+$inaugurationBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_inaugurate_president_elect"
+if ($successorWrapperBlock -notmatch 'has_variable\s*=\s*vptl_presidential_inauguration_pending' -or
+	$successorWrapperBlock -notmatch 'vptl_repair_transition_sitting_successor\s*=\s*yes' -or
+	$successorWrapperBlock -notmatch 'vptl_update_presidential_successor_unrestricted\s*=\s*yes') {
+	Add-Issue "transition-successor-routing" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Successor maintenance must route pending transitions to protected repair and normal operation to unrestricted selection."
+}
+foreach ($requiredToken in @('vptl_president_elect', 'vptl_vice_president_elect', 'vptl_select_transition_sitting_successor_replacement')) {
+	if ($transitionSuccessorRepairBlock -notmatch "\b$requiredToken\b") {
+		Add-Issue "transition-successor-repair" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Pending-transition successor repair is missing '$requiredToken'."
+	}
+}
+if ($transitionMaintenanceBlock -notmatch 'vptl_repair_transition_sitting_successor\s*=\s*yes') {
+	Add-Issue "transition-successor-repair" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Transition maintenance must repair saves whose sitting successor equals a certified elect."
+}
+if ($inaugurationBlock -notmatch 'vptl_update_presidential_successor_unrestricted\s*=\s*yes') {
+	Add-Issue "transition-successor-routing" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Inauguration must use unrestricted successor selection only when no valid vice president-elect can be installed."
+}
+$unrestrictedCallCount = ([regex]::Matches($allEffectText, '\bvptl_update_presidential_successor_unrestricted\s*=\s*yes')).Count
+if ($unrestrictedCallCount -ne 2) {
+	Add-Issue "transition-successor-routing" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Unrestricted successor selection must be called only by the normal wrapper and the inauguration fallback."
+}
+foreach ($triggerName in @('vptl_presidential_transition_qualifies', 'vptl_presidential_uses_delayed_inauguration', 'vptl_presidential_inauguration_is_due', 'vptl_presidential_transition_replacement_candidate_eligible', 'vptl_presidential_transition_replacement_running_mate_eligible', 'vptl_presidential_transition_sitting_successor_replacement_eligible')) {
+	if ([string]::IsNullOrWhiteSpace((Get-TopLevelBlockText $presidentialTriggersPath $triggerName))) {
+		Add-Issue "inauguration-triggers" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Missing required inauguration trigger '$triggerName'."
+	}
+}
+if (Test-Path $journalEntriesPath) {
+	$journalGroupName = 'vptl_je_group_presidential_inauguration'
+	if (-not (Test-Path $journalGroupsPath)) {
+		Add-Issue "inauguration-journal-group" "common\journal_entry_groups\zzz_vptl_presidential_inauguration.txt" 0 "Missing the BPR inauguration journal group."
+	}
+	else {
+		$journalGroupBlock = Get-TopLevelBlockText $journalGroupsPath $journalGroupName
+		if ($journalGroupBlock -notmatch '\bcontext\s*=\s*country') {
+			Add-Issue "inauguration-journal-group" "common\journal_entry_groups\zzz_vptl_presidential_inauguration.txt" 0 "The BPR inauguration journal group must use country context."
+		}
+	}
+	foreach ($days in @(30, 60, 90, 120)) {
+		$entryName = "je_vptl_presidential_transition_$days"
+		$entryBlock = Get-TopLevelBlockText $journalEntriesPath $entryName
+		if ([string]::IsNullOrWhiteSpace($entryBlock) -or
+			$entryBlock -notmatch "group\s*=\s*$journalGroupName" -or
+			$entryBlock -notmatch "timeout\s*=\s*$days" -or
+			$entryBlock -notmatch "var:vptl_presidential_inauguration_rule\s*=\s*$days" -or
+			$entryBlock -notmatch '\bvptl_inaugurate_president_elect\s*=\s*yes') {
+			Add-Issue "inauguration-journal" "common\journal_entries\zzz_vptl_presidential_inauguration.txt" 0 "Journal '$entryName' must match its configured duration, fixed timeout, and common inauguration effect."
+		}
+	}
+}
+else {
+	Add-Issue "inauguration-journal" "common\journal_entries\zzz_vptl_presidential_inauguration.txt" 0 "Missing fixed-duration inauguration journals."
+}
+
+if (Test-Path $presidentialEffectsPath) {
+	$electRoleRefreshBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_refresh_presidential_elect_roles"
+	if ($electRoleRefreshBlock -match 'remove_character_role\s*=\s*character_role_vptl_vice_president(?:\s|$)|remove_variable\s*=\s*vptl_presidential_successor') {
+		Add-Issue "elect-role-preservation" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Elect-role refresh must not remove a sitting vice-president role or constitutional-successor state."
 	}
 }
 

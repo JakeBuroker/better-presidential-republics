@@ -1,0 +1,107 @@
+﻿je_vptl_presidential_transition_30 = {
+	group = vptl_je_group_presidential_inauguration
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	complete = { NOT = { has_variable = vptl_presidential_inauguration_pending } }
+	invalid = {
+		OR = {
+			NOT = { vptl_presidential_transition_qualifies = yes }
+			NOT = { var:vptl_presidential_inauguration_rule = 30 }
+		}
+	}
+	timeout = 30
+
+	on_timeout = {
+		set_variable = vptl_presidential_inauguration_due
+		vptl_inaugurate_president_elect = yes
+	}
+	on_invalid = {
+		if = {
+			limit = { NOT = { vptl_presidential_transition_qualifies = yes } }
+			vptl_cleanup_presidential_inauguration_transition = yes
+		}
+		else = { vptl_maintain_presidential_inauguration_transition = yes }
+	}
+	should_be_pinned_by_default_uninvolved_or_context = yes
+}
+
+je_vptl_presidential_transition_60 = {
+	group = vptl_je_group_presidential_inauguration
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	complete = { NOT = { has_variable = vptl_presidential_inauguration_pending } }
+	invalid = {
+		OR = {
+			NOT = { vptl_presidential_transition_qualifies = yes }
+			NOT = { var:vptl_presidential_inauguration_rule = 60 }
+		}
+	}
+	timeout = 60
+
+	on_timeout = {
+		set_variable = vptl_presidential_inauguration_due
+		vptl_inaugurate_president_elect = yes
+	}
+	on_invalid = {
+		if = {
+			limit = { NOT = { vptl_presidential_transition_qualifies = yes } }
+			vptl_cleanup_presidential_inauguration_transition = yes
+		}
+		else = { vptl_maintain_presidential_inauguration_transition = yes }
+	}
+	should_be_pinned_by_default_uninvolved_or_context = yes
+}
+
+je_vptl_presidential_transition_90 = {
+	group = vptl_je_group_presidential_inauguration
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	complete = { NOT = { has_variable = vptl_presidential_inauguration_pending } }
+	invalid = {
+		OR = {
+			NOT = { vptl_presidential_transition_qualifies = yes }
+			NOT = { var:vptl_presidential_inauguration_rule = 90 }
+		}
+	}
+	timeout = 90
+
+	on_timeout = {
+		set_variable = vptl_presidential_inauguration_due
+		vptl_inaugurate_president_elect = yes
+	}
+	on_invalid = {
+		if = {
+			limit = { NOT = { vptl_presidential_transition_qualifies = yes } }
+			vptl_cleanup_presidential_inauguration_transition = yes
+		}
+		else = { vptl_maintain_presidential_inauguration_transition = yes }
+	}
+	should_be_pinned_by_default_uninvolved_or_context = yes
+}
+
+je_vptl_presidential_transition_120 = {
+	group = vptl_je_group_presidential_inauguration
+	icon = "gfx/interface/icons/event_icons/event_newspaper.dds"
+
+	complete = { NOT = { has_variable = vptl_presidential_inauguration_pending } }
+	invalid = {
+		OR = {
+			NOT = { vptl_presidential_transition_qualifies = yes }
+			NOT = { var:vptl_presidential_inauguration_rule = 120 }
+		}
+	}
+	timeout = 120
+
+	on_timeout = {
+		set_variable = vptl_presidential_inauguration_due
+		vptl_inaugurate_president_elect = yes
+	}
+	on_invalid = {
+		if = {
+			limit = { NOT = { vptl_presidential_transition_qualifies = yes } }
+			vptl_cleanup_presidential_inauguration_transition = yes
+		}
+		else = { vptl_maintain_presidential_inauguration_transition = yes }
+	}
+	should_be_pinned_by_default_uninvolved_or_context = yes
+}

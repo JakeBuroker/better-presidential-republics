@@ -7,6 +7,7 @@
 on_monthly_pulse_country = {
 	on_actions = {
 		vptl_presidential_term_limits_monthly
+		vptl_presidential_inauguration_cleanup_monthly
 	}
 }
 
@@ -44,12 +45,17 @@ vptl_presidential_term_limits_startup = {
 	effect = {
 		every_country = {
 			limit = {
-				has_law_or_variant = law_type:law_presidential_republic
-				government_transfer_of_power = presidential_elective
-				NOT = { has_law_or_variant = law_type:law_single_party_state }
+				OR = {
+					vptl_presidential_transition_qualifies = yes
+					has_variable = vptl_presidential_inauguration_pending
+				}
 			}
-			vptl_initialize_presidential_term_limits = yes
-			vptl_repair_presidential_campaign_ticket_if_needed = yes
+			if = {
+				limit = { vptl_presidential_transition_qualifies = yes }
+				vptl_initialize_presidential_term_limits = yes
+				vptl_repair_presidential_campaign_ticket_if_needed = yes
+			}
+			else = { vptl_cleanup_presidential_inauguration_transition = yes }
 		}
 	}
 }
@@ -61,6 +67,7 @@ vptl_presidential_term_limits_monthly = {
 		NOT = { has_law_or_variant = law_type:law_single_party_state }
 	}
 	effect = {
+		vptl_maintain_presidential_inauguration_transition = yes
 		if = {
 			limit = {
 				in_election_campaign = yes
@@ -84,6 +91,14 @@ vptl_presidential_term_limits_monthly = {
 		vptl_initialize_presidential_term_limits = yes
 		vptl_record_presidential_service_time = yes
 	}
+}
+
+vptl_presidential_inauguration_cleanup_monthly = {
+	trigger = {
+		has_variable = vptl_presidential_inauguration_pending
+		NOT = { vptl_presidential_transition_qualifies = yes }
+	}
+	effect = { vptl_maintain_presidential_inauguration_transition = yes }
 }
 
 vptl_presidential_term_limits_monthly_elections = {
@@ -141,7 +156,12 @@ vptl_presidential_successor_ruler_selected = {
 				vptl_debug_log_presidential_state = yes
 			}
 			if = {
-				limit = { has_variable = vptl_presidential_election_settlement_in_progress }
+				limit = {
+					OR = {
+						has_variable = vptl_presidential_election_settlement_in_progress
+						has_variable = vptl_presidential_inauguration_in_progress
+					}
+				}
 				vptl_sync_presidential_current_ruler = yes
 			}
 			else_if = {
@@ -150,6 +170,25 @@ vptl_presidential_successor_ruler_selected = {
 					in_election_campaign = no
 				}
 				vptl_settle_presidential_election = yes
+			}
+			else_if = {
+				limit = { has_variable = vptl_presidential_inauguration_pending }
+				if = {
+					limit = {
+						has_variable = vptl_presidential_transition_outgoing_ruler
+						var:vptl_presidential_transition_outgoing_ruler ?= { is_character_alive = yes }
+						ruler ?= {
+							NOT = { owner.var:vptl_presidential_transition_outgoing_ruler ?= this }
+							NOT = { owner.var:vptl_president_elect ?= this }
+						}
+					}
+					vptl_restore_transition_outgoing_ruler = yes
+				}
+				else = {
+					vptl_sync_presidential_current_ruler = yes
+					set_variable = { name = vptl_presidential_transition_outgoing_ruler value = ruler }
+				}
+				vptl_refresh_lame_duck_administration = yes
 			}
 			else = {
 				vptl_correct_presidential_ruler_change_during_campaign = yes
@@ -167,11 +206,17 @@ vptl_presidential_character_death = {
 		save_scope_as = vptl_presidential_dead_character
 		owner = {
 			save_scope_as = vptl_presidential_death_owner_country
-			vptl_refresh_presidential_successor_if_ruler_is_stable = yes
-			vptl_promote_presidential_successor_if_ruler_is_dead = yes
-			vptl_promote_presidential_successor_if_tracked_ruler_is_dead = yes
-			vptl_apply_presidential_successor_if_current_ruler_died_during_campaign = yes
-			vptl_refresh_presidential_successor_if_ruler_is_stable = yes
+			if = {
+				limit = { has_variable = vptl_presidential_inauguration_pending }
+				vptl_handle_presidential_inauguration_character_death = yes
+			}
+			else = {
+				vptl_refresh_presidential_successor_if_ruler_is_stable = yes
+				vptl_promote_presidential_successor_if_ruler_is_dead = yes
+				vptl_promote_presidential_successor_if_tracked_ruler_is_dead = yes
+				vptl_apply_presidential_successor_if_current_ruler_died_during_campaign = yes
+				vptl_refresh_presidential_successor_if_ruler_is_stable = yes
+			}
 			vptl_promote_running_mate_for_dead_presidential_ticket_head = yes
 			vptl_rebuild_presidential_campaign_ticket = yes
 			vptl_refresh_presidential_successor_display_marker = yes

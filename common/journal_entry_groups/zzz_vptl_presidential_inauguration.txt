@@ -1,0 +1,3 @@
+﻿vptl_je_group_presidential_inauguration = {
+	context = country
+}
