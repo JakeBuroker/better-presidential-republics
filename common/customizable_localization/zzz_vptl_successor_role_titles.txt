@@ -5,6 +5,43 @@
 	text = {
 		trigger = {
 			OR = {
+				AND = { exists = c:BRE owner = { c:BRE ?= this } }
+				AND = { exists = c:FRM owner = { c:FRM ?= this } }
+				AND = { exists = c:HAM owner = { c:HAM ?= this } }
+				AND = { exists = c:LUB owner = { c:LUB ?= this } }
+			}
+		}
+		localization_key = vptl_presidential_successor_mayoral
+	}
+	text = {
+		trigger = { exists = c:KRA owner = { c:KRA ?= this } }
+		localization_key = vptl_presidential_successor_senate_successor
+	}
+	text = {
+		trigger = { exists = c:ION owner = { c:ION ?= this } }
+		localization_key = vptl_presidential_successor_high_commissioner
+	}
+	text = {
+		trigger = { exists = c:LAN owner = { c:LAN ?= this } }
+		localization_key = vptl_presidential_successor_kongsi
+	}
+	text = {
+		trigger = {
+			OR = {
+				AND = { exists = c:ORA owner = { c:ORA ?= this } }
+				AND = { exists = c:TRN owner = { c:TRN ?= this } }
+			}
+		}
+		localization_key = vptl_presidential_successor_commandant
+	}
+	text = {
+		trigger = { exists = c:PRA owner = { c:PRA ?= this } }
+		localization_key = vptl_presidential_successor_government
+	}
+
+	text = {
+		trigger = {
+			OR = {
 				AND = {
 					exists = c:PRG
 					owner = { c:PRG ?= this }

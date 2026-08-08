@@ -175,14 +175,31 @@ vptl_presidential_successor_ruler_selected = {
 				limit = { has_variable = vptl_presidential_inauguration_pending }
 				if = {
 					limit = {
+						has_variable = vptl_presidential_handoff_in_progress
+						has_variable = vptl_presidential_handoff_target
+						has_variable = vptl_presidential_pending_death_handling
+						ruler ?= { owner.var:vptl_presidential_handoff_target ?= this }
+					}
+					vptl_sync_presidential_current_ruler = yes
+					set_variable = { name = vptl_presidential_transition_outgoing_ruler value = ruler }
+				}
+				else_if = {
+					limit = {
 						has_variable = vptl_presidential_transition_outgoing_ruler
 						var:vptl_presidential_transition_outgoing_ruler ?= { is_character_alive = yes }
 						ruler ?= {
 							NOT = { owner.var:vptl_presidential_transition_outgoing_ruler ?= this }
-							NOT = { owner.var:vptl_president_elect ?= this }
 						}
 					}
 					vptl_restore_transition_outgoing_ruler = yes
+				}
+				else_if = {
+					limit = {
+						has_variable = vptl_presidential_current_ruler
+						var:vptl_presidential_current_ruler ?= { is_character_alive = yes }
+						ruler ?= { NOT = { owner.var:vptl_presidential_current_ruler ?= this } }
+					}
+					vptl_restore_transition_acting_ruler = yes
 				}
 				else = {
 					vptl_sync_presidential_current_ruler = yes

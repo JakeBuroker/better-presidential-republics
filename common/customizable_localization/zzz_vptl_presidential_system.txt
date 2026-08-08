@@ -53,6 +53,12 @@ vptl_presidential_successor_office_type = {
 		trigger = {
 			OR = {
 				c:URU ?= this
+				c:BRE ?= this
+				c:FRM ?= this
+				c:HAM ?= this
+				c:LUB ?= this
+				c:KRA ?= this
+				c:LAN ?= this
 			}
 		}
 		localization_key = vptl_presidential_successor_office_type_legislative
@@ -63,6 +69,8 @@ vptl_presidential_successor_office_type = {
 				c:PRG ?= this
 				c:HAI ?= this
 				c:CHL ?= this
+				c:ION ?= this
+				c:PRA ?= this
 			}
 		}
 		localization_key = vptl_presidential_successor_office_type_cabinet
@@ -184,6 +192,36 @@ vptl_presidential_office_status = {
 	text = {
 		trigger = { always = yes }
 		localization_key = vptl_presidential_office_status_former
+	}
+}
+
+vptl_presidential_office_status_with_number = {
+	type = character
+	text = {
+		trigger = {
+			has_variable = vptl_presidential_order_number
+			NOT = { has_variable = vptl_presidential_order_number_display_suppressed }
+		}
+		localization_key = vptl_presidential_office_status_numbered
+	}
+	text = {
+		trigger = { always = yes }
+		localization_key = vptl_presidential_office_status_unnumbered
+	}
+}
+
+vptl_presidential_ruler_title_with_number = {
+	type = character
+	text = {
+		trigger = {
+			has_variable = vptl_presidential_order_number
+			NOT = { has_variable = vptl_presidential_order_number_display_suppressed }
+		}
+		localization_key = vptl_presidential_ruler_title_numbered
+	}
+	text = {
+		trigger = { always = yes }
+		localization_key = vptl_presidential_ruler_title_unnumbered
 	}
 }
 

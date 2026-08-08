@@ -6,6 +6,7 @@
 		NOT = { has_law_or_variant = law_type:law_single_party_state }
 		ruler ?= {
 			has_variable = vptl_presidential_order_number
+			NOT = { has_variable = vptl_presidential_order_number_display_suppressed }
 		}
 	}
 }
@@ -119,7 +120,7 @@ vptl_show_presidential_ticket_running_mate_sgui = {
 		has_variable = vptl_presidential_ticket_running_mate
 		var:vptl_presidential_ticket_running_mate ?= {
 			is_character_alive = yes
-			vptl_presidential_new_successor_candidate_eligible = yes
+			vptl_presidential_existing_campaign_running_mate_eligible = yes
 		}
 	}
 }
@@ -152,10 +153,9 @@ vptl_show_presidential_opposition_running_mate_sgui = {
 		var:vptl_presidential_opposition_running_mate ?= {
 			is_character_alive = yes
 			has_role_of_type = politician
-			is_ruler_of_own_country = no
 			is_heir_of_own_country = no
 			NOT = { has_variable = vptl_presidential_term_limited }
-			vptl_presidential_new_successor_candidate_eligible = yes
+			vptl_presidential_existing_campaign_running_mate_eligible = yes
 		}
 	}
 }

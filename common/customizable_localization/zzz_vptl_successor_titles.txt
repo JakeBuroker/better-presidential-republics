@@ -4,6 +4,43 @@
 	text = {
 		trigger = {
 			OR = {
+				c:BRE ?= this
+				c:FRM ?= this
+				c:HAM ?= this
+				c:LUB ?= this
+			}
+		}
+		localization_key = vptl_presidential_successor_mayoral
+	}
+	text = {
+		trigger = { c:KRA ?= this }
+		localization_key = vptl_presidential_successor_senate_successor
+	}
+	text = {
+		trigger = { c:ION ?= this }
+		localization_key = vptl_presidential_successor_high_commissioner
+	}
+	text = {
+		trigger = { c:LAN ?= this }
+		localization_key = vptl_presidential_successor_kongsi
+	}
+	text = {
+		trigger = {
+			OR = {
+				c:ORA ?= this
+				c:TRN ?= this
+			}
+		}
+		localization_key = vptl_presidential_successor_commandant
+	}
+	text = {
+		trigger = { c:PRA ?= this }
+		localization_key = vptl_presidential_successor_government
+	}
+
+	text = {
+		trigger = {
+			OR = {
 				c:PRG ?= this
 				c:HAI ?= this
 			}

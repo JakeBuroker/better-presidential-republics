@@ -98,6 +98,119 @@ vptl_presidential_new_successor_candidate_eligible = {
 	}
 }
 
+# A saved running mate may remain on their existing ticket after succeeding to the presidency mid-campaign.
+vptl_presidential_existing_campaign_running_mate_eligible = {
+	OR = {
+		vptl_presidential_new_successor_candidate_eligible = yes
+		AND = {
+			vptl_presidential_basic_eligibility = yes
+			is_character_alive = yes
+			has_role_of_type = politician
+			is_ruler_of_own_country = yes
+			is_heir_of_own_country = no
+			NOT = { has_role = character_role_vptl_former_president }
+			NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
+			NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
+			NOT = { owner.var:vptl_presidential_final_elected_ruler ?= this }
+			NOT = {
+				AND = {
+					has_variable = vptl_vice_presidential_terms_served
+					var:vptl_vice_presidential_terms_served >= 2
+				}
+			}
+			owner = {
+				has_variable = vptl_presidential_election_transition
+				has_variable = vptl_presidential_death_succession_lock
+				has_variable = vptl_presidential_death_successor
+			}
+			owner.var:vptl_presidential_death_successor ?= this
+			OR = {
+				owner.var:vptl_presidential_ticket_running_mate ?= this
+				owner.var:vptl_presidential_opposition_running_mate ?= this
+			}
+		}
+	}
+}
+
+# Election settlement may temporarily make the authoritative winning running mate the vanilla ruler.
+vptl_presidential_certified_running_mate_eligible = {
+	vptl_presidential_basic_eligibility = yes
+	is_character_alive = yes
+	has_role_of_type = politician
+	OR = {
+		is_ruler_of_own_country = no
+		AND = {
+			is_ruler_of_own_country = yes
+			owner = {
+				has_variable = vptl_presidential_election_settlement_in_progress
+				has_variable = vptl_presidential_vanilla_selected_ruler
+			}
+			owner.var:vptl_presidential_vanilla_selected_ruler ?= this
+		}
+		AND = {
+			is_ruler_of_own_country = yes
+			owner = {
+				has_variable = vptl_presidential_election_settlement_in_progress
+				has_variable = vptl_presidential_election_transition
+				has_variable = vptl_presidential_death_succession_lock
+				has_variable = vptl_presidential_death_successor
+			}
+			owner.var:vptl_presidential_death_successor ?= this
+			OR = {
+				owner.var:vptl_presidential_ticket_running_mate ?= this
+				owner.var:vptl_presidential_opposition_running_mate ?= this
+			}
+		}
+	}
+	is_heir_of_own_country = no
+	NOT = { has_role = character_role_vptl_former_president }
+	NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
+	NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
+	NOT = { owner.var:vptl_presidential_final_elected_ruler ?= this }
+	NOT = { owner.var:vptl_president_elect ?= this }
+	NOT = {
+		AND = {
+			has_variable = vptl_vice_presidential_terms_served
+			var:vptl_vice_presidential_terms_served >= 2
+		}
+	}
+}
+
+# The authoritative certified running mate remains valid if they are also the outgoing or acting president.
+vptl_presidential_certified_outgoing_vice_president_elect_eligible = {
+	vptl_presidential_basic_eligibility = yes
+	is_character_alive = yes
+	has_role_of_type = politician
+	is_heir_of_own_country = no
+	owner = {
+		has_variable = vptl_presidential_inauguration_pending
+		has_variable = vptl_president_elect
+		has_variable = vptl_vice_president_elect
+		OR = {
+			has_variable = vptl_presidential_transition_outgoing_ruler
+			has_variable = vptl_presidential_final_running_mate
+		}
+	}
+	owner.var:vptl_vice_president_elect ?= this
+	OR = {
+		AND = {
+			owner = { has_variable = vptl_presidential_transition_outgoing_ruler }
+			owner.var:vptl_presidential_transition_outgoing_ruler ?= this
+		}
+		AND = {
+			owner = { has_variable = vptl_presidential_final_running_mate }
+			owner.var:vptl_presidential_final_running_mate ?= this
+		}
+	}
+	NOT = { owner.var:vptl_president_elect ?= this }
+	NOT = {
+		AND = {
+			has_variable = vptl_vice_presidential_terms_served
+			var:vptl_vice_presidential_terms_served >= 2
+		}
+	}
+}
+
 vptl_presidential_sitting_successor_handoff_eligible = {
 	vptl_presidential_basic_eligibility = yes
 	is_character_alive = yes
@@ -139,7 +252,7 @@ vptl_presidential_campaign_ticket_valid = {
 	OR = {
 		NOT = { has_variable = vptl_presidential_ticket_running_mate }
 		var:vptl_presidential_ticket_running_mate ?= {
-			vptl_presidential_new_successor_candidate_eligible = yes
+			vptl_presidential_existing_campaign_running_mate_eligible = yes
 			NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
 			NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
 			NOT = { owner.var:vptl_presidential_opposition_running_mate ?= this }
@@ -158,7 +271,7 @@ vptl_presidential_campaign_ticket_valid = {
 	OR = {
 		NOT = { has_variable = vptl_presidential_opposition_running_mate }
 		var:vptl_presidential_opposition_running_mate ?= {
-			vptl_presidential_new_successor_candidate_eligible = yes
+			vptl_presidential_existing_campaign_running_mate_eligible = yes
 			NOT = { owner.var:vptl_presidential_ticket_candidate ?= this }
 			NOT = { owner.var:vptl_presidential_ticket_running_mate ?= this }
 			NOT = { owner.var:vptl_presidential_opposition_candidate ?= this }
@@ -183,6 +296,7 @@ vptl_presidential_successor_uses_vice_president_title = {
 		AND = { exists = c:GCO c:GCO ?= this }
 		AND = { exists = c:CLM c:CLM ?= this }
 		AND = { exists = c:UCA c:UCA ?= this }
+		AND = { exists = c:PNI c:PNI ?= this }
 		AND = { exists = c:COS c:COS ?= this }
 		AND = { exists = c:GUA c:GUA ?= this }
 		AND = { exists = c:ELS c:ELS ?= this }

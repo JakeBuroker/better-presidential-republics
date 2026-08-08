@@ -610,6 +610,38 @@ vptl_seed_1836_presidential_order_numbers = {
 		}
 	}
 	if = {
+		limit = { c:PNI ?= this }
+		if = {
+			limit = { NOT = { has_variable = vptl_presidential_order_counter } }
+			set_variable = { name = vptl_presidential_order_counter value = 1 }
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_counter < 1 }
+			set_variable = { name = vptl_presidential_order_counter value = 1 }
+		}
+		every_scope_character = {
+			limit = { has_template = PNI_bento_goncalves_da_silva }
+			set_variable = { name = vptl_presidential_order_number value = 1 }
+			vptl_refresh_presidential_office_markers = yes
+		}
+	}
+	if = {
+		limit = { c:PRA ?= this }
+		if = {
+			limit = { NOT = { has_variable = vptl_presidential_order_counter } }
+			set_variable = { name = vptl_presidential_order_counter value = 3 }
+		}
+		else_if = {
+			limit = { var:vptl_presidential_order_counter < 3 }
+			set_variable = { name = vptl_presidential_order_counter value = 3 }
+		}
+		every_scope_character = {
+			limit = { has_template = PRA_eduardo_angelim }
+			set_variable = { name = vptl_presidential_order_number value = 3 }
+			vptl_refresh_presidential_office_markers = yes
+		}
+	}
+	if = {
 		limit = { c:VNZ ?= this }
 		if = {
 			limit = { NOT = { has_variable = vptl_presidential_order_counter } }
@@ -650,14 +682,96 @@ vptl_seed_1836_presidential_order_numbers = {
 	}
 }
 
+vptl_seed_1836_presidential_order_display_suppressions = {
+	if = {
+		limit = { c:BRE ?= this }
+		every_scope_character = {
+			limit = { has_template = BRE_johann_smidt }
+			set_variable = vptl_presidential_order_number_display_suppressed
+			vptl_refresh_presidential_office_markers = yes
+		}
+	}
+	if = {
+		limit = { c:FRM ?= this }
+		every_scope_character = {
+			limit = { has_template = FRM_ferdinand_starck }
+			set_variable = vptl_presidential_order_number_display_suppressed
+			vptl_refresh_presidential_office_markers = yes
+		}
+	}
+	if = {
+		limit = { c:HAM ?= this }
+		every_scope_character = {
+			limit = { has_template = HAM_christian_daniel_benecke }
+			set_variable = vptl_presidential_order_number_display_suppressed
+			vptl_refresh_presidential_office_markers = yes
+		}
+	}
+	if = {
+		limit = { c:ION ?= this }
+		every_scope_character = {
+			limit = { has_template = ION_howard_douglas }
+			set_variable = vptl_presidential_order_number_display_suppressed
+			vptl_refresh_presidential_office_markers = yes
+		}
+	}
+	if = {
+		limit = { c:KRA ?= this }
+		every_scope_character = {
+			limit = { has_template = KRA_Kasper_Wieloglowski }
+			set_variable = vptl_presidential_order_number_display_suppressed
+			vptl_refresh_presidential_office_markers = yes
+		}
+	}
+	if = {
+		limit = { c:LAN ?= this }
+		every_scope_character = {
+			limit = { has_template = LAN_taiji_liu }
+			set_variable = vptl_presidential_order_number_display_suppressed
+			vptl_refresh_presidential_office_markers = yes
+		}
+	}
+	if = {
+		limit = { c:LUB ?= this }
+		every_scope_character = {
+			limit = { has_template = LUB_christian_nicolaus_von_evers }
+			set_variable = vptl_presidential_order_number_display_suppressed
+			vptl_refresh_presidential_office_markers = yes
+		}
+	}
+	if = {
+		limit = { c:ORA ?= this }
+		every_scope_character = {
+			limit = { has_template = ORA_hendrik_potgieter }
+			set_variable = vptl_presidential_order_number_display_suppressed
+			vptl_refresh_presidential_office_markers = yes
+		}
+	}
+	if = {
+		limit = { c:TRN ?= this }
+		every_scope_character = {
+			limit = { has_template = TRN_andries_pretorius }
+			set_variable = vptl_presidential_order_number_display_suppressed
+			vptl_refresh_presidential_office_markers = yes
+		}
+	}
+}
+
 vptl_assign_presidential_order_number_to_current_ruler = {
 	if = {
 		limit = {
 			NOT = { has_variable = vptl_presidential_historical_order_numbers_initialized }
 		}
+		set_variable = vptl_presidential_historical_order_numbers_initialized
+	}
+	if = {
+		limit = {
+			NOT = { has_variable = vptl_presidential_historical_order_numbers_v2_initialized }
+		}
 		vptl_seed_usa_presidential_order_numbers = yes
 		vptl_seed_1836_presidential_order_numbers = yes
-		set_variable = vptl_presidential_historical_order_numbers_initialized
+		vptl_seed_1836_presidential_order_display_suppressions = yes
+		set_variable = vptl_presidential_historical_order_numbers_v2_initialized
 	}
 
 	if = {
@@ -879,6 +993,10 @@ vptl_promote_presidential_successor_if_ruler_is_dead = {
 			has_law_or_variant = law_type:law_presidential_republic
 			government_transfer_of_power = presidential_elective
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
+			OR = {
+				NOT = { has_variable = vptl_presidential_inauguration_pending }
+				has_variable = vptl_presidential_pending_death_handling
+			}
 			ruler ?= {
 				NOT = { is_character_alive = yes }
 			}
@@ -894,6 +1012,10 @@ vptl_promote_presidential_successor_if_tracked_ruler_is_dead = {
 			has_law_or_variant = law_type:law_presidential_republic
 			government_transfer_of_power = presidential_elective
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
+			OR = {
+				NOT = { has_variable = vptl_presidential_inauguration_pending }
+				has_variable = vptl_presidential_pending_death_handling
+			}
 			has_variable = vptl_presidential_current_ruler
 			has_variable = vptl_presidential_successor
 			OR = {
@@ -1202,6 +1324,7 @@ vptl_update_presidential_ticket_candidates = {
 			}
 			if = {
 				limit = {
+					NOT = { has_variable = vptl_presidential_ticket_candidate }
 					ruler ?= {
 						is_character_alive = yes
 						NOT = { has_variable = vptl_presidential_term_limited }
@@ -2214,6 +2337,7 @@ vptl_replace_ineligible_usa_presidential_ruler_with_successor = {
 			has_law_or_variant = law_type:law_presidential_republic
 			government_transfer_of_power = presidential_elective
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
+			NOT = { has_variable = vptl_presidential_inauguration_pending }
 			ruler ?= {
 				NOT = { vptl_presidential_basic_eligibility = yes }
 			}
@@ -2251,6 +2375,7 @@ vptl_correct_unexpected_presidential_ruler_change = {
 			has_law_or_variant = law_type:law_presidential_republic
 			government_transfer_of_power = presidential_elective
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
+			NOT = { has_variable = vptl_presidential_inauguration_pending }
 			NOT = { has_variable = vptl_presidential_election_transition }
 			NOT = { has_variable = vptl_presidential_handoff_in_progress }
 			has_variable = vptl_presidential_death_succession_lock
@@ -2278,6 +2403,7 @@ vptl_correct_unexpected_presidential_ruler_change = {
 			has_law_or_variant = law_type:law_presidential_republic
 			government_transfer_of_power = presidential_elective
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
+			NOT = { has_variable = vptl_presidential_inauguration_pending }
 			NOT = { has_variable = vptl_presidential_election_transition }
 			has_variable = vptl_presidential_current_ruler
 			has_variable = vptl_presidential_successor
@@ -2298,6 +2424,7 @@ vptl_correct_unexpected_presidential_ruler_change = {
 			has_law_or_variant = law_type:law_presidential_republic
 			government_transfer_of_power = presidential_elective
 			NOT = { has_law_or_variant = law_type:law_single_party_state }
+			NOT = { has_variable = vptl_presidential_inauguration_pending }
 			NOT = { has_variable = vptl_presidential_election_transition }
 			has_variable = vptl_presidential_current_ruler
 			ruler ?= {
@@ -2686,7 +2813,7 @@ vptl_prune_invalid_presidential_campaign_ticket_slots = {
 			has_variable = vptl_presidential_ticket_running_mate
 			var:vptl_presidential_ticket_running_mate ?= {
 				OR = {
-					NOT = { vptl_presidential_new_successor_candidate_eligible = yes }
+					NOT = { vptl_presidential_existing_campaign_running_mate_eligible = yes }
 					owner.var:vptl_presidential_ticket_candidate ?= this
 					owner.var:vptl_presidential_opposition_candidate ?= this
 					owner.var:vptl_presidential_opposition_running_mate ?= this
@@ -2700,7 +2827,7 @@ vptl_prune_invalid_presidential_campaign_ticket_slots = {
 			has_variable = vptl_presidential_opposition_running_mate
 			var:vptl_presidential_opposition_running_mate ?= {
 				OR = {
-					NOT = { vptl_presidential_new_successor_candidate_eligible = yes }
+					NOT = { vptl_presidential_existing_campaign_running_mate_eligible = yes }
 					owner.var:vptl_presidential_ticket_candidate ?= this
 					owner.var:vptl_presidential_ticket_running_mate ?= this
 					owner.var:vptl_presidential_opposition_candidate ?= this
@@ -2853,6 +2980,32 @@ vptl_identify_presidential_winning_ticket_side = {
 		limit = {
 			has_variable = vptl_presidential_opposition_candidate
 			ruler ?= { owner.var:vptl_presidential_opposition_candidate ?= this }
+		}
+		set_variable = { name = vptl_presidential_winning_ticket_side value = 2 }
+	}
+	else_if = {
+		limit = {
+			has_variable = vptl_presidential_election_transition
+			has_variable = vptl_presidential_death_succession_lock
+			has_variable = vptl_presidential_death_successor
+			has_variable = vptl_presidential_ticket_running_mate
+			ruler ?= {
+				owner.var:vptl_presidential_death_successor ?= this
+				owner.var:vptl_presidential_ticket_running_mate ?= this
+			}
+		}
+		set_variable = { name = vptl_presidential_winning_ticket_side value = 1 }
+	}
+	else_if = {
+		limit = {
+			has_variable = vptl_presidential_election_transition
+			has_variable = vptl_presidential_death_succession_lock
+			has_variable = vptl_presidential_death_successor
+			has_variable = vptl_presidential_opposition_running_mate
+			ruler ?= {
+				owner.var:vptl_presidential_death_successor ?= this
+				owner.var:vptl_presidential_opposition_running_mate ?= this
+			}
 		}
 		set_variable = { name = vptl_presidential_winning_ticket_side value = 2 }
 	}
@@ -3180,7 +3333,7 @@ vptl_select_final_running_mate_from_winning_ticket = {
 			has_variable = vptl_presidential_ticket_running_mate
 			var:vptl_presidential_ticket_running_mate ?= {
 				owner ?= scope:vptl_presidential_settlement_country
-				vptl_presidential_new_successor_candidate_eligible = yes
+				vptl_presidential_certified_running_mate_eligible = yes
 				NOT = { owner.var:vptl_presidential_final_elected_ruler ?= this }
 			}
 		}
@@ -3193,7 +3346,7 @@ vptl_select_final_running_mate_from_winning_ticket = {
 			has_variable = vptl_presidential_opposition_running_mate
 			var:vptl_presidential_opposition_running_mate ?= {
 				owner ?= scope:vptl_presidential_settlement_country
-				vptl_presidential_new_successor_candidate_eligible = yes
+				vptl_presidential_certified_running_mate_eligible = yes
 				NOT = { owner.var:vptl_presidential_final_elected_ruler ?= this }
 			}
 		}
@@ -3345,6 +3498,11 @@ vptl_clear_presidential_transition_variables = {
 	remove_variable = vptl_presidential_final_elected_ruler
 	remove_variable = vptl_presidential_final_running_mate
 	remove_variable = vptl_presidential_winning_ticket_side
+	remove_variable = vptl_presidential_inauguration_schedule_initialized
+	remove_variable = vptl_presidential_inauguration_journal_generation_assigned
+	remove_variable = vptl_presidential_inauguration_journal_created
+	remove_variable = vptl_presidential_inauguration_legacy_transition
+	remove_variable = vptl_presidential_pending_death_handling
 }
 
 vptl_cleanup_presidential_inauguration_transition = {
@@ -3358,34 +3516,154 @@ vptl_ensure_presidential_transition_journal = {
 	if = {
 		limit = {
 			has_variable = vptl_presidential_inauguration_pending
+			has_variable = vptl_presidential_inauguration_journal_generation_assigned
+			NOT = { has_variable = vptl_presidential_inauguration_legacy_transition }
+			NOT = { has_variable = vptl_presidential_inauguration_journal_created }
+			var:vptl_presidential_inauguration_journal_generation = 1
+			OR = {
+				AND = {
+					var:vptl_presidential_inauguration_rule = 30
+					has_journal_entry = je_vptl_presidential_transition_30_a
+				}
+				AND = {
+					var:vptl_presidential_inauguration_rule = 60
+					has_journal_entry = je_vptl_presidential_transition_60_a
+				}
+				AND = {
+					var:vptl_presidential_inauguration_rule = 90
+					has_journal_entry = je_vptl_presidential_transition_90_a
+				}
+				AND = {
+					var:vptl_presidential_inauguration_rule = 120
+					has_journal_entry = je_vptl_presidential_transition_120_a
+				}
+			}
+		}
+		set_variable = vptl_presidential_inauguration_journal_created
+	}
+	else_if = {
+		limit = {
+			has_variable = vptl_presidential_inauguration_pending
+			has_variable = vptl_presidential_inauguration_journal_generation_assigned
+			NOT = { has_variable = vptl_presidential_inauguration_legacy_transition }
+			NOT = { has_variable = vptl_presidential_inauguration_journal_created }
+			var:vptl_presidential_inauguration_journal_generation = 2
+			OR = {
+				AND = {
+					var:vptl_presidential_inauguration_rule = 30
+					has_journal_entry = je_vptl_presidential_transition_30_b
+				}
+				AND = {
+					var:vptl_presidential_inauguration_rule = 60
+					has_journal_entry = je_vptl_presidential_transition_60_b
+				}
+				AND = {
+					var:vptl_presidential_inauguration_rule = 90
+					has_journal_entry = je_vptl_presidential_transition_90_b
+				}
+				AND = {
+					var:vptl_presidential_inauguration_rule = 120
+					has_journal_entry = je_vptl_presidential_transition_120_b
+				}
+			}
+		}
+		set_variable = vptl_presidential_inauguration_journal_created
+	}
+	if = {
+		limit = {
+			has_variable = vptl_presidential_inauguration_pending
+			has_variable = vptl_presidential_inauguration_journal_generation_assigned
+			NOT = { has_variable = vptl_presidential_inauguration_legacy_transition }
+			NOT = { has_variable = vptl_presidential_inauguration_journal_created }
+			var:vptl_presidential_inauguration_journal_generation = 1
 			var:vptl_presidential_inauguration_rule = 30
-			NOT = { has_journal_entry = je_vptl_presidential_transition_30 }
 		}
-		add_journal_entry = { type = je_vptl_presidential_transition_30 }
+		add_journal_entry = { type = je_vptl_presidential_transition_30_a }
+		set_variable = vptl_presidential_inauguration_journal_created
 	}
 	else_if = {
 		limit = {
 			has_variable = vptl_presidential_inauguration_pending
+			has_variable = vptl_presidential_inauguration_journal_generation_assigned
+			NOT = { has_variable = vptl_presidential_inauguration_legacy_transition }
+			NOT = { has_variable = vptl_presidential_inauguration_journal_created }
+			var:vptl_presidential_inauguration_journal_generation = 1
 			var:vptl_presidential_inauguration_rule = 60
-			NOT = { has_journal_entry = je_vptl_presidential_transition_60 }
 		}
-		add_journal_entry = { type = je_vptl_presidential_transition_60 }
+		add_journal_entry = { type = je_vptl_presidential_transition_60_a }
+		set_variable = vptl_presidential_inauguration_journal_created
 	}
 	else_if = {
 		limit = {
 			has_variable = vptl_presidential_inauguration_pending
+			has_variable = vptl_presidential_inauguration_journal_generation_assigned
+			NOT = { has_variable = vptl_presidential_inauguration_legacy_transition }
+			NOT = { has_variable = vptl_presidential_inauguration_journal_created }
+			var:vptl_presidential_inauguration_journal_generation = 1
 			var:vptl_presidential_inauguration_rule = 90
-			NOT = { has_journal_entry = je_vptl_presidential_transition_90 }
 		}
-		add_journal_entry = { type = je_vptl_presidential_transition_90 }
+		add_journal_entry = { type = je_vptl_presidential_transition_90_a }
+		set_variable = vptl_presidential_inauguration_journal_created
 	}
 	else_if = {
 		limit = {
 			has_variable = vptl_presidential_inauguration_pending
+			has_variable = vptl_presidential_inauguration_journal_generation_assigned
+			NOT = { has_variable = vptl_presidential_inauguration_legacy_transition }
+			NOT = { has_variable = vptl_presidential_inauguration_journal_created }
+			var:vptl_presidential_inauguration_journal_generation = 1
 			var:vptl_presidential_inauguration_rule = 120
-			NOT = { has_journal_entry = je_vptl_presidential_transition_120 }
 		}
-		add_journal_entry = { type = je_vptl_presidential_transition_120 }
+		add_journal_entry = { type = je_vptl_presidential_transition_120_a }
+		set_variable = vptl_presidential_inauguration_journal_created
+	}
+	else_if = {
+		limit = {
+			has_variable = vptl_presidential_inauguration_pending
+			has_variable = vptl_presidential_inauguration_journal_generation_assigned
+			NOT = { has_variable = vptl_presidential_inauguration_legacy_transition }
+			NOT = { has_variable = vptl_presidential_inauguration_journal_created }
+			var:vptl_presidential_inauguration_journal_generation = 2
+			var:vptl_presidential_inauguration_rule = 30
+		}
+		add_journal_entry = { type = je_vptl_presidential_transition_30_b }
+		set_variable = vptl_presidential_inauguration_journal_created
+	}
+	else_if = {
+		limit = {
+			has_variable = vptl_presidential_inauguration_pending
+			has_variable = vptl_presidential_inauguration_journal_generation_assigned
+			NOT = { has_variable = vptl_presidential_inauguration_legacy_transition }
+			NOT = { has_variable = vptl_presidential_inauguration_journal_created }
+			var:vptl_presidential_inauguration_journal_generation = 2
+			var:vptl_presidential_inauguration_rule = 60
+		}
+		add_journal_entry = { type = je_vptl_presidential_transition_60_b }
+		set_variable = vptl_presidential_inauguration_journal_created
+	}
+	else_if = {
+		limit = {
+			has_variable = vptl_presidential_inauguration_pending
+			has_variable = vptl_presidential_inauguration_journal_generation_assigned
+			NOT = { has_variable = vptl_presidential_inauguration_legacy_transition }
+			NOT = { has_variable = vptl_presidential_inauguration_journal_created }
+			var:vptl_presidential_inauguration_journal_generation = 2
+			var:vptl_presidential_inauguration_rule = 90
+		}
+		add_journal_entry = { type = je_vptl_presidential_transition_90_b }
+		set_variable = vptl_presidential_inauguration_journal_created
+	}
+	else_if = {
+		limit = {
+			has_variable = vptl_presidential_inauguration_pending
+			has_variable = vptl_presidential_inauguration_journal_generation_assigned
+			NOT = { has_variable = vptl_presidential_inauguration_legacy_transition }
+			NOT = { has_variable = vptl_presidential_inauguration_journal_created }
+			var:vptl_presidential_inauguration_journal_generation = 2
+			var:vptl_presidential_inauguration_rule = 120
+		}
+		add_journal_entry = { type = je_vptl_presidential_transition_120_b }
+		set_variable = vptl_presidential_inauguration_journal_created
 	}
 }
 
@@ -3566,7 +3844,14 @@ vptl_repair_presidential_elect_ticket = {
 			OR = {
 				NOT = { has_variable = vptl_vice_president_elect }
 				var:vptl_vice_president_elect ?= { NOT = { is_character_alive = yes } }
-				var:vptl_vice_president_elect ?= { NOT = { vptl_presidential_transition_replacement_running_mate_eligible = yes } }
+				var:vptl_vice_president_elect ?= {
+					NOT = {
+						OR = {
+							vptl_presidential_transition_replacement_running_mate_eligible = yes
+							vptl_presidential_certified_outgoing_vice_president_elect_eligible = yes
+						}
+					}
+				}
 			}
 		}
 		vptl_select_transition_replacement_vice_president_elect = yes
@@ -3598,33 +3883,72 @@ vptl_restore_transition_outgoing_ruler = {
 	}
 }
 
-vptl_schedule_presidential_inauguration = {
-	remove_variable = vptl_presidential_inauguration_timer
-	remove_variable = vptl_presidential_inauguration_due
+vptl_restore_transition_acting_ruler = {
 	if = {
-		limit = { var:vptl_presidential_inauguration_rule = 30 }
-		set_variable = { name = vptl_presidential_inauguration_timer days = 30 }
-		vptl_ensure_presidential_transition_journal = yes
+		limit = {
+			has_variable = vptl_presidential_inauguration_pending
+			has_variable = vptl_presidential_current_ruler
+			var:vptl_presidential_current_ruler ?= { is_character_alive = yes }
+			NOT = { has_variable = vptl_presidential_inauguration_in_progress }
+		}
+		if = {
+			limit = { ruler ?= { NOT = { owner.var:vptl_presidential_current_ruler ?= this } } }
+			vptl_suppress_next_presidential_ruler_notification = yes
+			var:vptl_presidential_current_ruler ?= {
+				if = {
+					limit = { owner ?= { has_variable = vptl_presidential_debug_logging } }
+					debug_log = "BPR checkpoint=set_character_as_ruler source=inauguration_acting_restore target=[THIS.GetCharacter.GetFullNameNoFormatting]"
+				}
+				set_character_as_ruler = yes
+			}
+			vptl_sync_presidential_current_ruler = yes
+		}
+		set_variable = { name = vptl_presidential_transition_outgoing_ruler value = var:vptl_presidential_current_ruler }
 	}
-	else_if = {
-		limit = { var:vptl_presidential_inauguration_rule = 60 }
-		set_variable = { name = vptl_presidential_inauguration_timer days = 60 }
-		vptl_ensure_presidential_transition_journal = yes
-	}
-	else_if = {
-		limit = { var:vptl_presidential_inauguration_rule = 90 }
-		set_variable = { name = vptl_presidential_inauguration_timer days = 90 }
-		vptl_ensure_presidential_transition_journal = yes
-	}
-	else_if = {
-		limit = { var:vptl_presidential_inauguration_rule = 120 }
-		set_variable = { name = vptl_presidential_inauguration_timer days = 120 }
-		vptl_ensure_presidential_transition_journal = yes
-	}
-	else = {
-		# Rule 0 is pending and immediately due; it uses the same inauguration path synchronously.
-		set_variable = vptl_presidential_inauguration_due
-		vptl_inaugurate_president_elect = yes
+}
+
+vptl_schedule_presidential_inauguration = {
+	if = {
+		limit = { NOT = { has_variable = vptl_presidential_inauguration_schedule_initialized } }
+		set_variable = vptl_presidential_inauguration_schedule_initialized
+		remove_variable = vptl_presidential_inauguration_timer
+		remove_variable = vptl_presidential_inauguration_due
+		if = {
+			limit = { var:vptl_presidential_inauguration_rule > 0 }
+			if = {
+				limit = {
+					has_variable = vptl_presidential_inauguration_journal_generation
+					var:vptl_presidential_inauguration_journal_generation = 1
+				}
+				set_variable = { name = vptl_presidential_inauguration_journal_generation value = 2 }
+			}
+			else = {
+				set_variable = { name = vptl_presidential_inauguration_journal_generation value = 1 }
+			}
+			set_variable = vptl_presidential_inauguration_journal_generation_assigned
+			if = {
+				limit = { var:vptl_presidential_inauguration_rule = 30 }
+				set_variable = { name = vptl_presidential_inauguration_timer days = 30 }
+			}
+			else_if = {
+				limit = { var:vptl_presidential_inauguration_rule = 60 }
+				set_variable = { name = vptl_presidential_inauguration_timer days = 60 }
+			}
+			else_if = {
+				limit = { var:vptl_presidential_inauguration_rule = 90 }
+				set_variable = { name = vptl_presidential_inauguration_timer days = 90 }
+			}
+			else_if = {
+				limit = { var:vptl_presidential_inauguration_rule = 120 }
+				set_variable = { name = vptl_presidential_inauguration_timer days = 120 }
+			}
+			vptl_ensure_presidential_transition_journal = yes
+		}
+		else = {
+			# Rule 0 is pending and immediately due; it uses the same inauguration path synchronously.
+			set_variable = vptl_presidential_inauguration_due
+			vptl_inaugurate_president_elect = yes
+		}
 	}
 }
 
@@ -3674,7 +3998,10 @@ vptl_inaugurate_president_elect = {
 				limit = {
 					has_variable = vptl_vice_president_elect
 					var:vptl_vice_president_elect ?= {
-						vptl_presidential_new_successor_candidate_eligible = yes
+						OR = {
+							vptl_presidential_new_successor_candidate_eligible = yes
+							vptl_presidential_certified_outgoing_vice_president_elect_eligible = yes
+						}
 						NOT = { owner.var:vptl_president_elect ?= this }
 					}
 				}
@@ -3824,16 +4151,6 @@ vptl_repair_transition_sitting_successor = {
 					has_variable = vptl_presidential_successor
 					var:vptl_presidential_successor ?= { NOT = { vptl_presidential_sitting_successor_handoff_eligible = yes } }
 				}
-				AND = {
-					has_variable = vptl_presidential_successor
-					has_variable = vptl_president_elect
-					var:vptl_presidential_successor ?= { owner.var:vptl_president_elect ?= this }
-				}
-				AND = {
-					has_variable = vptl_presidential_successor
-					has_variable = vptl_vice_president_elect
-					var:vptl_presidential_successor ?= { owner.var:vptl_vice_president_elect ?= this }
-				}
 			}
 		}
 		vptl_select_transition_sitting_successor_replacement = yes
@@ -3847,6 +4164,7 @@ vptl_handle_presidential_inauguration_character_death = {
 			has_variable = vptl_presidential_inauguration_pending
 			exists = scope:vptl_presidential_dead_character
 		}
+		set_variable = vptl_presidential_pending_death_handling
 		if = {
 			limit = {
 				has_variable = vptl_presidential_current_ruler
@@ -3883,12 +4201,23 @@ vptl_handle_presidential_inauguration_character_death = {
 		if = {
 			limit = {
 				has_variable = vptl_presidential_inauguration_pending
+				has_variable = vptl_presidential_current_ruler
+				var:vptl_presidential_current_ruler ?= { is_character_alive = yes }
+			}
+			set_variable = { name = vptl_presidential_transition_outgoing_ruler value = var:vptl_presidential_current_ruler }
+		}
+		else_if = {
+			limit = {
+				has_variable = vptl_presidential_inauguration_pending
+				NOT = { has_variable = vptl_presidential_current_ruler }
 				ruler ?= { is_character_alive = yes }
 			}
+			vptl_sync_presidential_current_ruler = yes
 			set_variable = { name = vptl_presidential_transition_outgoing_ruler value = ruler }
 		}
 		vptl_refresh_presidential_elect_roles = yes
 		vptl_refresh_lame_duck_administration = yes
+		remove_variable = vptl_presidential_pending_death_handling
 	}
 }
 
@@ -3897,10 +4226,36 @@ vptl_maintain_presidential_inauguration_transition = {
 	if = {
 		limit = { has_variable = vptl_presidential_inauguration_pending }
 		if = {
+			limit = { NOT = { has_variable = vptl_presidential_inauguration_schedule_initialized } }
+			# Existing pending saves keep their original timed variable and do not receive a restarted journal.
+			set_variable = vptl_presidential_inauguration_schedule_initialized
+			set_variable = vptl_presidential_inauguration_legacy_transition
+			if = {
+				limit = { NOT = { has_variable = vptl_presidential_inauguration_journal_generation } }
+				set_variable = { name = vptl_presidential_inauguration_journal_generation value = 1 }
+			}
+		}
+		if = {
 			limit = { NOT = { vptl_presidential_transition_qualifies = yes } }
 			vptl_cleanup_presidential_inauguration_transition = yes
 		}
 		else = {
+			if = {
+				limit = {
+					NOT = { has_variable = vptl_presidential_inauguration_in_progress }
+					has_variable = vptl_presidential_transition_outgoing_ruler
+					var:vptl_presidential_transition_outgoing_ruler ?= { is_character_alive = yes }
+				}
+				vptl_restore_transition_outgoing_ruler = yes
+			}
+			else_if = {
+				limit = {
+					NOT = { has_variable = vptl_presidential_inauguration_in_progress }
+					has_variable = vptl_presidential_current_ruler
+					var:vptl_presidential_current_ruler ?= { is_character_alive = yes }
+				}
+				vptl_restore_transition_acting_ruler = yes
+			}
 			vptl_repair_presidential_elect_ticket = yes
 			vptl_repair_transition_sitting_successor = yes
 			vptl_refresh_presidential_elect_roles = yes

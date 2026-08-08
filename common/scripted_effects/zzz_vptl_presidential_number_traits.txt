@@ -62,7 +62,10 @@
 	remove_trait = vptl_presidential_history_marker_no_60
 
 	if = {
-		limit = { has_variable = vptl_presidential_order_number }
+		limit = {
+			has_variable = vptl_presidential_order_number
+			NOT = { has_variable = vptl_presidential_order_number_display_suppressed }
+		}
 		if = {
 			limit = { var:vptl_presidential_order_number = 1 }
 			add_trait = vptl_presidential_history_marker_no_1
