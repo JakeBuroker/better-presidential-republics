@@ -81,3 +81,13 @@
 		localization_key = vptl_presidential_successor_designated
 	}
 }
+
+character_role_vptl_former_president_custom_loc = {
+	type = character
+	random_valid = yes
+
+	text = {
+		trigger = { always = yes }
+		localization_key = character_role_vptl_former_president_title
+	}
+}

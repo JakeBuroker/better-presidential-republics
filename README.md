@@ -25,6 +25,7 @@ A lightweight Victoria 3 gameplay/UI mod that makes presidential republics feel 
 - Gives former presidents and vice presidents small visible service traits that mirror their tracked service.
 - Adds a presidential transition notification when a tracked president changes.
 - Seeds easy 1836 presidential numbering for several vanilla presidential republics.
+- When the personal ECCHI-backed USA roster is present, seeds John Quincy Adams with one prior presidential term and Martin Van Buren with one prior vice-presidential term; Jackson's and Calhoun's existing two-term seeds remain unchanged.
 - Uses vanilla character templates for startup and succession handling and does not ship character-pack stand-ins for missing historical politicians.
 
 The same character may return for a nonconsecutive presidency, but the current president-number state is stored once per character. Separate numbering for multiple nonconsecutive service episodes is deferred.

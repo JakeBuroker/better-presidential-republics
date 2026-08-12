@@ -159,3 +159,36 @@ vptl_show_presidential_opposition_running_mate_sgui = {
 		}
 	}
 }
+
+vptl_show_presidential_party_ticket_sgui = {
+	scope = party
+	is_shown = {
+		party_has_members = yes
+		vptl_presidential_party_ticket_generation_current = yes
+	}
+}
+
+vptl_show_presidential_party_ticket_candidate_sgui = {
+	scope = party
+	is_shown = {
+		vptl_presidential_party_ticket_generation_current = yes
+		has_variable = vptl_presidential_party_ticket_candidate
+		var:vptl_presidential_party_ticket_candidate ?= {
+			vptl_presidential_candidate_eligible = yes
+			this.interest_group ?= { is_member_of_party = root }
+		}
+	}
+}
+
+vptl_show_presidential_party_ticket_running_mate_sgui = {
+	scope = party
+	is_shown = {
+		vptl_presidential_party_ticket_generation_current = yes
+		has_variable = vptl_presidential_party_ticket_running_mate
+		var:vptl_presidential_party_ticket_running_mate ?= {
+			vptl_presidential_party_existing_running_mate_eligible = yes
+			this.interest_group ?= { is_member_of_party = root }
+			NOT = { root.var:vptl_presidential_party_ticket_candidate ?= this }
+		}
+	}
+}

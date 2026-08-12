@@ -42,6 +42,8 @@ character_role_vptl_former_president = {
 	texture = "gfx/interface/icons/character_role_icons/politician.dds"
 
 	type = politician
-	priority = 20
+	priority = 55
 
+	title_format = custom
+	title_preposition = PREP_IN
 }
