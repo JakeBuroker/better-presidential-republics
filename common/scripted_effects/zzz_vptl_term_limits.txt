@@ -52,6 +52,9 @@
 	}
 }
 
+# Main presidential state changes live here. Each effect is a reusable function run from an on-action.
+# Most values are stored on the country; character blocks update the individual politician.
+
 vptl_clear_presidential_accession_markers = {
 	remove_variable = vptl_presidential_accession_elected
 	remove_variable = vptl_presidential_accession_succeeded

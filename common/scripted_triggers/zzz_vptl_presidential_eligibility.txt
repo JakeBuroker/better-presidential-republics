@@ -61,6 +61,9 @@ vptl_usa_presidential_origin_eligible = {
 	}
 }
 
+# These triggers are reusable yes/no conditions for candidates and successors.
+# Character triggers run on a character scope; owner points back to that character's country.
+
 vptl_presidential_basic_eligibility = {
 	vptl_presidential_candidate_meets_age_requirement = yes
 	vptl_usa_presidential_origin_eligible = yes

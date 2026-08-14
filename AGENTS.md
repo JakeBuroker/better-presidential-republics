@@ -20,7 +20,7 @@ Validation and reporting:
 
 - Run `powershell -ExecutionPolicy Bypass -File tools\validate_mod.ps1 -ModPath .` after every implementation.
 - Static validation only checks repository health; it does not prove Victoria 3 booted or that election behavior is correct.
-- Report files changed, identifiers added or changed, validation results, and manual test cases still needed.
+- After changes report the estimated play-test cases that will be needed.
 
 High-risk integration files:
 
