@@ -4,6 +4,9 @@
 	}
 }
 
+# On-actions are Victoria 3 event hooks. They call BPR effects at lifecycle events.
+# Keep the hooks small; detailed work belongs in scripted effects and triggers.
+
 on_monthly_pulse_country = {
 	on_actions = {
 		vptl_presidential_term_limits_monthly

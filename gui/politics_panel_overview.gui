@@ -1,5 +1,8 @@
 ﻿@non_layoutpolicy_max_width = 300 #for elements that can not use a layoutpolicy, need to be adapted for lowest resolution 1600x900.
 
+# Whole-file override for the Politics overview. Bindings decide what existing state displays.
+# A GUI scope must be valid before its character, party, or IG getter is used.
+
 types politics_panel_types
 {
 	### IG ITEM BAR

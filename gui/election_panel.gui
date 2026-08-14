@@ -9,6 +9,9 @@
 @panel_width_plus_30 = 570			# used to be 490
 @panel_width_plus_70 = 610			# used to be 530
 
+# Whole-file override for the election campaign panel. Vanilla supplies party and polling data.
+# BPR adds guarded nominee bindings without changing the election result.
+
 types election_panel_types
 {
 	type election_ig_list = flowcontainer {
