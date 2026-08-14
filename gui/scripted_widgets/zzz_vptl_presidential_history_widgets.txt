@@ -1,0 +1,2 @@
+﻿gui/vptl_presidential_history_button.gui = vptl_presidential_history_button
+gui/vptl_presidential_history_window.gui = vptl_presidential_history_window

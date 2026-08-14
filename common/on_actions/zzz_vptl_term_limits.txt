@@ -90,15 +90,22 @@ vptl_presidential_term_limits_monthly = {
 		vptl_correct_unexpected_presidential_ruler_change = yes
 		vptl_initialize_presidential_term_limits = yes
 		vptl_record_presidential_service_time = yes
+		vptl_sync_presidential_history_after_ruler_change = yes
 	}
 }
 
 vptl_presidential_inauguration_cleanup_monthly = {
 	trigger = {
-		has_variable = vptl_presidential_inauguration_pending
+		OR = {
+			has_variable = vptl_presidential_inauguration_pending
+			has_variable = vptl_presidential_history_current_slot
+		}
 		NOT = { vptl_presidential_transition_qualifies = yes }
 	}
-	effect = { vptl_maintain_presidential_inauguration_transition = yes }
+	effect = {
+		vptl_maintain_presidential_inauguration_transition = yes
+		vptl_sync_presidential_history_after_ruler_change = yes
+	}
 }
 
 vptl_presidential_term_limits_monthly_elections = {
@@ -112,6 +119,7 @@ vptl_presidential_term_limits_monthly_elections = {
 		vptl_finalize_presidential_election_transition_if_campaign_ended = yes
 		vptl_promote_presidential_successor_if_tracked_ruler_is_dead = yes
 		vptl_correct_presidential_ruler_change_during_campaign = yes
+		vptl_sync_presidential_history_after_ruler_change = yes
 	}
 }
 
@@ -214,6 +222,7 @@ vptl_presidential_successor_ruler_selected = {
 				vptl_apply_presidential_successor_if_current_ruler_died_during_campaign = yes
 				vptl_enforce_presidential_successor_for_non_election_transition = yes
 			}
+			vptl_sync_presidential_history_after_ruler_change = yes
 		}
 	}
 }
@@ -237,6 +246,21 @@ vptl_presidential_character_death = {
 			vptl_promote_running_mate_for_dead_presidential_ticket_head = yes
 			vptl_rebuild_presidential_campaign_ticket = yes
 			vptl_refresh_presidential_successor_display_marker = yes
+			if = {
+				limit = {
+					has_variable = vptl_presidential_history_current_president
+					var:vptl_presidential_history_current_president ?= { this = scope:vptl_presidential_dead_character }
+				}
+				set_variable = { name = vptl_presidential_history_departure_reason value = 1 }
+				set_variable = vptl_presidential_history_committed_change
+				set_variable = vptl_presidential_history_pending_constitutional_accession
+			}
+			vptl_sync_presidential_history_after_ruler_change = yes
+			remove_variable = vptl_presidential_history_committed_change
+			if = {
+				limit = { has_variable = vptl_presidential_history_current_slot }
+				remove_variable = vptl_presidential_history_pending_constitutional_accession
+			}
 		}
 		if = {
 			limit = {

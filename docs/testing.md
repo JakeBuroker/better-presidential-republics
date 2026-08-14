@@ -22,6 +22,10 @@ Static validation passing means the files are structurally cleaner; it does not 
 
 ## Campaign Death Regression Checklist
 
+## Presidential History Ledger Checklist
+
+Test USA 1836 startup, reelection, delayed inauguration, death succession, candidate and VP deaths, non-USA immediate inauguration, reloads, government-law loss, and a former president returning to office. Confirm Politics contains no history mode or ruler-card ledger button and remains responsive. Open the standalone map button near `{ 106 93 }` and verify exactly one fully populated Jackson record in a centered, newest-first text ledger, including month/year dates and safe unavailable labels for dead or dissolved scopes. Start and run the election: Jackson's episode and stored identity must remain unchanged, and no second episode may appear before a genuine accession. Reopen repeatedly and verify no duplicate entries, growing lag, journal errors, invalid scopes, or data mutation. On inauguration, the outgoing episode must close and the incoming ruler must open in the same update. Confirm reelection refreshes the same episode, death succession creates exactly one successor episode after installation, and candidate or VP deaths create none. With National History enabled, confirm both upper-left buttons and windows remain independently clickable. After more than 50 episodes, only the newest 50 should render while archive slots through 128 remain intact. Portraits, detailed law/war lists, and standalone VP records are intentionally deferred.
+
 Use a presidential republic with an active election campaign, then test these in separate reloads or separate campaigns:
 
 1. Kill the incumbent-side presidential candidate.

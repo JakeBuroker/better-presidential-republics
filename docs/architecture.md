@@ -38,9 +38,19 @@ Game on-actions
 - Eligibility layers: `vptl_presidential_basic_eligibility` handles age/origin; `vptl_presidential_candidate_eligible` handles elected-president selection; `vptl_presidential_new_successor_candidate_eligible` handles a new running-mate/successor term; and `vptl_presidential_sitting_successor_handoff_eligible` protects constitutional handoff for the sitting successor.
 - USA-specific eligibility: `vptl_presidential_origin_eligible`, `vptl_presidential_origin_ineligible`, `vptl_usa_natural_born_presidential_eligible`, age checks under the basic eligibility layer, and historical seed/fallback effects.
 
+## Presidential History Ledger
+
+The office ledger uses 128 append-only country-variable archive slots. Every slot stores the immutable president identity, associated successor, party and IG, ordinal, accession and departure markers, term counts, GDP and prestige snapshots, closed state, and month/year dates. Slots are never reused during a campaign, so completed episodes remain available and a returning president receives a separate later episode.
+
+BPR follows the locally installed National History mod's proven architecture without depending on it: a scripted upper-left map button refreshes a latest-50 country-variable display cache and opens a standalone centered window. Durable `recent_*` records are copied into separate `display_*` variables only when the window opens, exactly separating stored state from GUI-facing state. The first stable view is text-only and reads those display variables through direct guarded `Country.MakeScope.Var(...)` chains, so normal Politics performance is unaffected and BPR remains compatible with National History's separate button and namespace.
+
+Every genuine accession atomically captures the new archive record and shifts the previous newest records down through the 50-record recent cache. Closing updates the active archive slot and newest recent record together before any successor record opens. GDP, prestige, and term values for the active episode refresh only when the ledger opens or an existing lifecycle path explicitly refreshes it; the click then copies the recent cache into the presentation cache. Month/year dates use National History's proven explicit game-date table. No new global pulse is used.
+
+`vptl_open_presidential_history_episode`, `vptl_request_close_presidential_history_episode`, and `vptl_sync_presidential_history_after_ruler_change` are called from existing startup, monthly, ruler-selection, election, and death hooks after BPR ruler repairs. Generic synchronization is frozen during campaigns, settlement, and delayed inauguration. Only explicit death-succession and inauguration commits may cross those guards. Reelection refreshes the same open episode, while a different inaugurated ruler closes and opens records in one installation sequence. Detailed law/war event lists and standalone VP episode records remain follow-up work.
+
 ## Current Behavior
 
-The current system has immediate handoff behavior. Victoria 3 determines the winning political side, then BPR installs that side's final visible eligible ticket. There is no delayed inauguration period; any "president-elect" wording remains future roadmap language.
+Victoria 3 determines the winning political side, then BPR certifies that side's final visible eligible ticket. Delayed inauguration remains authoritative for configured countries. The history ledger opens only after actual office installation or the initial tracked ruler, and closes once on genuine departure.
 
 When a character becomes president, current successor, vice-president, and former-president roles are removed from that character without deleting historical presidential or successor service variables and traits. A living outgoing president regains the former-president role. Nonconsecutive presidencies are allowed, but one character still stores only one president-number variable rather than a separate number for each service episode.
 

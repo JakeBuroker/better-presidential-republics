@@ -192,3 +192,11 @@ vptl_show_presidential_party_ticket_running_mate_sgui = {
 		}
 	}
 }
+
+
+vptl_open_presidential_history_ledger_sgui = {
+	scope = country
+	effect = {
+		vptl_load_presidential_history_latest_50 = yes
+	}
+}
