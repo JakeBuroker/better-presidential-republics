@@ -22,6 +22,10 @@ Static validation passing means the files are structurally cleaner; it does not 
 
 ## Campaign Death Regression Checklist
 
+## Presidential History Ledger Checklist
+
+Test USA 1836 startup, reelection, delayed inauguration, death succession, candidate and VP deaths, non-USA immediate inauguration, reloads, government-law loss, and a former president returning to office. Confirm Politics contains no history mode or ruler-card ledger button and remains responsive. Open the standalone map button near `{ 106 93 }` and verify exactly one fully populated Jackson record in a centered, newest-first text ledger, including month/year dates and safe unavailable labels for dead or dissolved scopes. Start and run the election: Jackson's episode and stored identity must remain unchanged, and no second episode may appear before a genuine accession. Reopen repeatedly and verify no duplicate entries, growing lag, journal errors, invalid scopes, or data mutation. On inauguration, the outgoing episode must close and the incoming ruler must open in the same update. Confirm reelection refreshes the same episode, death succession creates exactly one successor episode after installation, and candidate or VP deaths create none. With National History enabled, confirm both upper-left buttons and windows remain independently clickable. After more than 50 episodes, only the newest 50 should render while archive slots through 128 remain intact. Portraits, detailed law/war lists, and standalone VP records are intentionally deferred.
+
 Use a presidential republic with an active election campaign, then test these in separate reloads or separate campaigns:
 
 1. Kill the incumbent-side presidential candidate.
@@ -81,6 +85,7 @@ Run these cases in order and verify the character variables before and after one
 1. Start a non-USA presidential republic whose incumbent has no explicit BPR seed. Confirm `vptl_presidential_terms_served = 1`, initial-incumbent accession text, no new four-year first-term modifier, no ruler change or transition notification, and no second startup/monthly increment.
 2. Let that incumbent win the next election. Confirm the count becomes 2 exactly once, term-limited status appears, the count remains 2 after a monthly tick, and the incumbent is absent from the following campaign's presidential slots.
 3. Start the USA in 1836. Confirm Andrew Jackson remains at 2 presidential terms and John C. Calhoun remains at 2 successor terms; neither value is reset or incremented by startup.
+   With the personal ECCHI-backed character roster enabled, also confirm John Quincy Adams shows President No. 6 and Presidential Service (1 Term), Martin Van Buren shows Vice Presidential Service (1 Term), and Adams remains eligible for a second presidential term rather than being marked term-limited.
 4. Start a country with a generic valid successor. Confirm `vptl_vice_presidential_terms_served = 1`, then reload and tick one month to confirm it remains 1.
 5. Give a sitting successor a second recorded successor term. Confirm they remain displayed and immediately succeed if the president dies, are rejected for a third running-mate term, and remain eligible for a presidential slot when otherwise qualified.
 6. Use a living one-term former president. Confirm they may run for president, cannot be selected as a new successor, lose the Former President role while restored to office, and increment their existing presidential count rather than resetting it.

@@ -132,6 +132,35 @@ vptl_presidential_existing_campaign_running_mate_eligible = {
 	}
 }
 
+# Party-owned tickets may preserve the exact saved running mate after that character
+# constitutionally succeeds during the campaign. New searches still use the ordinary
+# non-ruler successor trigger.
+vptl_presidential_party_existing_running_mate_eligible = {
+	OR = {
+		vptl_presidential_new_successor_candidate_eligible = yes
+		AND = {
+			vptl_presidential_basic_eligibility = yes
+			is_character_alive = yes
+			has_role_of_type = politician
+			is_ruler_of_own_country = yes
+			is_heir_of_own_country = no
+			NOT = { has_role = character_role_vptl_former_president }
+			NOT = {
+				AND = {
+					has_variable = vptl_vice_presidential_terms_served
+					var:vptl_vice_presidential_terms_served >= 2
+				}
+			}
+			owner = {
+				has_variable = vptl_presidential_election_transition
+				has_variable = vptl_presidential_death_succession_lock
+				has_variable = vptl_presidential_death_successor
+			}
+			owner.var:vptl_presidential_death_successor ?= this
+		}
+	}
+}
+
 # Election settlement may temporarily make the authoritative winning running mate the vanilla ruler.
 vptl_presidential_certified_running_mate_eligible = {
 	vptl_presidential_basic_eligibility = yes
@@ -159,6 +188,12 @@ vptl_presidential_certified_running_mate_eligible = {
 			OR = {
 				owner.var:vptl_presidential_ticket_running_mate ?= this
 				owner.var:vptl_presidential_opposition_running_mate ?= this
+				owner.var:vptl_presidential_winning_ticket_party ?= {
+					has_variable = vptl_presidential_party_ticket_running_mate
+					var:vptl_presidential_party_ticket_running_mate ?= {
+						owner.var:vptl_presidential_death_successor ?= this
+					}
+				}
 			}
 		}
 	}
@@ -240,7 +275,7 @@ vptl_presidential_same_handoff_in_progress = {
 	}
 }
 
-vptl_presidential_campaign_ticket_valid = {
+vptl_presidential_campaign_ticket_valid_legacy = {
 	has_variable = vptl_presidential_election_transition
 	has_variable = vptl_presidential_ticket_candidate
 	var:vptl_presidential_ticket_candidate ?= {
@@ -307,6 +342,19 @@ vptl_presidential_successor_uses_vice_president_title = {
 	}
 }
 
+vptl_presidential_party_ticket_generation_current = {
+	OR = {
+		has_variable = vptl_presidential_party_ticket_generation_a
+		has_variable = vptl_presidential_party_ticket_generation_b
+	}
+}
+
+vptl_presidential_campaign_ticket_valid = {
+	has_variable = vptl_presidential_election_transition
+	has_variable = vptl_presidential_party_ticket_system_active
+	has_variable_list = vptl_presidential_campaign_parties
+}
+
 vptl_presidential_transition_qualifies = {
 	has_law_or_variant = law_type:law_presidential_republic
 	government_transfer_of_power = presidential_elective
@@ -338,6 +386,7 @@ vptl_president_elect_is_valid = {
 vptl_presidential_transition_replacement_candidate_eligible = {
 	vptl_presidential_candidate_eligible = yes
 	is_ruler_of_own_country = no
+	NOT = { has_variable = vptl_presidential_transition_losing_ticket_exclusion }
 	NOT = { owner.var:vptl_presidential_transition_losing_candidate ?= this }
 	NOT = { owner.var:vptl_presidential_transition_losing_running_mate ?= this }
 	NOT = { owner.var:vptl_vice_president_elect ?= this }
@@ -347,6 +396,7 @@ vptl_presidential_transition_replacement_candidate_eligible = {
 vptl_presidential_transition_replacement_running_mate_eligible = {
 	vptl_presidential_new_successor_candidate_eligible = yes
 	NOT = { owner.var:vptl_president_elect ?= this }
+	NOT = { has_variable = vptl_presidential_transition_losing_ticket_exclusion }
 	NOT = { owner.var:vptl_presidential_transition_losing_candidate ?= this }
 	NOT = { owner.var:vptl_presidential_transition_losing_running_mate ?= this }
 }

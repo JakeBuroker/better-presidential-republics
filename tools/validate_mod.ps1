@@ -38,9 +38,14 @@ function Test-Utf8Bom {
 
 function Remove-InlineComment {
 	param([string]$Line)
-	$commentIndex = $Line.IndexOf("#")
-	if ($commentIndex -ge 0) {
-		return $Line.Substring(0, $commentIndex)
+	$inQuote = $false
+	for ($i = 0; $i -lt $Line.Length; $i++) {
+		if ($Line[$i] -eq '"') {
+			$inQuote = -not $inQuote
+		}
+		elseif ($Line[$i] -eq '#' -and -not $inQuote) {
+			return $Line.Substring(0, $i)
+		}
 	}
 	return $Line
 }
@@ -466,16 +471,19 @@ if ((Test-Path $presidentialEffectsPath) -and (Test-Path $presidentialOnActionsP
 
 $presidentialTriggersPath = Join-Path $resolvedModPath "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt"
 $presidentialGuiPath = Join-Path $resolvedModPath "common\scripted_guis\zzz_vptl_term_limits.txt"
+$electionPanelGuiPath = Join-Path $resolvedModPath "gui\election_panel.gui"
 if ((Test-Path $presidentialTriggersPath) -and (Test-Path $presidentialGuiPath) -and (Test-Path $presidentialEffectsPath)) {
 	$candidateEligibilityBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_candidate_eligible"
 	$newSuccessorEligibilityBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_new_successor_candidate_eligible"
 	$existingCampaignRunningMateEligibilityBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_existing_campaign_running_mate_eligible"
+	$partyExistingRunningMateEligibilityBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_party_existing_running_mate_eligible"
 	$certifiedRunningMateEligibilityBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_certified_running_mate_eligible"
 	$certifiedOutgoingVicePresidentElectEligibilityBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_certified_outgoing_vice_president_elect_eligible"
 	$sittingSuccessorEligibilityBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_sitting_successor_handoff_eligible"
 	$ticketValidationBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_campaign_ticket_valid"
-	$incumbentRunningMateGuiBlock = Get-TopLevelBlockText $presidentialGuiPath "vptl_show_presidential_ticket_running_mate_sgui"
-	$oppositionRunningMateGuiBlock = Get-TopLevelBlockText $presidentialGuiPath "vptl_show_presidential_opposition_running_mate_sgui"
+	$partyTicketGuiBlock = Get-TopLevelBlockText $presidentialGuiPath "vptl_show_presidential_party_ticket_sgui"
+	$partyCandidateGuiBlock = Get-TopLevelBlockText $presidentialGuiPath "vptl_show_presidential_party_ticket_candidate_sgui"
+	$partyRunningMateGuiBlock = Get-TopLevelBlockText $presidentialGuiPath "vptl_show_presidential_party_ticket_running_mate_sgui"
 	$replacementPresidentBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_transition_replacement_candidate_eligible"
 	$replacementVicePresidentBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_transition_replacement_running_mate_eligible"
 	$transitionSuccessorBlock = Get-TopLevelBlockText $presidentialTriggersPath "vptl_presidential_transition_sitting_successor_replacement_eligible"
@@ -485,15 +493,23 @@ if ((Test-Path $presidentialTriggersPath) -and (Test-Path $presidentialGuiPath) 
 	$electTicketRepairBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_repair_presidential_elect_ticket"
 	$ticketPruneBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_prune_invalid_presidential_campaign_ticket_slots"
 	$ticketUpdateBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_update_presidential_ticket_candidates"
+	$partyTicketMaintenanceBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_maintain_presidential_party_ticket"
+	$partyRegistryBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_refresh_presidential_campaign_party_registry"
+	$partyTicketCleanupBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_clear_presidential_campaign_party_tickets"
+	$losingTicketMarkerBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_mark_losing_presidential_party_tickets"
+	$campaignRepairBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_repair_presidential_campaign_ticket_if_needed"
+	$legacyMigrationBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_migrate_legacy_presidential_campaign_tickets"
 	$inaugurationInstallBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_inaugurate_president_elect"
+	$electionPanelGuiText = if (Test-Path $electionPanelGuiPath) { [System.IO.File]::ReadAllText($electionPanelGuiPath) } else { '' }
 
 	if ([string]::IsNullOrWhiteSpace($candidateEligibilityBlock) -or
 		[string]::IsNullOrWhiteSpace($newSuccessorEligibilityBlock) -or
 		[string]::IsNullOrWhiteSpace($existingCampaignRunningMateEligibilityBlock) -or
+		[string]::IsNullOrWhiteSpace($partyExistingRunningMateEligibilityBlock) -or
 		[string]::IsNullOrWhiteSpace($certifiedRunningMateEligibilityBlock) -or
 		[string]::IsNullOrWhiteSpace($certifiedOutgoingVicePresidentElectEligibilityBlock) -or
 		[string]::IsNullOrWhiteSpace($sittingSuccessorEligibilityBlock)) {
-		Add-Issue "eligibility-layers" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Separate presidential-candidate, new-successor, saved-running-mate, certified-running-mate, outgoing-VP-elect, and sitting-successor eligibility triggers are required."
+		Add-Issue "eligibility-layers" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Separate presidential-candidate, new-successor, legacy and party saved-running-mate, certified-running-mate, outgoing-VP-elect, and sitting-successor eligibility triggers are required."
 	}
 	if ($candidateEligibilityBlock -match 'vptl_vice_presidential_terms_served|character_role_vptl_former_president') {
 		Add-Issue "presidential-eligibility" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Presidential candidates must not be blocked by successor-term count or former-president history."
@@ -541,52 +557,113 @@ if ((Test-Path $presidentialTriggersPath) -and (Test-Path $presidentialGuiPath) 
 	}
 	if ($certifiedRunningMateEligibilityBlock -notmatch 'vptl_presidential_death_succession_lock' -or
 		$certifiedRunningMateEligibilityBlock -notmatch 'owner\.var:vptl_presidential_death_successor\s*\?=\s*this' -or
-		$certifiedRunningMateEligibilityBlock -notmatch 'owner\.var:vptl_presidential_ticket_running_mate\s*\?=\s*this' -or
-		$certifiedRunningMateEligibilityBlock -notmatch 'owner\.var:vptl_presidential_opposition_running_mate\s*\?=\s*this') {
-		Add-Issue "certified-running-mate-death-successor" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Certification must retain a saved running mate who became ruler through the recorded campaign death succession."
+		$certifiedRunningMateEligibilityBlock -notmatch 'owner\.var:vptl_presidential_winning_ticket_party' -or
+		$certifiedRunningMateEligibilityBlock -notmatch 'vptl_presidential_party_ticket_running_mate') {
+		Add-Issue "certified-running-mate-death-successor" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Certification must retain the winning party's exact saved running mate after recorded campaign death succession."
 	}
-	if (([regex]::Matches($finalRunningMateSelectionBlock, '\bvptl_presidential_certified_running_mate_eligible\s*=\s*yes')).Count -ne 2) {
-		Add-Issue "certified-running-mate-routing" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Both authoritative winning-ticket running-mate branches must use certified-running-mate eligibility."
+	if (([regex]::Matches($finalRunningMateSelectionBlock, '\bvptl_presidential_certified_running_mate_eligible\s*=\s*yes')).Count -ne 1) {
+		Add-Issue "certified-running-mate-routing" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "The authoritative party-owned running mate must use certified-running-mate eligibility exactly once."
 	}
-	if (([regex]::Matches($finalRunningMateSelectionBlock, '\bvptl_presidential_new_successor_candidate_eligible\s*=\s*yes')).Count -ne 4) {
-		Add-Issue "certified-running-mate-fallback" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Party and interest-group fallback searches must retain normal new-successor eligibility."
+	if (([regex]::Matches($finalRunningMateSelectionBlock, '\bvptl_presidential_new_successor_candidate_eligible\s*=\s*yes')).Count -ne 2) {
+		Add-Issue "certified-running-mate-fallback" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Party fallback searches must retain normal new-successor eligibility."
 	}
-	$incumbentDeathSuccessorWinnerPattern = '(?s)else_if\s*=\s*\{\s*limit\s*=\s*\{\s*has_variable\s*=\s*vptl_presidential_election_transition\s*has_variable\s*=\s*vptl_presidential_death_succession_lock\s*has_variable\s*=\s*vptl_presidential_death_successor\s*has_variable\s*=\s*vptl_presidential_ticket_running_mate\s*ruler\s*\?=\s*\{\s*owner\.var:vptl_presidential_death_successor\s*\?=\s*this\s*owner\.var:vptl_presidential_ticket_running_mate\s*\?=\s*this\s*\}\s*\}\s*set_variable\s*=\s*\{\s*name\s*=\s*vptl_presidential_winning_ticket_side\s+value\s*=\s*1\s*\}'
-	$oppositionDeathSuccessorWinnerPattern = '(?s)else_if\s*=\s*\{\s*limit\s*=\s*\{\s*has_variable\s*=\s*vptl_presidential_election_transition\s*has_variable\s*=\s*vptl_presidential_death_succession_lock\s*has_variable\s*=\s*vptl_presidential_death_successor\s*has_variable\s*=\s*vptl_presidential_opposition_running_mate\s*ruler\s*\?=\s*\{\s*owner\.var:vptl_presidential_death_successor\s*\?=\s*this\s*owner\.var:vptl_presidential_opposition_running_mate\s*\?=\s*this\s*\}\s*\}\s*set_variable\s*=\s*\{\s*name\s*=\s*vptl_presidential_winning_ticket_side\s+value\s*=\s*2\s*\}'
-	if ($winningSideIdentificationBlock -notmatch $incumbentDeathSuccessorWinnerPattern -or
-		$winningSideIdentificationBlock -notmatch $oppositionDeathSuccessorWinnerPattern) {
-		Add-Issue "death-successor-winning-side" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Winner identification must classify a recorded campaign death successor through the exact existing running-mate slot on either ticket."
-	}
-	$directIncumbentCandidateIndex = $winningSideIdentificationBlock.IndexOf('owner.var:vptl_presidential_ticket_candidate ?= this')
-	$directOppositionCandidateIndex = $winningSideIdentificationBlock.IndexOf('owner.var:vptl_presidential_opposition_candidate ?= this')
-	$incumbentDeathSuccessorRunningMateIndex = $winningSideIdentificationBlock.IndexOf('owner.var:vptl_presidential_ticket_running_mate ?= this')
-	$oppositionDeathSuccessorRunningMateIndex = $winningSideIdentificationBlock.IndexOf('owner.var:vptl_presidential_opposition_running_mate ?= this')
-	$partyFallbackIndex = $winningSideIdentificationBlock.IndexOf('save_scope_as = vptl_presidential_vanilla_selected_ig')
-	if ($directIncumbentCandidateIndex -lt 0 -or $directOppositionCandidateIndex -lt 0 -or
-		$incumbentDeathSuccessorRunningMateIndex -lt 0 -or $oppositionDeathSuccessorRunningMateIndex -lt 0 -or $partyFallbackIndex -lt 0 -or
-		$incumbentDeathSuccessorRunningMateIndex -le $directIncumbentCandidateIndex -or
-		$oppositionDeathSuccessorRunningMateIndex -le $directOppositionCandidateIndex -or
-		$incumbentDeathSuccessorRunningMateIndex -ge $partyFallbackIndex -or
-		$oppositionDeathSuccessorRunningMateIndex -ge $partyFallbackIndex) {
-		Add-Issue "death-successor-winning-side-order" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Exact death-successor running-mate matches must run after direct candidate matches and before party or interest-group fallback."
+	$directCandidateIndex = $winningSideIdentificationBlock.IndexOf('vptl_presidential_party_ticket_candidate')
+	$deathSuccessorIndex = $winningSideIdentificationBlock.IndexOf('vptl_presidential_death_succession_lock')
+	$partyFallbackIndex = $winningSideIdentificationBlock.IndexOf('vptl_presidential_vanilla_selected_party')
+	$igFallbackIndex = $winningSideIdentificationBlock.IndexOf('vptl_presidential_vanilla_selected_ig')
+	if ($directCandidateIndex -lt 0 -or $deathSuccessorIndex -lt 0 -or $partyFallbackIndex -lt 0 -or $igFallbackIndex -lt 0 -or
+		$deathSuccessorIndex -le $directCandidateIndex -or $deathSuccessorIndex -ge $partyFallbackIndex -or $partyFallbackIndex -ge $igFallbackIndex -or
+		$winningSideIdentificationBlock -notmatch 'vptl_presidential_party_ticket_running_mate' -or
+		$winningSideIdentificationBlock -notmatch 'owner\.var:vptl_presidential_death_successor\s*\?=\s*this') {
+		Add-Issue "multi-party-winner-order" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Winner identification must check exact party candidate, exact death-successor running mate, party, and unique IG in that order."
 	}
 	if ($sittingSuccessorEligibilityBlock -match 'vptl_vice_presidential_terms_served|character_role_vptl_former_president') {
 		Add-Issue "successor-handoff-eligibility" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Sitting successor handoff must not apply new-term or former-president selection restrictions."
 	}
-	foreach ($block in @($ticketValidationBlock, $incumbentRunningMateGuiBlock, $oppositionRunningMateGuiBlock)) {
-		if ($block -notmatch '\bvptl_presidential_existing_campaign_running_mate_eligible\s*=\s*yes') {
-			Add-Issue "running-mate-eligibility" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Ticket validation and both running-mate GUI slots must preserve only an eligible existing campaign running mate."
+	foreach ($block in @($partyRunningMateGuiBlock, $partyTicketMaintenanceBlock)) {
+		if ($block -notmatch '\bvptl_presidential_party_existing_running_mate_eligible\s*=\s*yes') {
+			Add-Issue "running-mate-eligibility" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Party-ticket maintenance and GUI visibility must preserve only an eligible existing running mate."
 			break
 		}
-	}
-	if (([regex]::Matches($ticketPruneBlock, '\bvptl_presidential_existing_campaign_running_mate_eligible\s*=\s*yes')).Count -ne 2) {
-		Add-Issue "campaign-running-mate-pruning" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Both saved running-mate slots must use the campaign-preservation trigger when pruning invalid tickets."
 	}
 	if ($ticketUpdateBlock -match '\bvptl_presidential_existing_campaign_running_mate_eligible\s*=\s*yes') {
 		Add-Issue "campaign-running-mate-selection" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "The saved-running-mate exception must never be used to select a new running mate."
 	}
-	if ($ticketUpdateBlock -notmatch 'NOT\s*=\s*\{\s*has_variable\s*=\s*vptl_presidential_ticket_candidate\s*\}\s*ruler\s*\?=') {
-		Add-Issue "campaign-ticket-head-preservation" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "The current ruler may fill the incumbent ticket head only when that slot is vacant."
+	if ($partyTicketMaintenanceBlock -notmatch 'NOT\s*=\s*\{\s*has_variable\s*=\s*vptl_presidential_party_ticket_candidate\s*\}' -or
+		$partyTicketMaintenanceBlock -notmatch 'is_member_of_party\s*=\s*scope:vptl_presidential_campaign_party') {
+		Add-Issue "campaign-ticket-head-preservation" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "A party nominee must remain stable and be replaced only when its slot is vacant or party membership is lost."
+	}
+	foreach ($required in @('every_active_party', 'vptl_presidential_campaign_parties', 'vptl_presidential_party_ticket_generation_current', 'add_to_variable_list')) {
+		if ($partyRegistryBlock -notmatch $required) {
+			Add-Issue "multi-party-registry" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Campaign maintenance must register every active party and enforce the current ticket generation."
+			break
+		}
+	}
+	foreach ($required in @('vptl_presidential_party_ticket_system_active', 'vptl_presidential_campaign_ticket_generation\s+value\s*=\s*1', 'vptl_presidential_campaign_ticket_generation\s+value\s*=\s*2', 'vptl_migrate_legacy_presidential_campaign_tickets', 'every_in_list', 'vptl_maintain_presidential_party_ticket')) {
+		if ($ticketUpdateBlock -notmatch $required) {
+			Add-Issue "multi-party-generation" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Party tickets must initialize once per campaign, alternate generation, migrate legacy slots, and maintain every registered party."
+			break
+		}
+	}
+	if ($campaignRepairBlock -match 'NOT\s*=\s*\{\s*vptl_presidential_campaign_ticket_valid' -or
+		$campaignRepairBlock -notmatch 'vptl_update_presidential_ticket_candidates\s*=\s*yes') {
+		Add-Issue "multi-party-refresh" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Existing campaigns must refresh the active-party registry on each guarded election maintenance pulse."
+	}
+	if ($campaignPreparationBlock -notmatch 'vptl_clear_presidential_campaign_party_tickets\s*=\s*yes') {
+		Add-Issue "multi-party-new-campaign-cleanup" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Campaign preparation must retire any interrupted prior generation before creating new party tickets."
+	}
+	foreach ($legacyState in @('vptl_presidential_ticket_candidate', 'vptl_presidential_ticket_running_mate', 'vptl_presidential_opposition_candidate', 'vptl_presidential_opposition_running_mate')) {
+		if ($legacyMigrationBlock -notmatch $legacyState) {
+			Add-Issue "multi-party-legacy-migration" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Legacy active campaigns must migrate all four historical ticket slots into party-owned state."
+			break
+		}
+		if ($legacyMigrationBlock -notmatch "remove_variable\s*=\s*$([regex]::Escape($legacyState))") {
+			Add-Issue "multi-party-legacy-retirement" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "All four legacy ticket slots must be retired immediately after one-time migration."
+			break
+		}
+	}
+	if ($settlementBlock -notmatch 'vptl_identify_presidential_winning_ticket_side\s*=\s*yes' -or
+		$settlementBlock -notmatch 'vptl_clear_presidential_campaign_party_tickets\s*=\s*yes' -or
+		$certificationBlock -notmatch 'vptl_mark_losing_presidential_party_tickets\s*=\s*yes') {
+		Add-Issue "multi-party-settlement" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Settlement must certify party-owned state, mark losing tickets temporarily, and then clear campaign party tickets."
+	}
+	if ($replacementPresidentBlock -notmatch 'vptl_presidential_transition_losing_ticket_exclusion' -or
+		$replacementVicePresidentBlock -notmatch 'vptl_presidential_transition_losing_ticket_exclusion' -or
+		$cleanupBlock -notmatch 'vptl_presidential_transition_losing_ticket_exclusion') {
+		Add-Issue "multi-party-losing-exclusions" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "All losing party-ticket characters must be excluded only during the current transition and cleared afterward."
+	}
+	foreach ($required in @('scope\s*=\s*party', 'vptl_presidential_party_ticket_generation_current', 'vptl_presidential_party_ticket_candidate')) {
+		if ($partyCandidateGuiBlock -notmatch $required) {
+			Add-Issue "multi-party-gui-scope" "common\scripted_guis\zzz_vptl_term_limits.txt" 0 "Party candidate visibility must be driven by current party-owned ticket state."
+			break
+		}
+	}
+	if ($electionPanelGuiText -notmatch 'datamodel\s*=\s*"?\[Election\.GetParties\]' -or
+		$electionPanelGuiText -notmatch "Party\.MakeScope\.Var\('vptl_presidential_party_ticket_candidate'\)" -or
+		$electionPanelGuiText -notmatch "Party\.MakeScope\.Var\('vptl_presidential_party_ticket_running_mate'\)" -or
+		$electionPanelGuiText -match '(?m)^\s*vptl_presidential_candidates_election_panel\s*=\s*\{\}\s*$') {
+		Add-Issue "multi-party-election-panel" "gui\election_panel.gui" 0 "The election panel must show party-owned nominees inside Election.GetParties rows and must not instantiate the legacy two-ticket strip."
+	}
+	if ($ticketValidationBlock -match 'every_active_party\s*=') {
+		Add-Issue "unsupported-trigger-party-iteration" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "Scripted triggers must not use every_active_party; party iteration is an effect-only operation."
+	}
+	if ($partyRegistryBlock -match '(?m)^\s*owner\s*=\s*\{' -or
+		$partyRegistryBlock -match '(?m)^\s*owner\.var:' -or
+		$partyRegistryBlock -notmatch 'scope:vptl_presidential_campaign_country' -or
+		$partyRegistryBlock -notmatch 'target\s*=\s*scope:vptl_current_campaign_party') {
+		Add-Issue "party-scope-owner-link" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Party-scope registry effects must use the saved country scope and explicit party target instead of owner links."
+	}
+	if ($partyTicketMaintenanceBlock -match '(?m)^\s*owner\s*=\s*\{\s*save_scope_as\s*=\s*vptl_presidential_campaign_country') {
+		Add-Issue "party-maintenance-owner-link" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Party-ticket maintenance must not resolve its country through an unsupported party owner link."
+	}
+	if ($partyCandidateGuiBlock -notmatch 'has_variable\s*=\s*vptl_presidential_party_ticket_candidate' -or
+		$partyRunningMateGuiBlock -notmatch 'has_variable\s*=\s*vptl_presidential_party_ticket_running_mate') {
+		Add-Issue "party-gui-variable-guards" "common\scripted_guis\zzz_vptl_term_limits.txt" 0 "Party-ticket GUI visibility must guard both saved character variables before dereferencing them."
+	}
+	$partyCandidateVisibilityCount = ([regex]::Matches($electionPanelGuiText, "vptl_show_presidential_party_ticket_candidate_sgui'\)\.IsShown")).Count
+	$partyRunningMateVisibilityCount = ([regex]::Matches($electionPanelGuiText, "vptl_show_presidential_party_ticket_running_mate_sgui'\)\.IsShown")).Count
+	if ($partyCandidateVisibilityCount -lt 2 -or $partyRunningMateVisibilityCount -lt 2) {
+		Add-Issue "party-gui-dereference-guards" "gui\election_panel.gui" 0 "Party candidate and running-mate data contexts must be protected by visible and unavailable-state scripted-GUI guards."
 	}
 	foreach ($required in @(
 		'vptl_presidential_basic_eligibility',
@@ -799,8 +876,21 @@ $successorRoleTitlesPath = Join-Path $resolvedModPath "common\customizable_local
 $presidentialSystemLocPath = Join-Path $resolvedModPath "common\customizable_localization\zzz_vptl_presidential_system.txt"
 $presidentialEnglishLocPath = Join-Path $resolvedModPath "localization\english\vptl_term_limits_l_english.yml"
 
+$formerPresidentRoleBlock = Get-TopLevelBlockText $electRolesPath "character_role_vptl_former_president"
+$formerPresidentTitleBlock = Get-TopLevelBlockText $successorRoleTitlesPath "character_role_vptl_former_president_custom_loc"
+if ($formerPresidentRoleBlock -notmatch 'priority\s*=\s*55' -or
+	$formerPresidentRoleBlock -notmatch 'title_format\s*=\s*custom' -or
+	$formerPresidentRoleBlock -notmatch 'title_preposition\s*=\s*PREP_IN') {
+	Add-Issue "former-president-title" "common\character_roles\zzz_vptl_successor_roles.txt" 0 "The former-president role must use custom formatting, PREP_IN, and priority 55 so it outranks ordinary roles while remaining below active presidential offices."
+}
+if ([string]::IsNullOrWhiteSpace($formerPresidentTitleBlock) -or
+	$formerPresidentTitleBlock -notmatch 'localization_key\s*=\s*character_role_vptl_former_president_title') {
+	Add-Issue "former-president-title" "common\customizable_localization\zzz_vptl_successor_role_titles.txt" 0 "The former-president custom localization must resolve to character_role_vptl_former_president_title."
+}
+
 $orderSeedBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_seed_1836_presidential_order_numbers"
 $usaOrderSeedBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_seed_usa_presidential_order_numbers"
+$usaServiceHistoryBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_seed_usa_historical_service_history"
 $orderSuppressionSeedBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_seed_1836_presidential_order_display_suppressions"
 $orderAssignmentBlock = Get-TopLevelBlockText $presidentialEffectsPath "vptl_assign_presidential_order_number_to_current_ruler"
 if ($orderAssignmentBlock -notmatch 'NOT\s*=\s*\{\s*has_variable\s*=\s*vptl_presidential_historical_order_numbers_v2_initialized\s*\}' -or
@@ -809,6 +899,21 @@ if ($orderAssignmentBlock -notmatch 'NOT\s*=\s*\{\s*has_variable\s*=\s*vptl_pres
 	$orderAssignmentBlock -notmatch 'vptl_seed_1836_presidential_order_display_suppressions\s*=\s*yes' -or
 	$orderAssignmentBlock -notmatch 'set_variable\s*=\s*vptl_presidential_historical_order_numbers_v2_initialized') {
 	Add-Issue "historical-order-revision" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Historical office metadata must use the save-compatible v2 latch and run number and suppression seeds once."
+}
+if ($orderAssignmentBlock -notmatch 'NOT\s*=\s*\{\s*has_variable\s*=\s*vptl_presidential_historical_service_seeds_v3_initialized\s*\}' -or
+	$orderAssignmentBlock -notmatch 'vptl_seed_usa_historical_service_history\s*=\s*yes' -or
+	$orderAssignmentBlock -notmatch 'set_variable\s*=\s*vptl_presidential_historical_service_seeds_v3_initialized') {
+	Add-Issue "historical-service-revision" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Historical USA service metadata must use the save-compatible v3 latch and run its seed once."
+}
+if ($usaServiceHistoryBlock -notmatch 'has_trait\s*=\s*vptl_presidential_service_one_term_trait[\s\S]*?vptl_presidential_terms_served\s+value\s*=\s*1' -or
+	$usaServiceHistoryBlock -notmatch 'has_trait\s*=\s*vptl_presidential_service_one_term_trait[\s\S]*?vptl_presidential_years_served\s+value\s*=\s*4' -or
+	$usaServiceHistoryBlock -notmatch 'has_trait\s*=\s*vptl_presidential_history_marker_no_6[\s\S]*?vptl_presidential_order_number\s+value\s*=\s*6' -or
+	$usaServiceHistoryBlock -notmatch 'add_character_role\s*=\s*character_role_vptl_former_president') {
+	Add-Issue "usa-personal-service-seed" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Personal history traits must seed one-term presidential service, President No. 6, and the former-president role without donor template references."
+}
+if ($usaServiceHistoryBlock -notmatch 'has_trait\s*=\s*vptl_vice_presidential_service_one_term_trait[\s\S]*?vptl_vice_presidential_terms_served\s+value\s*=\s*1' -or
+	$usaServiceHistoryBlock -notmatch 'has_trait\s*=\s*vptl_vice_presidential_service_one_term_trait[\s\S]*?vptl_vice_presidential_years_served\s+value\s*=\s*4') {
+	Add-Issue "usa-personal-vice-service-seed" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Personal history traits must seed one tracked vice-presidential term and four years without donor template references."
 }
 
 $historicalNumberSeeds = @(
@@ -916,6 +1021,114 @@ foreach ($tag in @('USA', 'CLM', 'ECU', 'PNI', 'TEX', 'UCA')) {
 if ($successorCountryTitlesText -notmatch 'c:URU[\s\S]*?localization_key\s*=\s*vptl_presidential_successor_senate_president' -or
 	$successorRoleTitlesText -notmatch 'c:URU[\s\S]*?localization_key\s*=\s*vptl_presidential_successor_senate_president') {
 	Add-Issue "successor-title-mapping" "common\customizable_localization" 0 "Uruguay must use President of the Senate in both country and character-role localization."
+}
+
+# Standalone presidential history ledger: append-only country archive plus the
+# National History-style latest-50 presentation cache.
+$historyEffectsPath = Join-Path $resolvedModPath "common\scripted_effects\zzz_vptl_presidential_history.txt"
+$historyDateEffectsPath = Join-Path $resolvedModPath "common\scripted_effects\zzz_vptl_presidential_history_dates.txt"
+$historyButtonPath = Join-Path $resolvedModPath "gui\vptl_presidential_history_button.gui"
+$historyWindowPath = Join-Path $resolvedModPath "gui\vptl_presidential_history_window.gui"
+$historyRegistryPath = Join-Path $resolvedModPath "gui\scripted_widgets\zzz_vptl_presidential_history_widgets.txt"
+$historyPoliticsPath = Join-Path $resolvedModPath "gui\politics_panel_overview.gui"
+$historyLocalizationPath = Join-Path $resolvedModPath "localization\english\vptl_presidential_history_l_english.yml"
+$historyEffectsText = if (Test-Path $historyEffectsPath) { [System.IO.File]::ReadAllText($historyEffectsPath) } else { '' }
+$historyDateEffectsText = if (Test-Path $historyDateEffectsPath) { [System.IO.File]::ReadAllText($historyDateEffectsPath) } else { '' }
+$historyButtonText = if (Test-Path $historyButtonPath) { [System.IO.File]::ReadAllText($historyButtonPath) } else { '' }
+$historyWindowText = if (Test-Path $historyWindowPath) { [System.IO.File]::ReadAllText($historyWindowPath) } else { '' }
+$historyRegistryText = if (Test-Path $historyRegistryPath) { [System.IO.File]::ReadAllText($historyRegistryPath) } else { '' }
+$historyPoliticsText = if (Test-Path $historyPoliticsPath) { [System.IO.File]::ReadAllText($historyPoliticsPath) } else { '' }
+$historyLocalizationText = if (Test-Path $historyLocalizationPath) { [System.IO.File]::ReadAllText($historyLocalizationPath) } else { '' }
+
+foreach ($effect in @('vptl_open_presidential_history_episode','vptl_request_close_presidential_history_episode','vptl_refresh_open_presidential_history_episode','vptl_load_presidential_history_latest_50','vptl_sync_presidential_history_after_ruler_change')) {
+	if ($historyEffectsText -notmatch "(?m)^$([regex]::Escape($effect))\s*=\s*\{") {
+		Add-Issue "history-ledger-effect" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Standalone history lifecycle effect '$effect' is missing."
+	}
+}
+foreach ($slot in 1..128) {
+	if ($historyEffectsText -notmatch "vptl_presidential_history_slot_$($slot)_populated") {
+		Add-Issue "history-ledger-archive-slot" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Append-only presidential archive slot $slot is missing."
+	}
+}
+foreach ($slot in 1..50) {
+	if ($historyEffectsText -notmatch "vptl_presidential_history_recent_$($slot)_populated" -or
+		$historyEffectsText -notmatch "vptl_copy_presidential_history_recent_to_display_slot\s*=\s*\{" -or
+		$historyEffectsText -notmatch "vptl_copy_presidential_history_recent_to_display_slot\s*=\s*\{\s*SLOT\s*=\s*$slot\s*\}" -or
+		$historyWindowText -notmatch "vptl_presidential_history_display_$($slot)_president") {
+		Add-Issue "history-ledger-recent-slot" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Latest-50 presentation slot $slot is not fully stored and rendered."
+	}
+}
+foreach ($field in @('president','vice_president','party','ig','number','accession_type','departure_reason','terms_at_start','terms_at_end','gdp_start','gdp_end','prestige_start','prestige_end','start_year','start_month','end_year','end_month','closed')) {
+	if ($historyEffectsText -notmatch "vptl_presidential_history_slot_.+_$field") {
+		Add-Issue "history-ledger-field" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Archive field '$field' is missing from the parameterized slot writer."
+	}
+}
+if ($historyEffectsText -notmatch 'vptl_shift_presidential_history_recent_cache\s*=\s*\{' -or
+	$historyEffectsText -notmatch 'vptl_presidential_history_recent_50_populated' -or
+	$historyEffectsText -notmatch 'vptl_presidential_history_recent_count\s+add\s*=\s*1') {
+	Add-Issue "history-ledger-latest-cache" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "The newest-first 50-record presentation cache is incomplete."
+}
+if ($historyDateEffectsText -notmatch '(?m)^vptl_capture_presidential_history_date\s*=\s*\{' -or
+	$historyDateEffectsText -notmatch 'game_date\s*>=\s*1836\.1\.1[\s\S]*?vptl_history_capture_year\s+value\s*=\s*1836[\s\S]*?vptl_history_capture_month\s+value\s*=\s*1' -or
+	$historyDateEffectsText -notmatch 'game_date\s*>=\s*1935\.12\.1[\s\S]*?vptl_history_capture_year\s+value\s*=\s*1935[\s\S]*?vptl_history_capture_month\s+value\s*=\s*12' -or
+	$historyEffectsText -match 'script_value:vptl_presidential_history_current_year' -or
+	(Test-Path (Join-Path $resolvedModPath "common\script_values\zzz_vptl_presidential_history.txt"))) {
+	Add-Issue "history-ledger-date" "common\scripted_effects\zzz_vptl_presidential_history_dates.txt" 0 "Month/year capture must use National History's proven explicit 1836-1935 date table, not an unverified dynamic-year expression."
+}
+if ($historyEffectsText -match 'add_journal_entry|has_journal_entry|je:je_vptl_presidential_history|scope:journal_entry|JournalEntry' -or
+	(Test-Path (Join-Path $resolvedModPath "common\journal_entries\zzz_vptl_presidential_history.txt")) -or
+	(Test-Path (Join-Path $resolvedModPath "common\journal_entry_groups\zzz_vptl_presidential_history.txt"))) {
+	Add-Issue "history-ledger-journal-remnant" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Standalone history must not retain journal-entry storage or creation."
+}
+if ($historyPoliticsText -match 'vptl_presidential_history_mode|vptl_presidential_history_record_item|vptl_show_presidential_history_button_sgui') {
+	Add-Issue "history-ledger-politics-remnant" "gui\politics_panel_overview.gui" 0 "Politics must not contain the removed history mode, cards, or ruler-card button."
+}
+if ($historyButtonText -notmatch 'position\s*=\s*\{\s*106\s+93\s*\}' -or
+	$historyButtonText -notmatch 'vptl_open_presidential_history_ledger_sgui' -or
+	$historyButtonText -notmatch "GetVariableSystem\.Toggle\('vptl_presidential_history_panel_open'\)" -or
+	$historyButtonText -notmatch 'visible\s*=\s*"\[GetMetaPlayer\.GetPlayedOrObservedCountry\.IsValid\]"' -or
+	$historyButtonText -match 'input_action\s*=' -or
+	$historyRegistryText -notmatch 'gui/vptl_presidential_history_button\.gui\s*=\s*vptl_presidential_history_button' -or
+	$historyRegistryText -notmatch 'gui/vptl_presidential_history_window\.gui\s*=\s*vptl_presidential_history_window') {
+	Add-Issue "history-ledger-standalone-widget" "gui\scripted_widgets\zzz_vptl_presidential_history_widgets.txt" 0 "The standalone button/window registration, position, or no-hotkey contract is missing."
+}
+if ($historyWindowText -notmatch "GetVariableSystem\.Exists\('vptl_presidential_history_panel_open'\)" -or
+	$historyWindowText -notmatch "Country\.MakeScope\.Var\('vptl_presidential_history_display_1_president'\)\.GetCharacter\.IsValid" -or
+	$historyWindowText -notmatch "Country\.MakeScope\.Var\('vptl_presidential_history_display_1_president'\)\.GetCharacter\.GetFullName" -or
+	$historyWindowText -notmatch "Country\.MakeScope\.Var\('vptl_presidential_history_display_50_president'\)" -or
+	$historyWindowText -match 'character_portrait' -or
+	$historyWindowText -match 'datacontext\s*=\s*"\[Country\.MakeScope\.Var') {
+	Add-Issue "history-ledger-window-binding" "gui\vptl_presidential_history_window.gui" 0 "The standalone text ledger must bind National History-style display records 1 through 50 through direct guarded scope chains, without portrait or nested data-context rendering."
+}
+if ($historyEffectsText -notmatch 'vptl_presidential_history_display_count\s+value\s*=\s*var:vptl_presidential_history_recent_count' -or
+	$historyEffectsText -notmatch 'vptl_presidential_history_display_\$SLOT\$_president\s+value\s*=\s*var:vptl_presidential_history_recent_\$SLOT\$_president') {
+	Add-Issue "history-ledger-display-cache" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Opening the standalone ledger must copy durable recent records into a separate National History-style display cache."
+}
+if ($historyEffectsText -notmatch 'NOT\s*=\s*\{\s*in_election_campaign\s*=\s*yes\s*\}' -or
+	$historyEffectsText -notmatch 'NOT\s*=\s*\{\s*has_variable\s*=\s*vptl_presidential_inauguration_pending\s*\}' -or
+	$historyEffectsText -notmatch 'vptl_presidential_history_committed_change' -or
+	$historyEffectsText -notmatch 'vptl_presidential_history_sync_in_progress') {
+	Add-Issue "history-ledger-transition-guard" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "History creation must stay suppressed during campaign and transition callbacks except for explicit committed accessions."
+}
+if ($initializationBlock -notmatch 'vptl_open_presidential_history_episode\s*=\s*yes' -or
+	$onActionText -notmatch 'vptl_sync_presidential_history_after_ruler_change\s*=\s*yes') {
+	Add-Issue "history-ledger-hooks" "common\on_actions\zzz_vptl_term_limits.txt" 0 "Startup and existing lifecycle hooks must call standalone history synchronization."
+}
+$historyInaugurationEffect = Get-TopLevelBlockText $presidentialEffectsPath "vptl_inaugurate_president_elect"
+if ($historyInaugurationEffect -notmatch 'vptl_presidential_history_inauguration_same_president' -or
+	$historyInaugurationEffect -notmatch 'vptl_request_close_presidential_history_episode\s*=\s*yes[\s\S]*?vptl_open_presidential_history_episode\s*=\s*yes') {
+	Add-Issue "history-ledger-inauguration" "common\scripted_effects\zzz_vptl_term_limits.txt" 0 "Inauguration must close and open standalone records atomically while reelection remains uninterrupted."
+}
+if ($onActionText -notmatch 'vptl_presidential_history_departure_reason\s+value\s*=\s*1[\s\S]*?vptl_presidential_history_committed_change[\s\S]*?vptl_sync_presidential_history_after_ruler_change') {
+	Add-Issue "history-ledger-death" "common\on_actions\zzz_vptl_term_limits.txt" 0 "Committed death succession must close and open exactly once after constitutional repair."
+}
+foreach ($key in @('vptl_presidential_history_section','vptl_presidential_history_open_tooltip','vptl_presidential_history_empty','vptl_presidential_history_current_episode','vptl_presidential_history_former_episode','vptl_presidential_history_unavailable_president','vptl_presidential_history_unavailable_vice_president','vptl_presidential_history_unavailable_party','vptl_presidential_history_unavailable_ig')) {
+	if ($historyLocalizationText -notmatch "(?m)^\s*$([regex]::Escape($key)):0\s+") {
+		Add-Issue "history-ledger-localization" "localization\english\vptl_presidential_history_l_english.yml" 0 "Missing standalone history localization '$key'."
+	}
+}
+if ($onActionText -match 'vptl_presidential_history_monthly') {
+	Add-Issue "history-ledger-pulse" "common\on_actions\zzz_vptl_term_limits.txt" 0 "History must use existing guarded hooks, not a new broad pulse."
 }
 
 $roadmapPath = Join-Path $resolvedModPath "docs\roadmap.md"

@@ -357,8 +357,6 @@ types election_panel_types
 					}
 				}
 
-				vptl_presidential_candidates_election_panel = {}
-
 				### GRAPH
 				v3_plotline = {
 					visible = "[Election.IsInCampaignPeriod]"
@@ -592,6 +590,130 @@ types election_panel_types
 										raw_text = "@population![Party.GetCurrentPollNumVoters|vK] ([Party.GetCurrentPollNumVotersDifference|K+=])"
 										autoresize = yes
 										align = nobaseline
+									}
+								}
+							}
+
+							# BPR party-owned presidential ticket. This is intentionally inside
+							# Election.GetParties so vanilla controls party count and ordering.
+							flowcontainer = {
+								visible = "[GetScriptedGui('vptl_show_presidential_party_ticket_sgui').IsShown( GuiScope.SetRoot( Party.MakeScope ).End )]"
+								direction = horizontal
+								minimumsize = { @panel_width_minus_10 82 }
+								maximumsize = { @panel_width_minus_10 82 }
+								margin = { 10 6 }
+								spacing = 10
+
+								flowcontainer = {
+									direction = horizontal
+									layoutpolicy_horizontal = expanding
+									layoutpolicy_vertical = expanding
+									spacing = 10
+
+									flowcontainer = {
+										visible = "[GetScriptedGui('vptl_show_presidential_party_ticket_candidate_sgui').IsShown( GuiScope.SetRoot( Party.MakeScope ).End )]"
+										direction = horizontal
+										minimumsize = { 220 58 }
+										layoutpolicy_horizontal = expanding
+										layoutpolicy_vertical = preferred
+										spacing = 6
+										datacontext = "[Party.MakeScope.Var('vptl_presidential_party_ticket_candidate').GetCharacter]"
+										tooltipwidget = { FancyTooltip_Character = {} }
+
+										character_portrait_small = {
+											size = { 48 48 }
+											blockoverride "show_hat" {}
+											blockoverride "highlight" {}
+										}
+
+										flowcontainer = {
+											direction = vertical
+											minimumsize = { 160 36 }
+											layoutpolicy_horizontal = expanding
+											layoutpolicy_vertical = preferred
+											textbox = {
+												text = "vptl_presidential_party_candidate_label"
+												size = { 160 16 }
+												align = left|nobaseline
+												default_format = "#weak"
+											}
+											textbox = {
+												raw_text = "#BOLD [Character.GetFullNameNoFormatting]#!"
+												layoutpolicy_horizontal = expanding
+												size = { 160 20 }
+												fontsize_min = 12
+												align = left|nobaseline
+												elide = right
+											}
+										}
+									}
+
+									flowcontainer = {
+										visible = "[Not(GetScriptedGui('vptl_show_presidential_party_ticket_candidate_sgui').IsShown( GuiScope.SetRoot( Party.MakeScope ).End ))]"
+										direction = vertical
+										minimumsize = { 220 58 }
+										layoutpolicy_horizontal = expanding
+										layoutpolicy_vertical = preferred
+										textbox = {
+											text = "vptl_presidential_party_candidate_label"
+											size = { 160 16 }
+											default_format = "#weak"
+										}
+										textbox = { text = "vptl_presidential_party_no_eligible_nominee" }
+									}
+
+									vertical_divider = {}
+
+									flowcontainer = {
+										visible = "[GetScriptedGui('vptl_show_presidential_party_ticket_running_mate_sgui').IsShown( GuiScope.SetRoot( Party.MakeScope ).End )]"
+										direction = horizontal
+										minimumsize = { 220 58 }
+										layoutpolicy_horizontal = expanding
+										layoutpolicy_vertical = preferred
+										spacing = 6
+										datacontext = "[Party.MakeScope.Var('vptl_presidential_party_ticket_running_mate').GetCharacter]"
+										tooltipwidget = { FancyTooltip_Character = {} }
+
+										character_portrait_small = {
+											size = { 48 48 }
+											blockoverride "show_hat" {}
+											blockoverride "highlight" {}
+										}
+
+										flowcontainer = {
+											direction = vertical
+											minimumsize = { 160 36 }
+											layoutpolicy_horizontal = expanding
+											layoutpolicy_vertical = preferred
+											textbox = {
+												text = "vptl_presidential_party_running_mate_label"
+												size = { 160 16 }
+												align = left|nobaseline
+												default_format = "#weak"
+											}
+											textbox = {
+												raw_text = "#BOLD [Character.GetFullNameNoFormatting]#!"
+												layoutpolicy_horizontal = expanding
+												size = { 160 20 }
+												fontsize_min = 12
+												align = left|nobaseline
+												elide = right
+											}
+										}
+									}
+
+									flowcontainer = {
+										visible = "[Not(GetScriptedGui('vptl_show_presidential_party_ticket_running_mate_sgui').IsShown( GuiScope.SetRoot( Party.MakeScope ).End ))]"
+										direction = vertical
+										minimumsize = { 220 58 }
+										layoutpolicy_horizontal = expanding
+										layoutpolicy_vertical = preferred
+										textbox = {
+											text = "vptl_presidential_party_running_mate_label"
+											size = { 160 16 }
+											default_format = "#weak"
+										}
+										textbox = { text = "vptl_presidential_party_no_eligible_running_mate" }
 									}
 								}
 							}
