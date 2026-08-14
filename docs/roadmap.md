@@ -10,7 +10,7 @@ This file separates planned features from current behavior. Do not treat roadmap
 - Presidential candidate strip in the election panel.
 - USA-specific age and origin eligibility checks.
 - President numbering and former-service history markers.
-- Presidential office history ledger with 128 append-only country records and an on-demand standalone latest-50 window.
+- Presidential Library with 128 append-only country records, latest-50 top-packed portrait cards, nonconsecutive service numbering, boundary-frozen economic/social snapshots, numeric prestige rank plus power category, dynamic constitutional-deputy titles, and deduplicated activated-law history.
 - Transition notification when a tracked president changes.
 
 ## Near-Term Stabilization
@@ -22,7 +22,7 @@ This file separates planned features from current behavior. Do not treat roadmap
 
 ## Future Mechanics
 
-- Detailed presidential law/war event history and standalone VP episode records.
+- Detailed presidential war history and standalone VP episode records.
 - Constitution journal for presidential republic setup.
 - Country-specific term, age, and birthplace rules.
 - More country-specific successor offices and clearer succession-law labels.

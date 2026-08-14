@@ -41,6 +41,31 @@ on_character_death = {
 	}
 }
 
+# A law enters presidential history only after the game confirms activation.
+# ROOT is the activated law; owner is the country whose law changed.
+on_law_activated = {
+	on_actions = {
+		vptl_presidential_history_law_activated
+	}
+}
+
+vptl_presidential_history_law_activated = {
+	effect = {
+		owner ?= {
+			if = {
+				limit = {
+					vptl_presidential_transition_qualifies = yes
+					has_variable = vptl_presidential_history_current_slot
+					has_variable = vptl_presidential_history_current_president
+					ruler ?= { owner.var:vptl_presidential_history_current_president ?= this }
+				}
+				set_variable = { name = vptl_presidential_history_pending_law value = ROOT }
+				vptl_record_law_for_active_presidential_history = yes
+			}
+		}
+	}
+}
+
 vptl_presidential_term_limits_startup = {
 	effect = {
 		every_country = {

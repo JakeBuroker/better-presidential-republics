@@ -91,3 +91,13 @@ character_role_vptl_former_president_custom_loc = {
 		localization_key = character_role_vptl_former_president_title
 	}
 }
+
+character_role_vptl_presidential_history_subject_custom_loc = {
+	type = character
+	random_valid = yes
+
+	text = {
+		trigger = { always = yes }
+		localization_key = character_role_vptl_presidential_history_subject_title
+	}
+}
