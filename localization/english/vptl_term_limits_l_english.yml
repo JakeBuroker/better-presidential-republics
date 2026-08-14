@@ -102,6 +102,8 @@
  character_role_vptl_president_elect_title:0 "President-Elect"
  character_role_vptl_vice_president_elect:0 "Vice President-Elect"
  character_role_vptl_vice_president_elect_title:0 "Vice President-Elect"
+ character_role_vptl_presidential_history_subject:0 "Historical Officeholder"
+ character_role_vptl_presidential_history_subject_title:0 "Historical Officeholder"
  modifier_vptl_lame_duck_administration:0 "Lame-Duck Administration"
  modifier_vptl_lame_duck_administration_desc:0 "The elected successor has been certified, reducing the outgoing administration's political authority until inauguration."
  je_vptl_presidential_transition_30:0 "Presidential Transition"

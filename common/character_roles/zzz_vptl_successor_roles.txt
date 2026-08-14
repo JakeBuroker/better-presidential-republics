@@ -47,3 +47,16 @@ character_role_vptl_former_president = {
 	title_format = custom
 	title_preposition = PREP_IN
 }
+
+# Keeps country-owned Presidential Library character references addressable after
+# vanilla removes a former officeholder from active politics. Its zero priority
+# leaves every ordinary political, military, and constitutional title in control.
+character_role_vptl_presidential_history_subject = {
+	texture = "gfx/interface/icons/character_role_icons/politician.dds"
+
+	type = politician
+	priority = 0
+
+	title_format = custom
+	title_preposition = PREP_IN
+}

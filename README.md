@@ -27,8 +27,9 @@ A lightweight Victoria 3 gameplay/UI mod that makes presidential republics feel 
 - Seeds easy 1836 presidential numbering for several vanilla presidential republics.
 - When the personal ECCHI-backed USA roster is present, seeds John Quincy Adams with one prior presidential term and Martin Van Buren with one prior vice-presidential term; Jackson's and Calhoun's existing two-term seeds remain unchanged.
 - Uses vanilla character templates for startup and succession handling and does not ship character-pack stand-ins for missing historical politicians.
+- Adds an on-demand standalone Presidential Library with a 128-episode append-only archive and latest-50 compact display. Records retain the stored president portrait and service number, month/year span, accession and departure reason, country-specific deputy, party and IG, boundary-frozen GDP, population, average SoL, prestige, numeric prestige rank and power category, plus up to eight successfully activated laws with overflow.
 
-The same character may return for a nonconsecutive presidency, but the current president-number state is stored once per character. Separate numbering for multiple nonconsecutive service episodes is deferred.
+An uninterrupted reelection keeps the same episode and number. A president returning after an intervening presidency receives a new episode and the next service number, while earlier archive records remain immutable.
 
 ## Compatibility
 

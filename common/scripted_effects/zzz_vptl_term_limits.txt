@@ -1831,9 +1831,8 @@ vptl_clear_presidential_party_ticket = {
 # remain valid; only the affected slot is rebuilt.
 vptl_maintain_presidential_party_ticket = {
 	save_scope_as = vptl_presidential_campaign_party
-	# Party scopes have no owner link; root remains the country that invoked the
-	# campaign-maintenance effect.
-	root = { save_scope_as = vptl_presidential_campaign_country }
+	# The invoking country is saved before party iteration. Do not trust root here:
+	# nested death and ruler callbacks may leave a character as the root scope.
 
 	if = {
 		limit = {
@@ -2111,6 +2110,7 @@ vptl_clear_presidential_campaign_party_tickets = {
 }
 
 vptl_update_presidential_ticket_candidates = {
+	save_scope_as = vptl_presidential_campaign_country
 	if = {
 		limit = {
 			has_variable = vptl_presidential_election_transition
@@ -3861,6 +3861,7 @@ vptl_select_final_running_mate_from_winning_ticket_legacy = {
 }
 
 vptl_identify_presidential_winning_ticket_side = {
+	save_scope_as = vptl_presidential_settlement_country
 	remove_variable = vptl_presidential_winning_ticket_side
 	remove_variable = vptl_presidential_winning_ticket_party
 	remove_variable = vptl_presidential_winning_ticket_party_candidate
@@ -3886,9 +3887,10 @@ vptl_identify_presidential_winning_ticket_side = {
 				var:vptl_presidential_party_ticket_candidate ?= {
 					this = scope:vptl_presidential_vanilla_selected_ruler_scope
 				}
-				owner = { NOT = { has_variable = vptl_presidential_winning_ticket_party } }
+				scope:vptl_presidential_settlement_country = { NOT = { has_variable = vptl_presidential_winning_ticket_party } }
 			}
-			owner = { set_variable = { name = vptl_presidential_winning_ticket_party value = prev } }
+			save_scope_as = vptl_presidential_winning_party_match
+			scope:vptl_presidential_settlement_country = { set_variable = { name = vptl_presidential_winning_ticket_party value = scope:vptl_presidential_winning_party_match } }
 		}
 	}
 
@@ -3910,9 +3912,10 @@ vptl_identify_presidential_winning_ticket_side = {
 				var:vptl_presidential_party_ticket_running_mate ?= {
 					owner.var:vptl_presidential_death_successor ?= this
 				}
-				owner = { NOT = { has_variable = vptl_presidential_winning_ticket_party } }
+				scope:vptl_presidential_settlement_country = { NOT = { has_variable = vptl_presidential_winning_ticket_party } }
 			}
-			owner = { set_variable = { name = vptl_presidential_winning_ticket_party value = prev } }
+			save_scope_as = vptl_presidential_winning_party_match
+			scope:vptl_presidential_settlement_country = { set_variable = { name = vptl_presidential_winning_ticket_party value = scope:vptl_presidential_winning_party_match } }
 		}
 	}
 
@@ -3961,9 +3964,10 @@ vptl_identify_presidential_winning_ticket_side = {
 						}
 					}
 				}
-				owner = {
+				save_scope_as = vptl_presidential_winning_party_match
+				scope:vptl_presidential_settlement_country = {
 					change_variable = { name = vptl_presidential_winning_ticket_ig_match_count add = 1 }
-					set_variable = { name = vptl_presidential_winning_ticket_party_candidate value = prev }
+					set_variable = { name = vptl_presidential_winning_ticket_party_candidate value = scope:vptl_presidential_winning_party_match }
 				}
 			}
 			if = {
@@ -4744,6 +4748,15 @@ vptl_inaugurate_president_elect = {
 			}
 			if = {
 				limit = {
+					has_variable = vptl_presidential_history_current_slot
+					NOT = { has_variable = vptl_presidential_history_inauguration_same_president }
+				}
+				# Preserve the exact ledger subjects before vanilla installs and may retire
+				# the outgoing administration. Transition helper scopes are not authoritative.
+				vptl_preserve_presidential_history_subjects_before_close = yes
+			}
+			if = {
+				limit = {
 					has_variable = vptl_presidential_transition_outgoing_ruler
 					var:vptl_presidential_transition_outgoing_ruler ?= {
 						is_character_alive = yes
@@ -4771,7 +4784,24 @@ vptl_inaugurate_president_elect = {
 					has_variable = vptl_presidential_history_current_slot
 					NOT = { has_variable = vptl_presidential_history_inauguration_same_president }
 				}
-				set_variable = { name = vptl_presidential_history_departure_reason value = 2 }
+				# Distinguish only outcomes that existing election state confirms.
+				# A term-limited outgoing president is explicit; a losing-ticket marker
+				# proves election defeat; every other elected handoff stays neutral.
+				set_variable = { name = vptl_presidential_history_departure_reason value = 4 }
+				if = {
+					limit = {
+						has_variable = vptl_presidential_history_current_president
+						var:vptl_presidential_history_current_president ?= { has_variable = vptl_presidential_term_limited }
+					}
+					set_variable = { name = vptl_presidential_history_departure_reason value = 3 }
+				}
+				else_if = {
+					limit = {
+						has_variable = vptl_presidential_history_current_president
+						var:vptl_presidential_history_current_president ?= { has_variable = vptl_presidential_transition_losing_ticket_exclusion }
+					}
+					set_variable = { name = vptl_presidential_history_departure_reason value = 2 }
+				}
 				vptl_request_close_presidential_history_episode = yes
 			}
 			vptl_assign_presidential_order_number_to_current_ruler = yes
