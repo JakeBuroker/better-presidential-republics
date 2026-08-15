@@ -301,8 +301,12 @@ vptl_capture_presidential_history_episode_data = {
 	remove_variable = vptl_history_capture_vice_president
 	remove_variable = vptl_history_capture_party
 	remove_variable = vptl_history_capture_ig
+	remove_variable = vptl_history_capture_culture
+	remove_variable = vptl_history_capture_religion
+	remove_variable = vptl_history_capture_ideology
 	set_variable = { name = vptl_history_capture_president_identity value = 0 }
 	set_variable = { name = vptl_history_capture_vice_president_identity value = 0 }
+	set_variable = { name = vptl_history_capture_popularity value = 0 }
 	set_variable = { name = vptl_history_capture_number value = 0 }
 	set_variable = { name = vptl_history_capture_accession_type value = 5 }
 	set_variable = { name = vptl_history_capture_gdp_start value = gdp }
@@ -363,12 +367,22 @@ vptl_capture_presidential_history_episode_data = {
 		else_if = { limit = { scope:vptl_history_capture_president = { has_variable = vptl_presidential_accession_succeeded } } set_variable = { name = vptl_history_capture_accession_type value = 2 } }
 		else_if = { limit = { scope:vptl_history_capture_president = { has_variable = vptl_presidential_accession_interim } } set_variable = { name = vptl_history_capture_accession_type value = 3 } }
 		else_if = { limit = { scope:vptl_history_capture_president = { has_variable = vptl_presidential_accession_provisional } } set_variable = { name = vptl_history_capture_accession_type value = 4 } }
-		scope:vptl_history_capture_president = { this.interest_group ?= { save_scope_as = vptl_history_capture_ig party ?= { save_scope_as = vptl_history_capture_party } } }
+		set_variable = { name = vptl_history_capture_popularity value = scope:vptl_history_capture_president.popularity }
+		scope:vptl_history_capture_president = { this.interest_group ?= { save_scope_as = vptl_history_capture_ig party ?= { save_scope_as = vptl_history_capture_party } } culture ?= { save_scope_as = vptl_history_capture_culture } religion ?= { save_scope_as = vptl_history_capture_religion } ideology ?= { save_scope_as = vptl_history_capture_ideology } }
+		set_variable = { name = vptl_history_capture_ideology_identity value = 0 }
+		if = { limit = { scope:vptl_history_capture_president ?= { has_ideology = ideology:ideology_jacksonian_democrat } } set_variable = { name = vptl_history_capture_ideology_identity value = 1 } }
+		if = { limit = { scope:vptl_history_capture_president ?= { has_ideology = ideology:ideology_slaver } } set_variable = { name = vptl_history_capture_ideology_identity value = 2 } }
+		if = { limit = { scope:vptl_history_capture_president ?= { has_ideology = ideology:ideology_pacifist } } set_variable = { name = vptl_history_capture_ideology_identity value = 3 } }
+		if = { limit = { scope:vptl_history_capture_president ?= { has_ideology = ideology:ideology_republican_leader } } set_variable = { name = vptl_history_capture_ideology_identity value = 4 } }
+		if = { limit = { scope:vptl_history_capture_president ?= { has_ideology = ideology:ideology_moderate } } set_variable = { name = vptl_history_capture_ideology_identity value = 5 } }
 	}
 	# The first tracked USA episode is Jackson's real presidency, begun March 1829.
-	if = { limit = { this = c:USA NOT = { has_variable = vptl_presidential_history_slot_1_populated } scope:vptl_history_capture_president ?= { OR = { has_variable = is_andrew_jackson has_template = usa_andrew_jackson_template } } } set_variable = { name = vptl_history_capture_year value = 1829 } set_variable = { name = vptl_history_capture_month value = 3 } }
+	if = { limit = { this = c:USA NOT = { has_variable = vptl_presidential_history_slot_1_populated } scope:vptl_history_capture_president ?= { OR = { has_variable = is_andrew_jackson has_template = usa_andrew_jackson_template } } } set_variable = { name = vptl_history_capture_year value = 1829 } set_variable = { name = vptl_history_capture_month value = 3 } set_variable = { name = vptl_history_capture_accession_type value = 1 } }
 	if = { limit = { exists = scope:vptl_history_capture_ig } set_variable = { name = vptl_history_capture_ig value = scope:vptl_history_capture_ig } }
 	if = { limit = { exists = scope:vptl_history_capture_party } set_variable = { name = vptl_history_capture_party value = scope:vptl_history_capture_party } }
+	if = { limit = { exists = scope:vptl_history_capture_culture } set_variable = { name = vptl_history_capture_culture value = scope:vptl_history_capture_culture } }
+	if = { limit = { exists = scope:vptl_history_capture_religion } set_variable = { name = vptl_history_capture_religion value = scope:vptl_history_capture_religion } }
+	if = { limit = { exists = scope:vptl_history_capture_ideology } set_variable = { name = vptl_history_capture_ideology value = scope:vptl_history_capture_ideology } }
 	set_variable = { name = vptl_history_capture_party_type_identity value = 0 }
 	if = { limit = { scope:vptl_history_capture_party ?= { is_party_type = agrarian_party } } set_variable = { name = vptl_history_capture_party_type_identity value = 1 } }
 	if = { limit = { scope:vptl_history_capture_party ?= { is_party_type = anarchist_party } } set_variable = { name = vptl_history_capture_party_type_identity value = 2 } }
@@ -650,6 +664,212 @@ vptl_migrate_presidential_history_affiliation_identities = {
 	}
 }
 
+vptl_freeze_presidential_history_profile_for_record = {
+	# Backfill old records once, and only while their original president resolves.
+	if = { limit = { has_variable = $PREFIX$_populated var:$PREFIX$_president ?= { is_character_alive = yes } OR = { NOT = { has_variable = $PREFIX$_culture } NOT = { has_variable = $PREFIX$_religion } NOT = { has_variable = $PREFIX$_ideology } NOT = { has_variable = $PREFIX$_popularity } } }
+		var:$PREFIX$_president ?= { save_scope_as = vptl_history_profile_subject culture ?= { save_scope_as = vptl_history_capture_culture } religion ?= { save_scope_as = vptl_history_capture_religion } ideology ?= { save_scope_as = vptl_history_capture_ideology } }
+		if = { limit = { NOT = { has_variable = $PREFIX$_culture } exists = scope:vptl_history_capture_culture } set_variable = { name = $PREFIX$_culture value = scope:vptl_history_capture_culture } }
+		if = { limit = { NOT = { has_variable = $PREFIX$_religion } exists = scope:vptl_history_capture_religion } set_variable = { name = $PREFIX$_religion value = scope:vptl_history_capture_religion } }
+		if = { limit = { NOT = { has_variable = $PREFIX$_ideology } exists = scope:vptl_history_capture_ideology } set_variable = { name = $PREFIX$_ideology value = scope:vptl_history_capture_ideology } }
+		if = { limit = { NOT = { has_variable = $PREFIX$_ideology_identity } }
+			set_variable = { name = $PREFIX$_ideology_identity value = 0 }
+			if = { limit = { var:$PREFIX$_president ?= { has_ideology = ideology:ideology_jacksonian_democrat } } set_variable = { name = $PREFIX$_ideology_identity value = 1 } }
+			if = { limit = { var:$PREFIX$_president ?= { has_ideology = ideology:ideology_slaver } } set_variable = { name = $PREFIX$_ideology_identity value = 2 } }
+			if = { limit = { var:$PREFIX$_president ?= { has_ideology = ideology:ideology_pacifist } } set_variable = { name = $PREFIX$_ideology_identity value = 3 } }
+			if = { limit = { var:$PREFIX$_president ?= { has_ideology = ideology:ideology_republican_leader } } set_variable = { name = $PREFIX$_ideology_identity value = 4 } }
+			if = { limit = { var:$PREFIX$_president ?= { has_ideology = ideology:ideology_moderate } } set_variable = { name = $PREFIX$_ideology_identity value = 5 } }
+		}
+		if = { limit = { NOT = { has_variable = $PREFIX$_popularity } exists = scope:vptl_history_profile_subject } set_variable = { name = $PREFIX$_popularity value = scope:vptl_history_profile_subject.popularity } }
+	}
+	remove_variable = vptl_history_capture_culture
+	remove_variable = vptl_history_capture_religion
+	remove_variable = vptl_history_capture_ideology
+}
+
+vptl_migrate_presidential_history_profiles = {
+	if = { limit = { NOT = { has_variable = vptl_presidential_history_profiles_migrated } }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_1 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_2 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_3 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_4 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_5 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_6 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_7 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_8 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_9 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_10 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_11 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_12 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_13 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_14 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_15 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_16 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_17 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_18 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_19 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_20 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_21 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_22 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_23 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_24 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_25 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_26 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_27 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_28 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_29 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_30 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_31 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_32 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_33 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_34 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_35 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_36 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_37 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_38 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_39 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_40 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_41 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_42 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_43 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_44 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_45 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_46 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_47 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_48 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_49 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_50 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_51 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_52 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_53 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_54 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_55 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_56 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_57 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_58 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_59 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_60 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_61 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_62 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_63 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_64 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_65 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_66 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_67 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_68 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_69 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_70 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_71 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_72 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_73 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_74 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_75 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_76 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_77 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_78 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_79 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_80 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_81 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_82 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_83 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_84 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_85 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_86 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_87 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_88 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_89 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_90 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_91 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_92 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_93 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_94 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_95 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_96 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_97 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_98 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_99 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_100 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_101 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_102 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_103 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_104 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_105 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_106 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_107 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_108 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_109 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_110 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_111 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_112 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_113 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_114 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_115 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_116 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_117 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_118 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_119 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_120 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_121 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_122 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_123 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_124 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_125 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_126 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_127 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_slot_128 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_1 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_2 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_3 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_4 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_5 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_6 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_7 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_8 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_9 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_10 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_11 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_12 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_13 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_14 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_15 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_16 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_17 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_18 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_19 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_20 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_21 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_22 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_23 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_24 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_25 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_26 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_27 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_28 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_29 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_30 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_31 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_32 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_33 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_34 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_35 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_36 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_37 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_38 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_39 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_40 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_41 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_42 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_43 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_44 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_45 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_46 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_47 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_48 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_49 }
+		vptl_freeze_presidential_history_profile_for_record = { PREFIX = vptl_presidential_history_recent_50 }
+		set_variable = vptl_presidential_history_profiles_migrated
+	}
+}
+
 vptl_copy_presidential_history_recent_slot = {
 	if = {
 		limit = { has_variable = vptl_presidential_history_recent_$FROM$_populated }
@@ -661,6 +881,12 @@ vptl_copy_presidential_history_recent_slot = {
 		else = { remove_variable = vptl_presidential_history_recent_$TO$_party }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$FROM$_ig } set_variable = { name = vptl_presidential_history_recent_$TO$_ig value = var:vptl_presidential_history_recent_$FROM$_ig } }
 		else = { remove_variable = vptl_presidential_history_recent_$TO$_ig }
+		if = { limit = { has_variable = vptl_presidential_history_recent_$FROM$_culture } set_variable = { name = vptl_presidential_history_recent_$TO$_culture value = var:vptl_presidential_history_recent_$FROM$_culture } }
+		else = { remove_variable = vptl_presidential_history_recent_$TO$_culture }
+		if = { limit = { has_variable = vptl_presidential_history_recent_$FROM$_religion } set_variable = { name = vptl_presidential_history_recent_$TO$_religion value = var:vptl_presidential_history_recent_$FROM$_religion } }
+		else = { remove_variable = vptl_presidential_history_recent_$TO$_religion }
+		if = { limit = { has_variable = vptl_presidential_history_recent_$FROM$_ideology } set_variable = { name = vptl_presidential_history_recent_$TO$_ideology value = var:vptl_presidential_history_recent_$FROM$_ideology } }
+		else = { remove_variable = vptl_presidential_history_recent_$TO$_ideology }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$FROM$_law_1 } set_variable = { name = vptl_presidential_history_recent_$TO$_law_1 value = var:vptl_presidential_history_recent_$FROM$_law_1 } }
 		else = { remove_variable = vptl_presidential_history_recent_$TO$_law_1 }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$FROM$_law_2 } set_variable = { name = vptl_presidential_history_recent_$TO$_law_2 value = var:vptl_presidential_history_recent_$FROM$_law_2 } }
@@ -685,6 +911,10 @@ vptl_copy_presidential_history_recent_slot = {
 		else = { remove_variable = vptl_presidential_history_recent_$TO$_party_type_identity }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$FROM$_ig_type_identity } set_variable = { name = vptl_presidential_history_recent_$TO$_ig_type_identity value = var:vptl_presidential_history_recent_$FROM$_ig_type_identity } }
 		else = { remove_variable = vptl_presidential_history_recent_$TO$_ig_type_identity }
+		if = { limit = { has_variable = vptl_presidential_history_recent_$FROM$_ideology_identity } set_variable = { name = vptl_presidential_history_recent_$TO$_ideology_identity value = var:vptl_presidential_history_recent_$FROM$_ideology_identity } }
+		else = { remove_variable = vptl_presidential_history_recent_$TO$_ideology_identity }
+		if = { limit = { has_variable = vptl_presidential_history_recent_$FROM$_popularity } set_variable = { name = vptl_presidential_history_recent_$TO$_popularity value = var:vptl_presidential_history_recent_$FROM$_popularity } }
+		else = { remove_variable = vptl_presidential_history_recent_$TO$_popularity }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$FROM$_number } set_variable = { name = vptl_presidential_history_recent_$TO$_number value = var:vptl_presidential_history_recent_$FROM$_number } }
 		else = { remove_variable = vptl_presidential_history_recent_$TO$_number }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$FROM$_accession_type } set_variable = { name = vptl_presidential_history_recent_$TO$_accession_type value = var:vptl_presidential_history_recent_$FROM$_accession_type } }
@@ -791,10 +1021,15 @@ vptl_copy_history_capture_to_recent_1 = {
 	if = { limit = { has_variable = vptl_history_capture_vice_president } set_variable = { name = vptl_presidential_history_recent_1_vice_president value = var:vptl_history_capture_vice_president } } else = { remove_variable = vptl_presidential_history_recent_1_vice_president }
 	if = { limit = { has_variable = vptl_history_capture_party } set_variable = { name = vptl_presidential_history_recent_1_party value = var:vptl_history_capture_party } } else = { remove_variable = vptl_presidential_history_recent_1_party }
 	if = { limit = { has_variable = vptl_history_capture_ig } set_variable = { name = vptl_presidential_history_recent_1_ig value = var:vptl_history_capture_ig } } else = { remove_variable = vptl_presidential_history_recent_1_ig }
+	if = { limit = { has_variable = vptl_history_capture_culture } set_variable = { name = vptl_presidential_history_recent_1_culture value = var:vptl_history_capture_culture } } else = { remove_variable = vptl_presidential_history_recent_1_culture }
+	if = { limit = { has_variable = vptl_history_capture_religion } set_variable = { name = vptl_presidential_history_recent_1_religion value = var:vptl_history_capture_religion } } else = { remove_variable = vptl_presidential_history_recent_1_religion }
+	if = { limit = { has_variable = vptl_history_capture_ideology } set_variable = { name = vptl_presidential_history_recent_1_ideology value = var:vptl_history_capture_ideology } } else = { remove_variable = vptl_presidential_history_recent_1_ideology }
 	set_variable = { name = vptl_presidential_history_recent_1_president_identity value = var:vptl_history_capture_president_identity }
 	set_variable = { name = vptl_presidential_history_recent_1_vice_president_identity value = var:vptl_history_capture_vice_president_identity }
 	set_variable = { name = vptl_presidential_history_recent_1_party_type_identity value = var:vptl_history_capture_party_type_identity }
 	set_variable = { name = vptl_presidential_history_recent_1_ig_type_identity value = var:vptl_history_capture_ig_type_identity }
+	set_variable = { name = vptl_presidential_history_recent_1_ideology_identity value = var:vptl_history_capture_ideology_identity }
+	set_variable = { name = vptl_presidential_history_recent_1_popularity value = var:vptl_history_capture_popularity }
 	set_variable = { name = vptl_presidential_history_recent_1_number value = var:vptl_history_capture_number }
 	set_variable = { name = vptl_presidential_history_recent_1_accession_type value = var:vptl_history_capture_accession_type }
 	set_variable = { name = vptl_presidential_history_recent_1_departure_reason value = 0 }
@@ -833,10 +1068,15 @@ vptl_copy_history_capture_to_archive_slot = {
 	if = { limit = { has_variable = vptl_history_capture_vice_president } set_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president value = var:vptl_history_capture_vice_president } }
 	if = { limit = { has_variable = vptl_history_capture_party } set_variable = { name = vptl_presidential_history_slot_$SLOT$_party value = var:vptl_history_capture_party } }
 	if = { limit = { has_variable = vptl_history_capture_ig } set_variable = { name = vptl_presidential_history_slot_$SLOT$_ig value = var:vptl_history_capture_ig } }
+	if = { limit = { has_variable = vptl_history_capture_culture } set_variable = { name = vptl_presidential_history_slot_$SLOT$_culture value = var:vptl_history_capture_culture } }
+	if = { limit = { has_variable = vptl_history_capture_religion } set_variable = { name = vptl_presidential_history_slot_$SLOT$_religion value = var:vptl_history_capture_religion } }
+	if = { limit = { has_variable = vptl_history_capture_ideology } set_variable = { name = vptl_presidential_history_slot_$SLOT$_ideology value = var:vptl_history_capture_ideology } }
 	set_variable = { name = vptl_presidential_history_slot_$SLOT$_president_identity value = var:vptl_history_capture_president_identity }
 	set_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president_identity value = var:vptl_history_capture_vice_president_identity }
 	set_variable = { name = vptl_presidential_history_slot_$SLOT$_party_type_identity value = var:vptl_history_capture_party_type_identity }
 	set_variable = { name = vptl_presidential_history_slot_$SLOT$_ig_type_identity value = var:vptl_history_capture_ig_type_identity }
+	set_variable = { name = vptl_presidential_history_slot_$SLOT$_ideology_identity value = var:vptl_history_capture_ideology_identity }
+	set_variable = { name = vptl_presidential_history_slot_$SLOT$_popularity value = var:vptl_history_capture_popularity }
 	set_variable = { name = vptl_presidential_history_slot_$SLOT$_number value = var:vptl_history_capture_number }
 	set_variable = { name = vptl_presidential_history_slot_$SLOT$_accession_type value = var:vptl_history_capture_accession_type }
 	set_variable = { name = vptl_presidential_history_slot_$SLOT$_departure_reason value = 0 }
@@ -999,10 +1239,15 @@ vptl_open_presidential_history_episode = {
 	remove_variable = vptl_history_capture_vice_president
 	remove_variable = vptl_history_capture_party
 	remove_variable = vptl_history_capture_ig
+	remove_variable = vptl_history_capture_culture
+	remove_variable = vptl_history_capture_religion
+	remove_variable = vptl_history_capture_ideology
 	remove_variable = vptl_history_capture_president_identity
 	remove_variable = vptl_history_capture_vice_president_identity
 	remove_variable = vptl_history_capture_party_type_identity
 	remove_variable = vptl_history_capture_ig_type_identity
+	remove_variable = vptl_history_capture_ideology_identity
+	remove_variable = vptl_history_capture_popularity
 	remove_variable = vptl_history_capture_number
 	remove_variable = vptl_history_capture_accession_type
 	remove_variable = vptl_history_capture_gdp_start
@@ -1027,6 +1272,12 @@ vptl_finalize_presidential_history_archive_slot = {
 		set_variable = { name = vptl_presidential_history_slot_$SLOT$_end_year value = var:vptl_history_capture_year }
 		set_variable = { name = vptl_presidential_history_slot_$SLOT$_end_month value = var:vptl_history_capture_month }
 		set_variable = vptl_presidential_history_slot_$SLOT$_closed remove_variable = vptl_presidential_history_slot_$SLOT$_active
+		# Mirror the final handoff snapshot before the recent cache shifts the episode.
+		if = { limit = { has_variable = vptl_presidential_history_recent_1_populated NOT = { has_variable = vptl_presidential_history_recent_1_closed } }
+			set_variable = { name = vptl_presidential_history_recent_1_gdp_end value = gdp } set_variable = { name = vptl_presidential_history_recent_1_population_end value = total_population } set_variable = { name = vptl_presidential_history_recent_1_sol_end value = average_sol } set_variable = { name = vptl_presidential_history_recent_1_prestige_end value = prestige }
+			set_variable = { name = vptl_presidential_history_recent_1_rank_end value = var:vptl_history_capture_rank } set_variable = { name = vptl_presidential_history_recent_1_score_rank_end value = var:vptl_history_capture_score_rank }
+			set_variable = { name = vptl_presidential_history_recent_1_departure_reason value = var:vptl_presidential_history_departure_reason } set_variable = { name = vptl_presidential_history_recent_1_end_year value = var:vptl_history_capture_year } set_variable = { name = vptl_presidential_history_recent_1_end_month value = var:vptl_history_capture_month } set_variable = vptl_presidential_history_recent_1_closed
+		}
 	}
 }
 
@@ -1244,13 +1495,19 @@ vptl_refresh_presidential_history_archive_slot = {
 			}
 		}
 		else = { remove_variable = vptl_presidential_history_slot_$SLOT$_vice_president set_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president_identity value = 0 } }
+		set_variable = { name = vptl_presidential_history_slot_$SLOT$_gdp_end value = gdp }
+		set_variable = { name = vptl_presidential_history_slot_$SLOT$_population_end value = total_population }
+		set_variable = { name = vptl_presidential_history_slot_$SLOT$_sol_end value = average_sol }
+		set_variable = { name = vptl_presidential_history_slot_$SLOT$_prestige_end value = prestige }
+		set_variable = { name = vptl_presidential_history_slot_$SLOT$_rank_end value = var:vptl_history_capture_rank }
 		set_variable = { name = vptl_presidential_history_slot_$SLOT$_score_rank_end value = var:vptl_history_capture_score_rank }
 	}
 }
 
 vptl_refresh_open_presidential_history_episode = {
 	if = { limit = { has_variable = vptl_presidential_history_current_slot has_variable = vptl_presidential_history_current_president NOT = { has_variable = vptl_presidential_history_close_in_progress } }
-		# Only provisional numeric prestige rank refreshes on demand.
+		# Active national results refresh only when the user opens the library.
+		vptl_capture_presidential_history_power_rank = yes
 		vptl_capture_presidential_history_numeric_rank = yes
 		vptl_refresh_presidential_history_archive_slot = { SLOT = 1 }
 		vptl_refresh_presidential_history_archive_slot = { SLOT = 2 }
@@ -1427,7 +1684,13 @@ vptl_refresh_open_presidential_history_episode = {
 			}
 		}
 		else = { remove_variable = vptl_presidential_history_recent_1_vice_president set_variable = { name = vptl_presidential_history_recent_1_vice_president_identity value = 0 } }
+		set_variable = { name = vptl_presidential_history_recent_1_gdp_end value = gdp }
+		set_variable = { name = vptl_presidential_history_recent_1_population_end value = total_population }
+		set_variable = { name = vptl_presidential_history_recent_1_sol_end value = average_sol }
+		set_variable = { name = vptl_presidential_history_recent_1_prestige_end value = prestige }
+		set_variable = { name = vptl_presidential_history_recent_1_rank_end value = var:vptl_history_capture_rank }
 		set_variable = { name = vptl_presidential_history_recent_1_score_rank_end value = var:vptl_history_capture_score_rank }
+		remove_variable = vptl_history_capture_rank
 		remove_variable = vptl_history_capture_score_rank
 	}
 }
@@ -1593,6 +1856,12 @@ vptl_copy_presidential_history_recent_to_display_slot = {
 		else = { remove_variable = vptl_presidential_history_display_$SLOT$_party }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_ig } set_variable = { name = vptl_presidential_history_display_$SLOT$_ig value = var:vptl_presidential_history_recent_$SLOT$_ig } }
 		else = { remove_variable = vptl_presidential_history_display_$SLOT$_ig }
+		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_culture } set_variable = { name = vptl_presidential_history_display_$SLOT$_culture value = var:vptl_presidential_history_recent_$SLOT$_culture } }
+		else = { remove_variable = vptl_presidential_history_display_$SLOT$_culture }
+		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_religion } set_variable = { name = vptl_presidential_history_display_$SLOT$_religion value = var:vptl_presidential_history_recent_$SLOT$_religion } }
+		else = { remove_variable = vptl_presidential_history_display_$SLOT$_religion }
+		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_ideology } set_variable = { name = vptl_presidential_history_display_$SLOT$_ideology value = var:vptl_presidential_history_recent_$SLOT$_ideology } }
+		else = { remove_variable = vptl_presidential_history_display_$SLOT$_ideology }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_law_1 } set_variable = { name = vptl_presidential_history_display_$SLOT$_law_1 value = var:vptl_presidential_history_recent_$SLOT$_law_1 } }
 		else = { remove_variable = vptl_presidential_history_display_$SLOT$_law_1 }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_law_2 } set_variable = { name = vptl_presidential_history_display_$SLOT$_law_2 value = var:vptl_presidential_history_recent_$SLOT$_law_2 } }
@@ -1617,6 +1886,10 @@ vptl_copy_presidential_history_recent_to_display_slot = {
 		else = { remove_variable = vptl_presidential_history_display_$SLOT$_party_type_identity }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_ig_type_identity } set_variable = { name = vptl_presidential_history_display_$SLOT$_ig_type_identity value = var:vptl_presidential_history_recent_$SLOT$_ig_type_identity } }
 		else = { remove_variable = vptl_presidential_history_display_$SLOT$_ig_type_identity }
+		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_ideology_identity } set_variable = { name = vptl_presidential_history_display_$SLOT$_ideology_identity value = var:vptl_presidential_history_recent_$SLOT$_ideology_identity } }
+		else = { remove_variable = vptl_presidential_history_display_$SLOT$_ideology_identity }
+		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_popularity } set_variable = { name = vptl_presidential_history_display_$SLOT$_popularity value = var:vptl_presidential_history_recent_$SLOT$_popularity } }
+		else = { remove_variable = vptl_presidential_history_display_$SLOT$_popularity }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_number } set_variable = { name = vptl_presidential_history_display_$SLOT$_number value = var:vptl_presidential_history_recent_$SLOT$_number } }
 		else = { remove_variable = vptl_presidential_history_display_$SLOT$_number }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_accession_type } set_variable = { name = vptl_presidential_history_display_$SLOT$_accession_type value = var:vptl_presidential_history_recent_$SLOT$_accession_type } }
@@ -1662,10 +1935,8 @@ vptl_copy_presidential_history_recent_to_display_slot = {
 		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_closed } set_variable = { name = vptl_presidential_history_display_$SLOT$_closed value = 1 } } else = { set_variable = { name = vptl_presidential_history_display_$SLOT$_closed value = 0 } }
 		remove_variable = vptl_presidential_history_display_$SLOT$_gdp_change_available
 		remove_variable = vptl_presidential_history_display_$SLOT$_gdp_change_percent
-		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_closed has_variable = vptl_presidential_history_recent_$SLOT$_gdp_end var:vptl_presidential_history_recent_$SLOT$_gdp_start > 0 } set_variable = { name = vptl_presidential_history_display_$SLOT$_gdp_change_percent value = var:vptl_presidential_history_recent_$SLOT$_gdp_end } change_variable = { name = vptl_presidential_history_display_$SLOT$_gdp_change_percent subtract = var:vptl_presidential_history_recent_$SLOT$_gdp_start } change_variable = { name = vptl_presidential_history_display_$SLOT$_gdp_change_percent divide = var:vptl_presidential_history_recent_$SLOT$_gdp_start } change_variable = { name = vptl_presidential_history_display_$SLOT$_gdp_change_percent multiply = 100 } set_variable = vptl_presidential_history_display_$SLOT$_gdp_change_available }
 		remove_variable = vptl_presidential_history_display_$SLOT$_population_change_available
 		remove_variable = vptl_presidential_history_display_$SLOT$_population_change_percent
-		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_closed has_variable = vptl_presidential_history_recent_$SLOT$_population_end var:vptl_presidential_history_recent_$SLOT$_population_start > 0 } set_variable = { name = vptl_presidential_history_display_$SLOT$_population_change_percent value = var:vptl_presidential_history_recent_$SLOT$_population_end } change_variable = { name = vptl_presidential_history_display_$SLOT$_population_change_percent subtract = var:vptl_presidential_history_recent_$SLOT$_population_start } change_variable = { name = vptl_presidential_history_display_$SLOT$_population_change_percent divide = var:vptl_presidential_history_recent_$SLOT$_population_start } change_variable = { name = vptl_presidential_history_display_$SLOT$_population_change_percent multiply = 100 } set_variable = vptl_presidential_history_display_$SLOT$_population_change_available }
 		set_variable = vptl_presidential_history_display_$SLOT$_populated
 	}
 	else = {
@@ -1673,6 +1944,9 @@ vptl_copy_presidential_history_recent_to_display_slot = {
 		remove_variable = vptl_presidential_history_display_$SLOT$_vice_president
 		remove_variable = vptl_presidential_history_display_$SLOT$_party
 		remove_variable = vptl_presidential_history_display_$SLOT$_ig
+		remove_variable = vptl_presidential_history_display_$SLOT$_culture
+		remove_variable = vptl_presidential_history_display_$SLOT$_religion
+		remove_variable = vptl_presidential_history_display_$SLOT$_ideology
 		remove_variable = vptl_presidential_history_display_$SLOT$_law_1
 		remove_variable = vptl_presidential_history_display_$SLOT$_law_2
 		remove_variable = vptl_presidential_history_display_$SLOT$_law_3
@@ -1685,6 +1959,8 @@ vptl_copy_presidential_history_recent_to_display_slot = {
 		remove_variable = vptl_presidential_history_display_$SLOT$_vice_president_identity
 		remove_variable = vptl_presidential_history_display_$SLOT$_party_type_identity
 		remove_variable = vptl_presidential_history_display_$SLOT$_ig_type_identity
+		remove_variable = vptl_presidential_history_display_$SLOT$_ideology_identity
+		remove_variable = vptl_presidential_history_display_$SLOT$_popularity
 		remove_variable = vptl_presidential_history_display_$SLOT$_number
 		remove_variable = vptl_presidential_history_display_$SLOT$_accession_type
 		remove_variable = vptl_presidential_history_display_$SLOT$_departure_reason
@@ -1717,6 +1993,7 @@ vptl_copy_presidential_history_recent_to_display_slot = {
 
 vptl_load_presidential_history_latest_50 = {
 	vptl_migrate_presidential_history_affiliation_identities = yes
+	vptl_migrate_presidential_history_profiles = yes
 	vptl_refresh_open_presidential_history_episode = yes
 	set_variable = { name = vptl_presidential_history_display_count value = 0 }
 	if = { limit = { has_variable = vptl_presidential_history_recent_count } set_variable = { name = vptl_presidential_history_display_count value = var:vptl_presidential_history_recent_count } }
