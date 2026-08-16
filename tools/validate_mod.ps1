@@ -1175,7 +1175,7 @@ $presidentialTriggersText = if (Test-Path $presidentialTriggersPath) { [System.I
 if ($presidentialTriggersText -match 'character_role_vptl_presidential_history_subject') {
 	Add-Issue "history-subject-eligibility" "common\scripted_triggers\zzz_vptl_presidential_eligibility.txt" 0 "The archival history-subject role must never participate in presidential or successor eligibility."
 }
-foreach ($field in @('president','vice_president','party','ig','culture','religion','ideology','president_identity','vice_president_identity','ideology_identity','number','accession_type','departure_reason','popularity','gdp_start','gdp_end','population_start','population_end','sol_start','sol_end','prestige_start','prestige_end','rank_start','rank_end','score_rank_start','score_rank_end','start_year','start_month','end_year','end_month','law_count','law_overflow_count','closed')) {
+foreach ($field in @('president','vice_president','party','ig','culture','religion','ideology','president_identity','vice_president_identity','ideology_identity','number','accession_type','departure_reason','popularity','gdp_start','gdp_end','gdp_change_available','gdp_change_percent','population_start','population_end','population_change_available','population_change_percent','sol_start','sol_end','prestige_start','prestige_end','rank_start','rank_end','score_rank_start','score_rank_end','start_year','start_month','end_year','end_month','law_count','law_overflow_count','closed')) {
 	if ($historyEffectsText -notmatch "vptl_presidential_history_slot_.+_$field") {
 		Add-Issue "history-ledger-field" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Archive field '$field' is missing from the parameterized slot writer."
 	}
@@ -1267,7 +1267,7 @@ if ($historyEffectsText -notmatch '(?m)^vptl_migrate_presidential_history_affili
 	$historyEffectsText -notmatch 'vptl_migrate_presidential_history_affiliation_identities\s*=\s*yes[\s\S]*?vptl_refresh_open_presidential_history_episode') {
 	Add-Issue "history-library-frozen-affiliations" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Party family and IG type IDs must be captured once, propagated, and migrated before the display cache loads."
 }
-if ($historyCaptureBlock -notmatch 'vptl_history_capture_popularity\s+value\s*=\s*scope:vptl_history_capture_president\.popularity' -or
+if ($historyCaptureBlock -notmatch 'vptl_history_capture_popularity_start\s+value\s*=\s*scope:vptl_history_capture_president\.popularity' -or
 	$historyCaptureBlock -notmatch 'culture\s+\?=\s*\{\s*save_scope_as\s*=\s*vptl_history_capture_culture' -or
 	$historyCaptureBlock -notmatch 'religion\s+\?=\s*\{\s*save_scope_as\s*=\s*vptl_history_capture_religion' -or
 	$historyCaptureBlock -notmatch 'ideology\s+\?=\s*\{\s*save_scope_as\s*=\s*vptl_history_capture_ideology' -or
@@ -1277,9 +1277,9 @@ if ($historyCaptureBlock -notmatch 'vptl_history_capture_popularity\s+value\s*=\
 	$historyEffectsText -notmatch 'vptl_presidential_history_profiles_migrated' -or
 	$historyEffectsText -notmatch 'var:\$PREFIX\$_president\s+\?=\s*\{\s*is_character_alive\s*=\s*yes' -or
 	$historyEffectsText -notmatch 'NOT\s*=\s*\{\s*has_variable\s*=\s*\$PREFIX\$_culture\s*\}[\s\S]*?\$PREFIX\$_culture\s+value\s*=\s*scope:vptl_history_capture_culture' -or
-	$historyEffectsText -notmatch 'NOT\s*=\s*\{\s*has_variable\s*=\s*\$PREFIX\$_popularity\s*\}[\s\S]*?\$PREFIX\$_popularity\s+value\s*=\s*scope:vptl_history_profile_subject\.popularity' -or
+	$historyEffectsText -notmatch 'NOT\s*=\s*\{\s*has_variable\s*=\s*\$PREFIX\$_popularity_start\s*\}[\s\S]*?\$PREFIX\$_popularity_start\s+value\s*=\s*scope:vptl_history_profile_subject\.popularity' -or
 	$historyEffectsText -notmatch 'vptl_migrate_presidential_history_profiles\s*=\s*yes[\s\S]*?vptl_refresh_open_presidential_history_episode') {
-	Add-Issue "history-library-frozen-profile" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Culture, religion, ideology, and popularity must be captured once at accession and backfilled only once from the exact surviving stored president."
+	Add-Issue "history-library-frozen-profile" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Culture, religion, ideology, and popularity start must be captured once at accession and backfilled only once from the exact surviving stored president."
 }
 $igTextureMatches = [regex]::Matches($historyWindowText, 'gfx/interface/icons/ig_icons/(?:armed_forces|devout|industrialists|intelligensia|landowners|petty_bourgeoisie|rural_folk|trade_unions)_30\.dds')
 if ($igTextureMatches.Count -ne 400) {
@@ -1291,30 +1291,34 @@ if ($historyWindowText -notmatch "EqualTo_CFixedPoint\(Country\.MakeScope\.Var\(
 	$historyWindowText -notmatch "LessThan_CFixedPoint\(Country\.MakeScope\.Var\('vptl_presidential_history_display_1_vice_president_identity'\)\.GetValue, '\(CFixedPoint\)1'\).*?vptl_presidential_history_unavailable_vice_president") {
 	Add-Issue "history-subject-identity-label-rendering" "gui\vptl_presidential_history_window.gui" 0 "History cards must render frozen identity names first, safe plain live names second, and unavailable only when no valid character or identity exists."
 }
+if ($historyWindowText -notmatch 'Not\(Country\.MakeScope\.Var\(''vptl_presidential_history_display_1_president''\)\.GetCharacter\.IsValid\)' -or
+	$historyWindowText -notmatch 'Not\(Country\.MakeScope\.Var\(''vptl_presidential_history_display_1_vice_president''\)\.GetCharacter\.IsValid\)') {
+	Add-Issue "history-subject-name-exclusivity" "gui\vptl_presidential_history_window.gui" 0 "Frozen historical names must be limited to invalid character scopes so live names and fallback names cannot render together."
+}
 if ($historyWindowText -match 'Terms:|vptl_presidential_history_current_episode|vptl_presidential_history_former_episode|VP\s*/\s*successor') {
 	Add-Issue "history-ledger-simplified-card" "gui\vptl_presidential_history_window.gui" 0 "Library cards must omit term/status labels and use the country-specific constitutional deputy title."
 }
-if ($historyWindowText -match 'vptl_presidential_history_rank_[0-7]' -or
-	$historyWindowText -notmatch "#v ##\[Country\.MakeScope\.Var\('vptl_presidential_history_display_1_score_rank_end'\)\.GetValue\|0\]#!" -or
-	$historyWindowText -notmatch "#v ##\[Country\.MakeScope\.Var\('vptl_presidential_history_display_1_score_rank_start'\)\.GetValue\|0\] → ##\[Country\.MakeScope\.Var\('vptl_presidential_history_display_1_score_rank_end'\)\.GetValue\|0\]#!" -or
-	$historyWindowText -notmatch "GreaterThan_CFixedPoint\(Country\.MakeScope\.Var\('vptl_presidential_history_display_1_score_rank_end'\)\.GetValue, '\(CFixedPoint\)0'\)" -or
-	$historyWindowText -notmatch "Not\(And\(Country\.MakeScope\.Var\('vptl_presidential_history_display_1_score_rank_end'\)\.IsSet") {
-	Add-Issue "history-library-prestige-rank-display" "gui\vptl_presidential_history_window.gui" 0 "Cards must show positive numeric prestige rank with an escaped literal number marker and a complete fallback."
+if ($historyWindowText -match 'GetCountryScorePositionDesc|Country\.GetRank|score_rank_end|vptl_presidential_history_rank_label|vptl_presidential_history_rank_unavailable_value') {
+	Add-Issue "history-library-rank-disabled" "gui\vptl_presidential_history_window.gui" 0 "Rank display must remain disabled while rank persistence is being repaired."
 }
-if ($historyWindowText -match '(?:gdp|population)_change_(?:available|percent)|%#!' -or
+if ($historyWindowText -notmatch "vptl_presidential_history_display_1_popularity_end'\)\.GetValue" -or
+	$historyWindowText -match "vptl_presidential_history_display_\d+_popularity_(?:start|end)[^\r\n]*→") {
+	Add-Issue "history-library-popularity-display" "gui\vptl_presidential_history_window.gui" 0 "Completed cards must render frozen popularity_end values without exposing popularity_start snapshots."
+}
+if ($historyWindowText -notmatch '(?:gdp|population)_change_(?:available|percent)|%#!' -or
 	$historyWindowText -notmatch 'GetFullNameNoFormatting' -or
 	$historyWindowText -match 'GetInterestGroup\.GetTexture' -or
 	$historyWindowText -match 'party_icon\s*=\s*\{' -or
 	$historyWindowText -match 'ig_icon\s*=\s*\{' -or
 	$historyWindowText -notmatch 'vptl_presidential_history_metric_unavailable' -or
 	$historyWindowText -notmatch 'vptl_presidential_history_no_laws') {
-	Add-Issue "history-library-display-polish" "gui\vptl_presidential_history_window.gui" 0 "Complete metric fallbacks, numeric rank, frozen affiliation text, and the mapped IG badge are required without percentage output."
+	Add-Issue "history-library-display-polish" "gui\vptl_presidential_history_window.gui" 0 "Complete raw metric ranges, signed GDP/population percentages, numeric rank, and frozen affiliation text are required."
 }
 if ($historyEffectsText -notmatch 'vptl_presidential_history_display_count\s+value\s*=\s*var:vptl_presidential_history_recent_count' -or
 	$historyEffectsText -notmatch 'vptl_presidential_history_display_\$SLOT\$_president\s+value\s*=\s*var:vptl_presidential_history_recent_\$SLOT\$_president') {
 	Add-Issue "history-ledger-display-cache" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Opening the standalone ledger must copy durable recent records into a separate National History-style display cache."
 }
-foreach ($field in @('party_type_identity','ig_type_identity','culture','religion','ideology','ideology_identity','popularity','population_start','population_end','sol_start','sol_end','rank_start','rank_end','score_rank_start','score_rank_end','law_count','law_overflow_count')) {
+foreach ($field in @('party_type_identity','ig_type_identity','culture','religion','ideology','ideology_identity','popularity','popularity_start','popularity_end','gdp_start','gdp_end','gdp_change_available','gdp_change_percent','population_start','population_end','population_change_available','population_change_percent','sol_start','sol_end','prestige_start','prestige_end','rank_start','rank_end','score_rank_start','score_rank_end','law_count','law_overflow_count')) {
 	if ($historyEffectsText -notmatch "vptl_presidential_history_recent_.+_$field" -or
 		$historyEffectsText -notmatch "vptl_presidential_history_display_.+_$field") {
 		Add-Issue "history-library-propagation" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Presidential Library field '$field' must propagate through archive, recent, and display state."
@@ -1343,28 +1347,54 @@ if ($historyEffectsText -notmatch '(?m)^vptl_capture_presidential_history_numeri
 	$historyEffectsText -match 'prestige\s*>') {
 	Add-Issue "history-library-numeric-rank" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Numeric rank must use the vanilla global_country_ranking trigger in lifecycle/open-refresh effects, not the old manual prestige scan."
 }
+if ($onActionText -notmatch 'has_variable\s*=\s*vptl_presidential_history_current_slot[\s\S]*?var:vptl_presidential_history_current_president\s*\?=\s*\{\s*this\s*=\s*scope:vptl_presidential_dead_character[\s\S]*?vptl_latch_presidential_history_death_rank\s*=\s*yes' -or
+	$historyEffectsText -notmatch 'vptl_latch_presidential_history_death_rank\s*=\s*\{[\s\S]*?vptl_capture_presidential_history_numeric_rank\s*=\s*yes[\s\S]*?vptl_history_capture_score_rank\s*>\s*0[\s\S]*?vptl_presidential_history_slot_1_score_rank_end[\s\S]*?vptl_presidential_history_rank_latched' -or
+	$historyFinalizeBlock -notmatch 'NOT\s*=\s*\{\s*has_variable\s*=\s*vptl_presidential_history_slot_\$SLOT\$_score_rank_end\s*\}\s+var:vptl_history_capture_score_rank\s*>\s*0' -or
+	$historyFinalizeBlock -match 'vptl_presidential_history_pending_score_rank') {
+	Add-Issue "history-library-death-rank-latch" "common\on_actions\zzz_vptl_term_limits.txt" 0 "Death succession must latch a positive rank directly into the active archive slot before promotion, and finalization must not overwrite it."
+}
 $historyLoadBlock = Get-TopLevelBlockText $historyEffectsPath 'vptl_load_presidential_history_latest_50'
 $historyOpenRefreshBlock = Get-TopLevelBlockText $historyEffectsPath 'vptl_refresh_open_presidential_history_episode'
-if ($historyLoadBlock -match 'capture_presidential_history_(?:power|numeric)_rank' -or
-	$historyOpenRefreshBlock -match '(?:gdp|population|sol|prestige|rank|score_rank)_start\s+value' -or
-	$historyOpenRefreshBlock -match '(?:(?<!vice_)president|number|accession_type|start_year|start_month|culture|religion|ideology|popularity)\s+value' -or
-	$historyOpenRefreshBlock -notmatch 'vptl_capture_presidential_history_power_rank\s*=\s*yes' -or
-	$historyOpenRefreshBlock -notmatch 'vptl_capture_presidential_history_numeric_rank\s*=\s*yes' -or
-	$historyOpenRefreshBlock -notmatch 'vptl_presidential_history_recent_1_gdp_end\s+value\s*=\s*gdp' -or
-	$historyOpenRefreshBlock -notmatch 'vptl_presidential_history_recent_1_population_end\s+value\s*=\s*total_population' -or
-	$historyOpenRefreshBlock -notmatch 'vptl_presidential_history_recent_1_sol_end\s+value\s*=\s*average_sol' -or
-	$historyOpenRefreshBlock -notmatch 'vptl_presidential_history_recent_1_prestige_end\s+value\s*=\s*prestige' -or
-	$historyOpenRefreshBlock -notmatch 'vptl_presidential_history_recent_1_score_rank_end\s+value\s*=\s*var:vptl_history_capture_score_rank' -or
-	$historyRefreshBlock -notmatch 'vptl_presidential_history_slot_\$SLOT\$_gdp_end\s+value\s*=\s*gdp' -or
-	$historyRefreshBlock -notmatch 'vptl_presidential_history_slot_\$SLOT\$_population_end\s+value\s*=\s*total_population' -or
-	$historyRefreshBlock -notmatch 'vptl_presidential_history_slot_\$SLOT\$_sol_end\s+value\s*=\s*average_sol' -or
-	$historyRefreshBlock -notmatch 'vptl_presidential_history_slot_\$SLOT\$_prestige_end\s+value\s*=\s*prestige' -or
-	$historyRefreshBlock -notmatch 'vptl_presidential_history_slot_\$SLOT\$_score_rank_end\s+value\s*=\s*var:vptl_history_capture_score_rank') {
-	Add-Issue "history-library-boundary-metrics" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Opening the library may refresh only the active episode's provisional ending metrics, deputy, and numeric rank; starting/profile values must remain frozen."
+if ($historyEffectsText -notmatch '(?m)^vptl_migrate_presidential_history_closed_rank_fallback\s*=\s*\{' -or
+	$historyEffectsText -notmatch 'vptl_presidential_history_closed_rank_fallback_migrated' -or
+	$historyLoadBlock -notmatch 'vptl_migrate_presidential_history_closed_rank_fallback\s*=\s*yes') {
+	Add-Issue "history-library-legacy-rank-migration" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Closed records from older saves need a dedicated rank migration invoked during Library load."
 }
-if ($historyEffectsText -match '(?:gdp|population)_change_percent\s+(?:value|subtract|divide|multiply)' -or
-	$historyWindowText -match '(?:gdp|population)_change_(?:available|percent)|%#!') {
-	Add-Issue "history-library-no-percent" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "The display cache and cards must not calculate or render GDP/population percentages."
+if ($historyLoadBlock -notmatch 'vptl_migrate_presidential_history_metric_snapshots\s*=\s*yes' -or
+	$historyLoadBlock -match 'capture_presidential_history_(?:power|numeric)_rank' -or
+	$historyOpenRefreshBlock -match '(?:gdp|population|sol|prestige|rank|score_rank)_end\s+value' -or
+	$historyRefreshBlock -match '(?:gdp|population|sol|prestige|rank|score_rank)_end\s+value' -or
+	$historyFinalizeBlock -notmatch 'vptl_presidential_history_slot_\$SLOT\$_gdp_end\s+value\s*=\s*gdp' -or
+	$historyFinalizeBlock -notmatch 'vptl_presidential_history_slot_\$SLOT\$_population_end\s+value\s*=\s*total_population' -or
+	$historyFinalizeBlock -notmatch 'vptl_presidential_history_slot_\$SLOT\$_sol_end\s+value\s*=\s*average_sol' -or
+	$historyFinalizeBlock -notmatch 'vptl_presidential_history_slot_\$SLOT\$_prestige_end\s+value\s*=\s*prestige' -or
+	$historyFinalizeBlock -notmatch 'vptl_presidential_history_slot_\$SLOT\$_score_rank_end\s+value\s*=\s*var:vptl_history_capture_score_rank' -or
+	$historyFinalizeBlock -notmatch 'vptl_presidential_history_slot_\$SLOT\$_gdp_change_percent' -or
+	$historyFinalizeBlock -notmatch 'vptl_presidential_history_slot_\$SLOT\$_population_change_percent' -or
+	$historyFinalizeBlock -notmatch 'vptl_presidential_history_slot_\$SLOT\$_popularity_end\s+value' -or
+	$historyFinalizeBlock -notmatch 'has_variable\s*=\s*vptl_presidential_history_slot_\$SLOT\$_popularity' -or
+	$historyFinalizeBlock -notmatch 'has_variable\s*=\s*vptl_presidential_history_current_president' -or
+	$historyFinalizeBlock -notmatch 'has_variable\s*=\s*vptl_presidential_history_slot_\$SLOT\$_populated\s+NOT\s*=\s*\{\s*has_variable\s*=\s*vptl_presidential_history_slot_\$SLOT\$_closed' -or
+	$historyCloseBlock -match 'vptl_presidential_history_recent_1_(?:gdp_end|population_end|sol_end|prestige_end|score_rank_end|popularity_end|closed)') {
+	Add-Issue "history-library-boundary-metrics" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Opening and refreshing must not rewrite historical finals; closure must capture final metrics, rank, popularity, and GDP/population changes."
+}
+if ($historyEffectsText -notmatch '(?:gdp|population)_change_percent\s+add\s*=\s*\{\s*value\s*=\s*var:[^\r\n]+_end\s+subtract\s*=\s*var:[^\r\n]+_start\s+divide\s*=\s*var:[^\r\n]+_start\s+multiply\s*=\s*100' -or
+	$historyWindowText -notmatch '(?:gdp|population)_change_(?:available|percent)' -or
+	$historyEffectsText -notmatch 'gdp_start[^\r\n]+gdp_end[^\r\n]+gdp_start\s*>\s*0' -or
+	$historyEffectsText -notmatch 'population_start[^\r\n]+population_end[^\r\n]+population_start\s*>\s*0') {
+	Add-Issue "history-library-percentages" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Closed GDP and population percentages must be stored from frozen baseline/final pairs only when the baseline is positive, then rendered on completed cards."
+}
+if ($historyWindowText -notmatch '#BOLD \[Country\.GetGDP\|D\]#!' -or
+	$historyWindowText -notmatch '#BOLD \[Country\.GetTotalPopulation\|D\]#!' -or
+	$historyWindowText -notmatch '#BOLD \[Country\.GetAverageSoLByPopulation\|1\]#!' -or
+	$historyWindowText -notmatch '#BOLD \[Country\.GetPrestige\|0\]#!' -or
+	$historyWindowText -notmatch "vptl_presidential_history_display_1_gdp_end'\)\.GetValue" -or
+	$historyWindowText -notmatch "vptl_presidential_history_display_1_population_end'\)\.GetValue" -or
+	$historyWindowText -notmatch "vptl_presidential_history_display_1_sol_end'\)\.GetValue" -or
+	$historyWindowText -notmatch "vptl_presidential_history_display_1_prestige_end'\)\.GetValue" -or
+	$historyWindowText -match "vptl_presidential_history_display_1_(?:gdp|population|sol|prestige|score_rank)_start'" -or
+	$historyWindowText -match '(?m)^.*vptl_presidential_history_display_\d+_(?:gdp|population|sol|prestige|score_rank)_(?:start|end).*→') {
+	Add-Issue "history-library-direct-metric-bindings" "gui\vptl_presidential_history_window.gui" 0 "Active cards must bind live country metrics while completed cards bind only frozen final values; metric start snapshots must stay out of the visible UI."
 }
 if ($historyEffectsText -notmatch 'vptl_prepare_presidential_history_episode_number\s*=\s*\{' -or
 	$historyEffectsText -notmatch 'vptl_presidential_history_previous_president' -or

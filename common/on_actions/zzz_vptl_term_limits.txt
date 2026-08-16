@@ -261,6 +261,14 @@ vptl_presidential_character_death = {
 		owner = {
 			save_scope_as = vptl_presidential_death_owner_country
 			if = {
+				limit = {
+					has_variable = vptl_presidential_history_current_president
+					has_variable = vptl_presidential_history_current_slot
+					var:vptl_presidential_history_current_president ?= { this = scope:vptl_presidential_dead_character }
+				}
+				vptl_latch_presidential_history_death_rank = yes
+			}
+			if = {
 				limit = { has_variable = vptl_presidential_inauguration_pending }
 				vptl_handle_presidential_inauguration_character_death = yes
 			}

@@ -107,7 +107,7 @@ function Add-IdentityFallbackText([System.Collections.Generic.List[string]]$Line
 	Add-Line $Lines ("{0}`tsize = {{ {1} }}" -f $Indent,$Size)
 	foreach ($identity in $historicalIdentities) {
 		# Frozen identity labels remain readable after the engine retires a character scope.
-		Add-Line $Lines ("{0}`ttextbox = {{ visible = `"[EqualTo_CFixedPoint(Country.MakeScope.Var('{1}_{2}_identity').GetValue, '(CFixedPoint){3}')]`" size = {{ {4} }} text = `"{5}`" tooltip = `"{5}`" fontsize = {6} elide = right align = left|nobaseline }}" -f $Indent,$Prefix,$IdentityField,$identity.Id,$Size,$identity.Loc,$FontSize)
+		Add-Line $Lines ("{0}`ttextbox = {{ visible = `"[And(Not(Country.MakeScope.Var('{1}_{2}').GetCharacter.IsValid), EqualTo_CFixedPoint(Country.MakeScope.Var('{1}_{2}_identity').GetValue, '(CFixedPoint){3}'))]`" size = {{ {4} }} text = `"{5}`" tooltip = `"{5}`" fontsize = {6} elide = right align = left|nobaseline }}" -f $Indent,$Prefix,$IdentityField,$identity.Id,$Size,$identity.Loc,$FontSize)
 	}
 	# Living unknowns use plain text only; dead unknowns stay unavailable.
 	Add-Line $Lines ("{0}`ttextbox = {{ visible = `"[Country.MakeScope.Var('{1}_{2}').GetCharacter.IsValid]`" size = {{ {3} }} raw_text = `"#BOLD [Country.MakeScope.Var('{1}_{2}').GetCharacter.GetFullNameNoFormatting]#!`" tooltip = `"[Country.MakeScope.Var('{1}_{2}').GetCharacter.GetFullNameNoFormatting]`" fontsize = {4} elide = right align = left|nobaseline }}" -f $Indent,$Prefix,$IdentityField,$Size,$FontSize)
@@ -148,7 +148,76 @@ function Add-IdeologyText([System.Collections.Generic.List[string]]$Lines, [stri
 	foreach ($mapping in $ideologyIdentities) {
 		Add-Line $Lines ("{0}`ttextbox = {{ visible = `"[And(Not(Country.MakeScope.Var('{1}').GetIdeology.IsValid), EqualTo_CFixedPoint(Country.MakeScope.Var('{2}').GetValue, '(CFixedPoint){3}'))]`" size = {{ 150 32 }} text = `"{4}`" tooltip = `"{4}`" fontsize = 15 elide = right }}" -f $Indent,$variable,$identity,$mapping.Id,$mapping.Loc)
 	}
-	Add-Line $Lines ("{0}`ttextbox = {{ visible = `"[And(Not(Country.MakeScope.Var('{1}').GetIdeology.IsValid), LessThan_CFixedPoint(Country.MakeScope.Var('{2}').GetValue, '(CFixedPoint)1'))]`" size = {{ 150 32 }} text = `"vptl_presidential_history_profile_unavailable`" fontsize = 15 elide = right }}" -f $Indent,$variable,$identity)
+	Add-Line $Lines ("{0}`ttextbox = {{ visible = `"[And(Not(Country.MakeScope.Var('{1}').GetIdeology.IsValid), Or(Not(Country.MakeScope.Var('{2}').IsSet), LessThan_CFixedPoint(Country.MakeScope.Var('{2}').GetValue, '(CFixedPoint)1')))]`" size = {{ 150 32 }} text = `"vptl_presidential_history_profile_unavailable`" fontsize = 15 elide = right }}" -f $Indent,$variable,$identity)
+	Add-Line $Lines ("{0}}} }}" -f $Indent)
+}
+
+function Add-PopularityText([System.Collections.Generic.List[string]]$Lines, [string]$Prefix, [string]$Size = '226 32', [string]$Indent = "`t`t`t`t`t`t`t`t`t") {
+	$start = "${Prefix}_popularity_start"
+	$end = "${Prefix}_popularity_end"
+	$closed = "And(Country.MakeScope.Var('${Prefix}_closed').IsSet, GreaterThan_CFixedPoint(Country.MakeScope.Var('${Prefix}_closed').GetValue, '(CFixedPoint)0'))"
+	$active = "Not($closed)"
+	$closedValue = "And($closed, Country.MakeScope.Var('$end').IsSet)"
+	$closedMissing = "And($closed, Not(Country.MakeScope.Var('$end').IsSet))"
+	Add-Line $Lines ("{0}widget = {{ size = {{ {1} }} hbox = {{ spacing = 4" -f $Indent,$Size)
+	Add-Line $Lines ("{0}`ttextbox = {{ size = {{ 72 32 }} text = `"vptl_presidential_history_popularity_label`" fontsize = 14 align = left|nobaseline }}" -f $Indent)
+	$states = @(
+		@{ Condition = "GreaterThan_CFixedPoint(Country.MakeScope.Var('{0}').GetValue, '(CFixedPoint)0')" -f $start; Format = "#P +[Country.MakeScope.Var('{0}').GetValue|0]#!" -f $start },
+		@{ Condition = "LessThan_CFixedPoint(Country.MakeScope.Var('{0}').GetValue, '(CFixedPoint)0')" -f $start; Format = "#N [Country.MakeScope.Var('{0}').GetValue|0]#!" -f $start },
+		@{ Condition = "EqualTo_CFixedPoint(Country.MakeScope.Var('{0}').GetValue, '(CFixedPoint)0')" -f $start; Format = "[Country.MakeScope.Var('{0}').GetValue|0]" -f $start }
+	)
+	foreach ($state in $states) { Add-Line $Lines ("{0}`ttextbox = {{ visible = `"[And({1}, {2})]`" size = {{ 150 32 }} raw_text = `"{3}`" fontsize = 15 }}" -f $Indent,$active,$state.Condition,$state.Format) }
+	$finalStates = @(
+		@{ Condition = "GreaterThan_CFixedPoint(Country.MakeScope.Var('{0}').GetValue, '(CFixedPoint)0')" -f $end; Format = "#P +[Country.MakeScope.Var('{0}').GetValue|0]#!" -f $end },
+		@{ Condition = "LessThan_CFixedPoint(Country.MakeScope.Var('{0}').GetValue, '(CFixedPoint)0')" -f $end; Format = "#N [Country.MakeScope.Var('{0}').GetValue|0]#!" -f $end },
+		@{ Condition = "EqualTo_CFixedPoint(Country.MakeScope.Var('{0}').GetValue, '(CFixedPoint)0')" -f $end; Format = "[Country.MakeScope.Var('{0}').GetValue|0]" -f $end }
+	)
+	foreach ($state in $finalStates) { Add-Line $Lines ("{0}`ttextbox = {{ visible = `"[And({1}, {2})]`" size = {{ 150 32 }} raw_text = `"{3}`" fontsize = 15 }}" -f $Indent,$closedValue,$state.Condition,$state.Format) }
+	Add-Line $Lines ("{0}`ttextbox = {{ visible = `"[{1}]`" size = {{ 150 32 }} text = `"vptl_presidential_history_profile_unavailable`" fontsize = 15 }}" -f $Indent,$closedMissing)
+	Add-Line $Lines ("{0}}} }}" -f $Indent)
+}
+
+function Add-PercentCalculation([System.Collections.Generic.List[string]]$Lines, [string]$Prefix, [string]$Metric, [string]$Indent = '\t', [bool]$OnlyIfMissing = $false) {
+	$baseline = "${Prefix}_${Metric}_start"
+	$final = "${Prefix}_${Metric}_end"
+	$percent = "${Prefix}_${Metric}_change_percent"
+	$available = "${Prefix}_${Metric}_change_available"
+	if (-not $OnlyIfMissing) {
+		Add-Line $Lines "${Indent}remove_variable = $available"
+		Add-Line $Lines "${Indent}remove_variable = $percent"
+	}
+	$limit = "has_variable = $baseline has_variable = $final $baseline > 0"
+	if ($OnlyIfMissing) { $limit += " NOT = { has_variable = $available }" }
+	Add-Line $Lines "${Indent}if = {"
+	Add-Line $Lines "${Indent}`tlimit = { $limit }"
+	Add-Line $Lines "${Indent}`tset_variable = { name = $percent value = 0 }"
+	Add-Line $Lines "${Indent}`tchange_variable = { name = $percent add = { value = var:$final subtract = var:$baseline divide = var:$baseline multiply = 100 } }"
+	Add-Line $Lines "${Indent}`tset_variable = $available"
+	Add-Line $Lines "${Indent}}"
+}
+
+function Add-NationalMetricText([System.Collections.Generic.List[string]]$Lines, [string]$Prefix, [string]$Name, [string]$Label, [string]$Format, [string]$LiveGetter, [bool]$ShowPercent, [string]$Width = '180', [string]$Indent = "`t`t`t`t`t`t`t`t`t") {
+	$closed = "And(Country.MakeScope.Var('${Prefix}_closed').IsSet, GreaterThan_CFixedPoint(Country.MakeScope.Var('${Prefix}_closed').GetValue, '(CFixedPoint)0'))"
+	$end = "${Prefix}_${Name}_end"
+	$closedValue = "And($closed, Country.MakeScope.Var('$end').IsSet)"
+	$missingValue = "And($closed, Not(Country.MakeScope.Var('$end').IsSet))"
+	Add-Line $Lines ("{0}widget = {{ size = {{ {1} 48 }} vbox = {{" -f $Indent,$Width)
+	Add-Line $Lines ("{0}`ttextbox = {{ size = {{ {1} 18 }} text = `"{2}`" fontsize = 14 }}" -f $Indent,$Width,$Label)
+	Add-Line $Lines ("{0}`thbox = {{ spacing = 4" -f $Indent)
+	Add-Line $Lines ("{0}`t`ttextbox = {{ visible = `"[{1}]`" size = {{ 112 28 }} raw_text = `"#BOLD [Country.{2}|{3}]#!`" fontsize = 16 elide = right }}" -f $Indent,("Not($closed)"),$LiveGetter,$Format)
+	Add-Line $Lines ("{0}`t`ttextbox = {{ visible = `"[{1}]`" size = {{ 112 28 }} raw_text = `"#BOLD [Country.MakeScope.Var('{2}').GetValue|{3}]#!`" fontsize = 16 elide = right }}" -f $Indent,$closedValue,$end,$Format)
+	Add-Line $Lines ("{0}`t`ttextbox = {{ visible = `"[{1}]`" size = {{ 112 28 }} text = `"vptl_presidential_history_metric_unavailable`" fontsize = 15 elide = right }}" -f $Indent,$missingValue)
+	if ($ShowPercent) {
+		$available = "${Prefix}_${Name}_change_available"
+		$positive = "And($closed, Country.MakeScope.Var('$available').IsSet, GreaterThan_CFixedPoint(Country.MakeScope.Var('${Prefix}_${Name}_change_percent').GetValue, '(CFixedPoint)0'))"
+		$negative = "And($closed, Country.MakeScope.Var('$available').IsSet, LessThan_CFixedPoint(Country.MakeScope.Var('${Prefix}_${Name}_change_percent').GetValue, '(CFixedPoint)0'))"
+		$zero = "And($closed, Country.MakeScope.Var('$available').IsSet, EqualTo_CFixedPoint(Country.MakeScope.Var('${Prefix}_${Name}_change_percent').GetValue, '(CFixedPoint)0'))"
+		$percentPath = "Country.MakeScope.Var('${Prefix}_${Name}_change_percent').GetValue|1"
+		Add-Line $Lines ("{0}`t`ttextbox = {{ visible = `"[{1}]`" size = {{ 62 28 }} raw_text = `"#P +[{2}]%#!`" fontsize = 15 align = right|nobaseline }}" -f $Indent,$positive,$percentPath)
+		Add-Line $Lines ("{0}`t`ttextbox = {{ visible = `"[{1}]`" size = {{ 62 28 }} raw_text = `"#N [{2}]%#!`" fontsize = 15 align = right|nobaseline }}" -f $Indent,$negative,$percentPath)
+		Add-Line $Lines ("{0}`t`ttextbox = {{ visible = `"[{1}]`" size = {{ 62 28 }} raw_text = `"[{2}]%`" fontsize = 15 align = right|nobaseline }}" -f $Indent,$zero,$percentPath)
+	}
+	Add-Line $Lines ("{0}`t}}" -f $Indent)
 	Add-Line $Lines ("{0}}} }}" -f $Indent)
 }
 
@@ -174,7 +243,7 @@ function Add-ProfileScopeText([System.Collections.Generic.List[string]]$Lines, [
 }
 
 $scopeFields = @('president','vice_president','party','ig','culture','religion','ideology') + (1..8 | ForEach-Object { "law_$_" })
-$valueFields = @('president_identity','vice_president_identity','party_type_identity','ig_type_identity','ideology_identity','popularity','number','accession_type','departure_reason','gdp_start','gdp_end','population_start','population_end','sol_start','sol_end','prestige_start','prestige_end','rank_start','rank_end','score_rank_start','score_rank_end','start_year','start_month','end_year','end_month','law_count','law_overflow_count')
+$valueFields = @('president_identity','vice_president_identity','party_type_identity','ig_type_identity','ideology_identity','popularity','popularity_start','popularity_end','number','accession_type','departure_reason','gdp_start','gdp_end','gdp_change_available','gdp_change_percent','population_start','population_end','population_change_available','population_change_percent','sol_start','sol_end','prestige_start','prestige_end','rank_start','rank_end','score_rank_start','score_rank_end','start_year','start_month','end_year','end_month','law_count','law_overflow_count')
 $allFields = $scopeFields + $valueFields
 $e = [System.Collections.Generic.List[string]]::new()
 $e.Add('# Generated presidential-history effects: edit this generator, then regenerate the output.')
@@ -195,6 +264,16 @@ Add-Line $e '\t# Stored in the save-compatible score_rank_* fields, but captured
 Add-Line $e '\t# vanilla global_country_ranking so it matches the top-bar rank tooltip.'
 Add-Line $e '\tset_variable = { name = vptl_history_capture_score_rank value = -1 }'
 for ($i=1; $i -le 250; $i++) { Add-Line $e ("\tif = {{ limit = {{ global_country_ranking = {0} }} set_variable = {{ name = vptl_history_capture_score_rank value = {0} }} }}" -f $i) }
+Add-Line $e '}'
+Add-Line $e
+Add-Line $e 'vptl_latch_presidential_history_death_rank = {'
+Add-Line $e '\tif = { limit = { has_variable = vptl_presidential_history_current_slot NOT = { has_variable = vptl_presidential_history_rank_latched } }'
+Add-Line $e '\t\tvptl_capture_presidential_history_numeric_rank = yes'
+Add-Line $e '\t\tif = { limit = { var:vptl_history_capture_score_rank > 0 }'
+for ($i=1;$i -le 128;$i++) { $kw=if($i -eq 1){'if'}else{'else_if'}; Add-Line $e ("\t\t\t{0} = {{ limit = {{ var:vptl_presidential_history_current_slot = {1} has_variable = vptl_presidential_history_slot_{1}_populated NOT = {{ has_variable = vptl_presidential_history_slot_{1}_closed }} }} set_variable = {{ name = vptl_presidential_history_slot_{1}_score_rank_end value = var:vptl_history_capture_score_rank }} }}" -f $kw,$i) }
+Add-Line $e '\t\t\tset_variable = vptl_presidential_history_rank_latched'
+Add-Line $e '\t\t}'
+Add-Line $e '\t}'
 Add-Line $e '}'
 Add-Line $e
 Add-Line $e 'vptl_prepare_presidential_history_episode_number = {'
@@ -224,7 +303,7 @@ Add-Line $e 'vptl_capture_presidential_history_episode_data = {'
 foreach ($field in @('president','vice_president','party','ig','culture','religion','ideology')) { Add-Line $e "\tremove_variable = vptl_history_capture_$field" }
 Add-Line $e '\tset_variable = { name = vptl_history_capture_president_identity value = 0 }'
 Add-Line $e '\tset_variable = { name = vptl_history_capture_vice_president_identity value = 0 }'
-Add-Line $e '\tset_variable = { name = vptl_history_capture_popularity value = 0 }'
+Add-Line $e '\tset_variable = { name = vptl_history_capture_popularity_start value = 0 }'
 Add-Line $e '\tset_variable = { name = vptl_history_capture_number value = 0 }'
 Add-Line $e '\tset_variable = { name = vptl_history_capture_accession_type value = 5 }'
 Add-Line $e '\tset_variable = { name = vptl_history_capture_gdp_start value = gdp }'
@@ -245,7 +324,7 @@ Add-Line $e '\t\tif = { limit = { scope:vptl_history_capture_president = { has_v
 Add-Line $e '\t\telse_if = { limit = { scope:vptl_history_capture_president = { has_variable = vptl_presidential_accession_succeeded } } set_variable = { name = vptl_history_capture_accession_type value = 2 } }'
 Add-Line $e '\t\telse_if = { limit = { scope:vptl_history_capture_president = { has_variable = vptl_presidential_accession_interim } } set_variable = { name = vptl_history_capture_accession_type value = 3 } }'
 Add-Line $e '\t\telse_if = { limit = { scope:vptl_history_capture_president = { has_variable = vptl_presidential_accession_provisional } } set_variable = { name = vptl_history_capture_accession_type value = 4 } }'
-Add-Line $e '\t\tset_variable = { name = vptl_history_capture_popularity value = scope:vptl_history_capture_president.popularity }'
+Add-Line $e '\t\tset_variable = { name = vptl_history_capture_popularity_start value = scope:vptl_history_capture_president.popularity }'
 Add-Line $e '\t\tscope:vptl_history_capture_president = { this.interest_group ?= { save_scope_as = vptl_history_capture_ig party ?= { save_scope_as = vptl_history_capture_party } } culture ?= { save_scope_as = vptl_history_capture_culture } religion ?= { save_scope_as = vptl_history_capture_religion } ideology ?= { save_scope_as = vptl_history_capture_ideology } }'
 Add-IdeologyIdentityCapture $e 'scope:vptl_history_capture_president' 'vptl_history_capture_ideology_identity' "`t`t"
 Add-Line $e '\t}'
@@ -281,13 +360,15 @@ Add-Line $e '}'
 Add-Line $e
 Add-Line $e 'vptl_freeze_presidential_history_profile_for_record = {'
 Add-Line $e '\t# Backfill old records once, and only while their original president resolves.'
-Add-Line $e '\tif = { limit = { has_variable = $PREFIX$_populated var:$PREFIX$_president ?= { is_character_alive = yes } OR = { NOT = { has_variable = $PREFIX$_culture } NOT = { has_variable = $PREFIX$_religion } NOT = { has_variable = $PREFIX$_ideology } NOT = { has_variable = $PREFIX$_popularity } } }'
+Add-Line $e '\tif = { limit = { has_variable = $PREFIX$_populated var:$PREFIX$_president ?= { is_character_alive = yes } OR = { NOT = { has_variable = $PREFIX$_culture } NOT = { has_variable = $PREFIX$_religion } NOT = { has_variable = $PREFIX$_ideology } NOT = { has_variable = $PREFIX$_ideology_identity } NOT = { has_variable = $PREFIX$_popularity_start } NOT = { has_variable = $PREFIX$_popularity } } }'
 Add-Line $e '\t\tvar:$PREFIX$_president ?= { save_scope_as = vptl_history_profile_subject culture ?= { save_scope_as = vptl_history_capture_culture } religion ?= { save_scope_as = vptl_history_capture_religion } ideology ?= { save_scope_as = vptl_history_capture_ideology } }'
 foreach ($field in @('culture','religion','ideology')) { Add-Line $e "\t\tif = { limit = { NOT = { has_variable = `$PREFIX`$_$field } exists = scope:vptl_history_capture_$field } set_variable = { name = `$PREFIX`$_$field value = scope:vptl_history_capture_$field } }" }
 Add-Line $e '\t\tif = { limit = { NOT = { has_variable = $PREFIX$_ideology_identity } }'
 Add-IdeologyIdentityCapture $e 'var:$PREFIX$_president' '$PREFIX$_ideology_identity' "`t`t`t"
 Add-Line $e '\t\t}'
-Add-Line $e '\t\tif = { limit = { NOT = { has_variable = $PREFIX$_popularity } exists = scope:vptl_history_profile_subject } set_variable = { name = $PREFIX$_popularity value = scope:vptl_history_profile_subject.popularity } }'
+Add-Line $e '\t\tif = { limit = { NOT = { has_variable = $PREFIX$_popularity_start } has_variable = $PREFIX$_popularity } set_variable = { name = $PREFIX$_popularity_start value = var:$PREFIX$_popularity } }'
+Add-Line $e '\t\tif = { limit = { NOT = { has_variable = $PREFIX$_popularity_start } exists = scope:vptl_history_profile_subject } set_variable = { name = $PREFIX$_popularity_start value = scope:vptl_history_profile_subject.popularity } }'
+Add-Line $e '\t\tif = { limit = { NOT = { has_variable = $PREFIX$_popularity } has_variable = $PREFIX$_popularity_start } set_variable = { name = $PREFIX$_popularity value = var:$PREFIX$_popularity_start } }'
 Add-Line $e '\t}'
 foreach ($field in @('culture','religion','ideology')) { Add-Line $e "\tremove_variable = vptl_history_capture_$field" }
 Add-Line $e '}'
@@ -300,6 +381,45 @@ Add-Line $e '\t\tset_variable = vptl_presidential_history_profiles_migrated'
 Add-Line $e '\t}'
 Add-Line $e '}'
 Add-Line $e
+
+Add-Line $e 'vptl_migrate_presidential_history_metric_snapshots_for_record = {'
+Add-Line $e '\tif = { limit = { has_variable = $PREFIX$_populated NOT = { has_variable = $PREFIX$_closed } }'
+foreach ($field in @('gdp_end','population_end','sol_end','prestige_end','rank_end','score_rank_end','popularity_end','gdp_change_available','gdp_change_percent','population_change_available','population_change_percent')) { Add-Line $e "\t\tremove_variable = `$PREFIX`$_$field".Replace('`$','$') }
+Add-Line $e '\t}'
+Add-Line $e '\tif = { limit = { has_variable = $PREFIX$_populated has_variable = $PREFIX$_closed NOT = { has_variable = $PREFIX$_popularity_end } }'
+Add-Line $e '\t\tif = { limit = { has_variable = $PREFIX$_popularity } set_variable = { name = $PREFIX$_popularity_end value = var:$PREFIX$_popularity } }'
+Add-Line $e '\t\telse_if = { limit = { has_variable = $PREFIX$_popularity_start } set_variable = { name = $PREFIX$_popularity_end value = var:$PREFIX$_popularity_start } }'
+Add-Line $e '\t}'
+Add-Line $e '\tif = { limit = { has_variable = $PREFIX$_populated has_variable = $PREFIX$_closed NOT = { has_variable = $PREFIX$_score_rank_end } has_variable = $PREFIX$_score_rank_start $PREFIX$_score_rank_start > 0 } set_variable = { name = $PREFIX$_score_rank_end value = var:$PREFIX$_score_rank_start } }'
+foreach ($metric in @('gdp','population')) { Add-PercentCalculation $e '$PREFIX$' $metric "\t" $true }
+Add-Line $e '}'
+Add-Line $e
+
+Add-Line $e 'vptl_migrate_presidential_history_metric_snapshots = {'
+Add-Line $e '\tif = { limit = { NOT = { has_variable = vptl_presidential_history_metric_snapshots_migrated } }'
+for ($i=1;$i -le 128;$i++) { Add-Line $e ("\t\tvptl_migrate_presidential_history_metric_snapshots_for_record = {{ PREFIX = vptl_presidential_history_slot_{0} }}" -f $i) }
+for ($i=1;$i -le 50;$i++) { Add-Line $e ("\t\tvptl_migrate_presidential_history_metric_snapshots_for_record = {{ PREFIX = vptl_presidential_history_recent_{0} }}" -f $i) }
+Add-Line $e '\t\tset_variable = vptl_presidential_history_metric_snapshots_migrated'
+Add-Line $e '\t}'
+Add-Line $e '}'
+Add-Line $e
+
+Add-Line $e 'vptl_migrate_presidential_history_closed_rank_fallback_for_record = {'
+Add-Line $e '\tif = { limit = { has_variable = $PREFIX$_populated has_variable = $PREFIX$_closed NOT = { has_variable = $PREFIX$_score_rank_end } has_variable = $PREFIX$_score_rank_start $PREFIX$_score_rank_start > 0 }'
+Add-Line $e '\t\tset_variable = { name = $PREFIX$_score_rank_end value = var:$PREFIX$_score_rank_start }'
+Add-Line $e '\t}'
+Add-Line $e '}'
+Add-Line $e
+
+Add-Line $e 'vptl_migrate_presidential_history_closed_rank_fallback = {'
+Add-Line $e '\tif = { limit = { NOT = { has_variable = vptl_presidential_history_closed_rank_fallback_migrated } }'
+for ($i=1;$i -le 128;$i++) { Add-Line $e ("\t\tvptl_migrate_presidential_history_closed_rank_fallback_for_record = {{ PREFIX = vptl_presidential_history_slot_{0} }}" -f $i) }
+for ($i=1;$i -le 50;$i++) { Add-Line $e ("\t\tvptl_migrate_presidential_history_closed_rank_fallback_for_record = {{ PREFIX = vptl_presidential_history_recent_{0} }}" -f $i) }
+Add-Line $e '\t\tset_variable = vptl_presidential_history_closed_rank_fallback_migrated'
+Add-Line $e '\t}'
+Add-Line $e '}'
+Add-Line $e
+
 Add-Line $e 'vptl_copy_presidential_history_recent_slot = {'
 Add-Line $e '\tif = {'
 Add-Line $e '\t\tlimit = { has_variable = vptl_presidential_history_recent_$FROM$_populated }'
@@ -323,10 +443,13 @@ Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_vice_p
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_party_type_identity value = var:vptl_history_capture_party_type_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_ig_type_identity value = var:vptl_history_capture_ig_type_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_ideology_identity value = var:vptl_history_capture_ideology_identity }'
-Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_popularity value = var:vptl_history_capture_popularity }'
+Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_popularity_start value = var:vptl_history_capture_popularity_start }'
+Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_popularity value = var:vptl_history_capture_popularity_start }'
+Add-Line $e '\tremove_variable = vptl_presidential_history_recent_1_popularity_end'
 foreach ($f in @('number','accession_type')) { Add-Line $e "\tset_variable = { name = vptl_presidential_history_recent_1_$f value = var:vptl_history_capture_$f }" }
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_departure_reason value = 0 }'
 foreach ($f in @('gdp','population','sol','prestige')) { Add-Line $e "\tset_variable = { name = vptl_presidential_history_recent_1_${f}_start value = var:vptl_history_capture_${f}_start }"; Add-Line $e "\tremove_variable = vptl_presidential_history_recent_1_${f}_end" }
+foreach ($f in @('gdp_change_available','gdp_change_percent','population_change_available','population_change_percent')) { Add-Line $e "\tremove_variable = vptl_presidential_history_recent_1_$f" }
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_rank_start value = var:vptl_history_capture_rank }'
 Add-Line $e '\tremove_variable = vptl_presidential_history_recent_1_rank_end'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_score_rank_start value = var:vptl_history_capture_score_rank }'
@@ -350,10 +473,12 @@ Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_vic
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_party_type_identity value = var:vptl_history_capture_party_type_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_ig_type_identity value = var:vptl_history_capture_ig_type_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_ideology_identity value = var:vptl_history_capture_ideology_identity }'
-Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_popularity value = var:vptl_history_capture_popularity }'
+Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_popularity_start value = var:vptl_history_capture_popularity_start }'
+Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_popularity value = var:vptl_history_capture_popularity_start }'
 foreach ($f in @('number','accession_type')) { Add-Line $e "\tset_variable = { name = vptl_presidential_history_slot_`$SLOT`$_$f value = var:vptl_history_capture_$f }".Replace('`$','$') }
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_departure_reason value = 0 }'
 foreach ($f in @('gdp','population','sol','prestige')) { Add-Line $e ("\tset_variable = {{ name = vptl_presidential_history_slot_`$SLOT`$_{0}_start value = var:vptl_history_capture_{0}_start }}" -f $f).Replace('`$','$') }
+foreach ($f in @('gdp_end','population_end','sol_end','prestige_end','rank_end','score_rank_end','popularity_end','gdp_change_available','gdp_change_percent','population_change_available','population_change_percent')) { Add-Line $e "\tremove_variable = vptl_presidential_history_slot_`$SLOT`$_$f".Replace('`$','$') }
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_rank_start value = var:vptl_history_capture_rank }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_score_rank_start value = var:vptl_history_capture_score_rank }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_start_year value = var:vptl_history_capture_year }'
@@ -378,23 +503,30 @@ Add-Line $e '\t\t\tif = { limit = { has_variable = vptl_presidential_history_cur
 Add-Line $e '\t\t\telse = { remove_variable = vptl_presidential_history_recent_1_populated }'
 Add-Line $e '\t\t}'
 Add-Line $e '\t}'
-foreach ($f in @('president','vice_president','party','ig','culture','religion','ideology','president_identity','vice_president_identity','party_type_identity','ig_type_identity','ideology_identity','popularity','number','accession_type','gdp_start','population_start','sol_start','prestige_start','rank','score_rank','year','month')) { Add-Line $e "\tremove_variable = vptl_history_capture_$f" }
+foreach ($f in @('president','vice_president','party','ig','culture','religion','ideology','president_identity','vice_president_identity','party_type_identity','ig_type_identity','ideology_identity','popularity','popularity_start','popularity_end','number','accession_type','gdp_start','population_start','sol_start','prestige_start','rank','score_rank','year','month')) { Add-Line $e "\tremove_variable = vptl_history_capture_$f" }
 Add-Line $e '}'
 Add-Line $e
 Add-Line $e 'vptl_finalize_presidential_history_archive_slot = {'
-Add-Line $e '\tif = { limit = { var:vptl_presidential_history_current_slot = $SLOT$ has_variable = vptl_presidential_history_slot_$SLOT$_active NOT = { has_variable = vptl_presidential_history_slot_$SLOT$_closed } }'
+Add-Line $e '\tif = { limit = { var:vptl_presidential_history_current_slot = $SLOT$ has_variable = vptl_presidential_history_slot_$SLOT$_populated NOT = { has_variable = vptl_presidential_history_slot_$SLOT$_closed } }'
 foreach ($f in @('gdp','total_population','average_sol','prestige')) { $name=@{'gdp'='gdp';'total_population'='population';'average_sol'='sol';'prestige'='prestige'}[$f]; Add-Line $e "\t\tset_variable = { name = vptl_presidential_history_slot_`$SLOT`$_${name}_end value = $f }".Replace('`$','$') }
 Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_rank_end value = var:vptl_history_capture_rank }'
-Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_score_rank_end value = var:vptl_history_capture_score_rank }'
+Add-Line $e '\t\tif = { limit = { NOT = { has_variable = vptl_presidential_history_slot_$SLOT$_score_rank_end } var:vptl_history_capture_score_rank > 0 } set_variable = { name = vptl_presidential_history_slot_$SLOT$_score_rank_end value = var:vptl_history_capture_score_rank } }'
+foreach ($metric in @('gdp','population')) { Add-PercentCalculation $e 'vptl_presidential_history_slot_$SLOT$' $metric "\t\t" $false }
+Add-Line $e '\t\t# Prefer the outgoing president, then the maintained active value, then the accession baseline.'
+Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_popularity_end value = var:vptl_presidential_history_slot_$SLOT$_popularity_start }'
+Add-Line $e '\t\tif = { limit = { has_variable = vptl_presidential_history_slot_$SLOT$_popularity } set_variable = { name = vptl_presidential_history_slot_$SLOT$_popularity_end value = var:vptl_presidential_history_slot_$SLOT$_popularity } }'
+Add-Line $e '\t\tif = { limit = { has_variable = vptl_presidential_history_current_president var:vptl_presidential_history_current_president ?= { is_character_alive = yes } } set_variable = { name = vptl_presidential_history_slot_$SLOT$_popularity_end value = var:vptl_presidential_history_current_president.popularity } }'
 Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_departure_reason value = var:vptl_presidential_history_departure_reason }'
 Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_end_year value = var:vptl_history_capture_year }'
 Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_end_month value = var:vptl_history_capture_month }'
 Add-Line $e '\t\tset_variable = vptl_presidential_history_slot_$SLOT$_closed remove_variable = vptl_presidential_history_slot_$SLOT$_active'
-Add-Line $e '\t\t# Mirror the final handoff snapshot before the recent cache shifts the episode.'
+Add-Line $e '\t\t# Mirror the finalized archive snapshot before the recent cache shifts the episode.'
 Add-Line $e '\t\tif = { limit = { has_variable = vptl_presidential_history_recent_1_populated NOT = { has_variable = vptl_presidential_history_recent_1_closed } }'
-Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_gdp_end value = gdp } set_variable = { name = vptl_presidential_history_recent_1_population_end value = total_population } set_variable = { name = vptl_presidential_history_recent_1_sol_end value = average_sol } set_variable = { name = vptl_presidential_history_recent_1_prestige_end value = prestige }'
-Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_rank_end value = var:vptl_history_capture_rank } set_variable = { name = vptl_presidential_history_recent_1_score_rank_end value = var:vptl_history_capture_score_rank }'
-Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_departure_reason value = var:vptl_presidential_history_departure_reason } set_variable = { name = vptl_presidential_history_recent_1_end_year value = var:vptl_history_capture_year } set_variable = { name = vptl_presidential_history_recent_1_end_month value = var:vptl_history_capture_month } set_variable = vptl_presidential_history_recent_1_closed'
+Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_gdp_end value = var:vptl_presidential_history_slot_$SLOT$_gdp_end } set_variable = { name = vptl_presidential_history_recent_1_population_end value = var:vptl_presidential_history_slot_$SLOT$_population_end } set_variable = { name = vptl_presidential_history_recent_1_sol_end value = var:vptl_presidential_history_slot_$SLOT$_sol_end } set_variable = { name = vptl_presidential_history_recent_1_prestige_end value = var:vptl_presidential_history_slot_$SLOT$_prestige_end }'
+Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_rank_end value = var:vptl_presidential_history_slot_$SLOT$_rank_end } set_variable = { name = vptl_presidential_history_recent_1_score_rank_end value = var:vptl_presidential_history_slot_$SLOT$_score_rank_end }'
+	Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_popularity_end value = var:vptl_presidential_history_slot_$SLOT$_popularity_end }'
+	foreach ($metric in @('gdp','population')) { Add-Line $e "\t\t\tif = { limit = { has_variable = vptl_presidential_history_slot_`$SLOT`$_${metric}_change_available } set_variable = { name = vptl_presidential_history_recent_1_${metric}_change_available } set_variable = { name = vptl_presidential_history_recent_1_${metric}_change_percent value = var:vptl_presidential_history_slot_`$SLOT`$_${metric}_change_percent } } else = { remove_variable = vptl_presidential_history_recent_1_${metric}_change_available remove_variable = vptl_presidential_history_recent_1_${metric}_change_percent }".Replace('`$','$') }
+	Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_departure_reason value = var:vptl_presidential_history_departure_reason } set_variable = { name = vptl_presidential_history_recent_1_end_year value = var:vptl_history_capture_year } set_variable = { name = vptl_presidential_history_recent_1_end_month value = var:vptl_history_capture_month } set_variable = vptl_presidential_history_recent_1_closed'
 Add-Line $e '\t\t}'
 Add-Line $e '\t}'
 Add-Line $e '}'
@@ -423,60 +555,33 @@ Add-Line $e '\t\tvptl_capture_presidential_history_date = yes'
 Add-Line $e '\t\tvptl_capture_presidential_history_power_rank = yes'
 Add-Line $e '\t\tvptl_capture_presidential_history_numeric_rank = yes'
 for ($i=1;$i -le 128;$i++) { Add-Line $e "\t\tvptl_finalize_presidential_history_archive_slot = { SLOT = $i }" }
-Add-Line $e '\t\tif = { limit = { has_variable = vptl_presidential_history_recent_1_populated NOT = { has_variable = vptl_presidential_history_recent_1_closed } }'
-Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_gdp_end value = gdp } set_variable = { name = vptl_presidential_history_recent_1_population_end value = total_population } set_variable = { name = vptl_presidential_history_recent_1_sol_end value = average_sol } set_variable = { name = vptl_presidential_history_recent_1_prestige_end value = prestige }'
-Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_rank_end value = var:vptl_history_capture_rank } set_variable = { name = vptl_presidential_history_recent_1_score_rank_end value = var:vptl_history_capture_score_rank }'
-Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_departure_reason value = var:vptl_presidential_history_departure_reason } set_variable = { name = vptl_presidential_history_recent_1_end_year value = var:vptl_history_capture_year } set_variable = { name = vptl_presidential_history_recent_1_end_month value = var:vptl_history_capture_month } set_variable = vptl_presidential_history_recent_1_closed'
-Add-Line $e '\t\t}'
 Add-Line $e '\t\tif = {'
 Add-Line $e '\t\t\tlimit = { has_variable = vptl_presidential_history_current_president }'
 Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_previous_president value = var:vptl_presidential_history_current_president }'
 Add-Line $e '\t\t\tif = { limit = { var:vptl_presidential_history_current_president ?= { has_variable = vptl_presidential_order_number } } set_variable = { name = vptl_presidential_history_previous_number value = var:vptl_presidential_history_current_president.var:vptl_presidential_order_number } }'
 Add-Line $e '\t\t}'
-Add-Line $e '\t\tclear_variable_list = vptl_presidential_history_active_laws_seen remove_variable = vptl_presidential_history_current_slot remove_variable = vptl_presidential_history_current_president remove_variable = vptl_presidential_history_departure_reason remove_variable = vptl_history_capture_year remove_variable = vptl_history_capture_month remove_variable = vptl_history_capture_rank remove_variable = vptl_history_capture_score_rank remove_variable = vptl_presidential_history_close_in_progress'
+Add-Line $e '\t\tclear_variable_list = vptl_presidential_history_active_laws_seen remove_variable = vptl_presidential_history_current_slot remove_variable = vptl_presidential_history_current_president remove_variable = vptl_presidential_history_departure_reason remove_variable = vptl_history_capture_year remove_variable = vptl_history_capture_month remove_variable = vptl_history_capture_rank remove_variable = vptl_history_capture_score_rank remove_variable = vptl_presidential_history_rank_latched remove_variable = vptl_presidential_history_close_in_progress'
 Add-Line $e '\t}'
 Add-Line $e '}'
 Add-Line $e
 Add-Line $e 'vptl_refresh_presidential_history_archive_slot = {'
-Add-Line $e '\tif = { limit = { var:vptl_presidential_history_current_slot = $SLOT$ has_variable = vptl_presidential_history_slot_$SLOT$_active }'
-Add-Line $e '\t\tif = {'
-Add-Line $e '\t\t\tlimit = { has_variable = vptl_presidential_successor }'
-Add-Line $e '\t\t\tvar:vptl_presidential_successor ?= { if = { limit = { is_character_alive = yes NOT = { has_role = character_role_vptl_presidential_history_subject } } add_character_role = character_role_vptl_presidential_history_subject } }'
-Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president value = var:vptl_presidential_successor }'
-Add-IdentityCapture $e 'var:vptl_presidential_successor' 'vptl_presidential_history_slot_$SLOT$_vice_president_identity' "`t`t`t"
-Add-Line $e '\t\t}'
-Add-Line $e '\t\telse = { remove_variable = vptl_presidential_history_slot_$SLOT$_vice_president set_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president_identity value = 0 } }'
-Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_gdp_end value = gdp }'
-Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_population_end value = total_population }'
-Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_sol_end value = average_sol }'
-Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_prestige_end value = prestige }'
-Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_rank_end value = var:vptl_history_capture_rank }'
-Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_score_rank_end value = var:vptl_history_capture_score_rank }'
-Add-Line $e '\t}'
+	Add-Line $e '\t# Retained as a compatibility no-op; closed final metrics are never refreshed.'
 Add-Line $e '}'
 Add-Line $e
 Add-Line $e 'vptl_refresh_open_presidential_history_episode = {'
-Add-Line $e '\tif = { limit = { has_variable = vptl_presidential_history_current_slot has_variable = vptl_presidential_history_current_president NOT = { has_variable = vptl_presidential_history_close_in_progress } }'
-Add-Line $e '\t\t# Active national results refresh only when the user opens the library.'
-Add-Line $e '\t\tvptl_capture_presidential_history_power_rank = yes'
-Add-Line $e '\t\tvptl_capture_presidential_history_numeric_rank = yes'
-for ($i=1;$i -le 128;$i++) { Add-Line $e "\t\tvptl_refresh_presidential_history_archive_slot = { SLOT = $i }" }
-Add-Line $e '\t\tif = {'
-Add-Line $e '\t\t\tlimit = { has_variable = vptl_presidential_successor }'
-Add-Line $e '\t\t\tvar:vptl_presidential_successor ?= { if = { limit = { is_character_alive = yes NOT = { has_role = character_role_vptl_presidential_history_subject } } add_character_role = character_role_vptl_presidential_history_subject } }'
+	Add-Line $e '\t# Historical final metrics are immutable; active cards bind directly to current Country values.'
+	Add-Line $e '\t# Only the associated successor may refresh while the episode stays open.'
+	Add-Line $e '\tif = { limit = { has_variable = vptl_presidential_history_current_slot has_variable = vptl_presidential_history_current_president NOT = { has_variable = vptl_presidential_history_close_in_progress } }'
+	Add-Line $e '\t\tif = { limit = { has_variable = vptl_presidential_successor }'
 Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_vice_president value = var:vptl_presidential_successor }'
 Add-IdentityCapture $e 'var:vptl_presidential_successor' 'vptl_presidential_history_recent_1_vice_president_identity' "`t`t`t"
-Add-Line $e '\t\t}'
-Add-Line $e '\t\telse = { remove_variable = vptl_presidential_history_recent_1_vice_president set_variable = { name = vptl_presidential_history_recent_1_vice_president_identity value = 0 } }'
-Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_recent_1_gdp_end value = gdp }'
-Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_recent_1_population_end value = total_population }'
-Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_recent_1_sol_end value = average_sol }'
-Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_recent_1_prestige_end value = prestige }'
-Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_recent_1_rank_end value = var:vptl_history_capture_rank }'
-Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_recent_1_score_rank_end value = var:vptl_history_capture_score_rank }'
-Add-Line $e '\t\tremove_variable = vptl_history_capture_rank'
-Add-Line $e '\t\tremove_variable = vptl_history_capture_score_rank'
-Add-Line $e '\t}'
+	for ($i=1;$i -le 128;$i++) { Add-Line $e "\t\t\tif = { limit = { var:vptl_presidential_history_current_slot = $i } set_variable = { name = vptl_presidential_history_slot_${i}_vice_president value = var:vptl_presidential_successor } }" }
+	Add-Line $e '\t\t}'
+	Add-Line $e '\t\tif = { limit = { has_variable = vptl_presidential_history_current_president var:vptl_presidential_history_current_president ?= { is_character_alive = yes } }'
+	Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_popularity value = var:vptl_presidential_history_current_president.popularity }'
+	for ($i=1;$i -le 128;$i++) { Add-Line $e "\t\t\tif = { limit = { var:vptl_presidential_history_current_slot = $i } set_variable = { name = vptl_presidential_history_slot_${i}_popularity value = var:vptl_presidential_history_current_president.popularity } }" }
+	Add-Line $e '\t\t}'
+	Add-Line $e '\t}'
 Add-Line $e '}'
 Add-Line $e
 Add-Line $e 'vptl_record_presidential_history_law_in_archive_slot = {'
@@ -500,10 +605,6 @@ Add-Line $e 'vptl_copy_presidential_history_recent_to_display_slot = {'
 Add-Line $e '\tif = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_populated }'
 Copy-VariableBlock $e 'vptl_presidential_history_recent_$SLOT$' 'vptl_presidential_history_display_$SLOT$' $allFields '\t\t'
 Add-Line $e '\t\tif = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_closed } set_variable = { name = vptl_presidential_history_display_$SLOT$_closed value = 1 } } else = { set_variable = { name = vptl_presidential_history_display_$SLOT$_closed value = 0 } }'
-foreach ($metric in @('gdp','population')) {
-	Add-Line $e "\t\tremove_variable = vptl_presidential_history_display_`$SLOT`$_${metric}_change_available".Replace('`$','$')
-	Add-Line $e "\t\tremove_variable = vptl_presidential_history_display_`$SLOT`$_${metric}_change_percent".Replace('`$','$')
-}
 Add-Line $e '\t\tset_variable = vptl_presidential_history_display_$SLOT$_populated'
 Add-Line $e '\t}'
 Add-Line $e '\telse = {'
@@ -514,6 +615,8 @@ Add-Line $e
 Add-Line $e 'vptl_load_presidential_history_latest_50 = {'
 Add-Line $e '\tvptl_migrate_presidential_history_affiliation_identities = yes'
 Add-Line $e '\tvptl_migrate_presidential_history_profiles = yes'
+Add-Line $e '\tvptl_migrate_presidential_history_metric_snapshots = yes'
+Add-Line $e '\tvptl_migrate_presidential_history_closed_rank_fallback = yes'
 Add-Line $e '\tvptl_refresh_open_presidential_history_episode = yes'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_display_count value = 0 }'
 Add-Line $e '\tif = { limit = { has_variable = vptl_presidential_history_recent_count } set_variable = { name = vptl_presidential_history_display_count value = var:vptl_presidential_history_recent_count } }'
@@ -545,14 +648,11 @@ Add-Line $g '\t\ttextbox = { visible = "[LessThan_CFixedPoint(Country.MakeScope.
 Add-Line $g '\t\tscrollarea = {'; Add-Line $g '\t\t\tvisible = "[GreaterThanOrEqualTo_CFixedPoint(Country.MakeScope.Var(''vptl_presidential_history_display_count'').GetValue, ''(CFixedPoint)1'')]"'; Add-Line $g '\t\t\tsize = { 992 770 }'; Add-Line $g '\t\t\tscrollbarpolicy_horizontal = always_off'; Add-Line $g '\t\t\tscrollbaralign_vertical = right'; Add-Line $g '\t\t\tscrollbar_vertical = { using = vertical_scrollbar }'; Add-Line $g '\t\t\tscrollwidget = {'; Add-Line $g '\t\t\t\tvbox = {'; Add-Line $g '\t\t\t\t\tlayoutpolicy_horizontal = expanding'; Add-Line $g '\t\t\t\t\tlayoutpolicy_vertical = preferred'; Add-Line $g '\t\t\t\t\tspacing = 5'
 for ($s=1;$s -le 50;$s++) {
 	$p="vptl_presidential_history_display_${s}"
-	$closed="GreaterThan_CFixedPoint(Country.MakeScope.Var('${p}_closed').GetValue, '(CFixedPoint)0')"
+	# A missing closed marker means the active record is still open.
+	$closed="And(Country.MakeScope.Var('${p}_closed').IsSet, GreaterThan_CFixedPoint(Country.MakeScope.Var('${p}_closed').GetValue, '(CFixedPoint)0'))"
 	$open="Not($closed)"
-	$rankOpenEnd="And($open, Country.MakeScope.Var('${p}_score_rank_end').IsSet, GreaterThan_CFixedPoint(Country.MakeScope.Var('${p}_score_rank_end').GetValue, '(CFixedPoint)0'))"
-	$rankOpenStartOnly="And($open, Country.MakeScope.Var('${p}_score_rank_start').IsSet, GreaterThan_CFixedPoint(Country.MakeScope.Var('${p}_score_rank_start').GetValue, '(CFixedPoint)0'), Not(And(Country.MakeScope.Var('${p}_score_rank_end').IsSet, GreaterThan_CFixedPoint(Country.MakeScope.Var('${p}_score_rank_end').GetValue, '(CFixedPoint)0'))))"
-	$rankClosed="And($closed, Country.MakeScope.Var('${p}_score_rank_start').IsSet, Country.MakeScope.Var('${p}_score_rank_end').IsSet, GreaterThan_CFixedPoint(Country.MakeScope.Var('${p}_score_rank_start').GetValue, '(CFixedPoint)0'), GreaterThan_CFixedPoint(Country.MakeScope.Var('${p}_score_rank_end').GetValue, '(CFixedPoint)0'))"
-	$rankClosedStartOnly="And($closed, Country.MakeScope.Var('${p}_score_rank_start').IsSet, GreaterThan_CFixedPoint(Country.MakeScope.Var('${p}_score_rank_start').GetValue, '(CFixedPoint)0'), Not(And(Country.MakeScope.Var('${p}_score_rank_end').IsSet, GreaterThan_CFixedPoint(Country.MakeScope.Var('${p}_score_rank_end').GetValue, '(CFixedPoint)0'))))"
-	$rankMissingOpen="And($open, Not({0}), Not({1}))" -f $rankOpenEnd,$rankOpenStartOnly
-	$rankMissingClosed="And($closed, Not({0}), Not({1}))" -f $rankClosed,$rankClosedStartOnly
+	$rankClosed="And($closed, Country.MakeScope.Var('${p}_score_rank_end').IsSet, GreaterThan_CFixedPoint(Country.MakeScope.Var('${p}_score_rank_end').GetValue, '(CFixedPoint)0'))"
+	$rankMissingClosed="And($closed, Not($rankClosed))"
 	Add-Line $g '\t\t\t\t\twidget = {'
 	Add-Line $g ("\t\t\t\t\t\tvisible = `"[And(GreaterThanOrEqualTo_CFixedPoint(Country.MakeScope.Var('vptl_presidential_history_display_count').GetValue, '(CFixedPoint){0}'), Country.MakeScope.Var('{1}_populated').IsSet)]`"" -f $s,$p)
 	Add-Line $g '\t\t\t\t\t\tsize = { 964 210 }'
@@ -587,28 +687,26 @@ for ($s=1;$s -le 50;$s++) {
 	Add-ProfileScopeText $g $p 'culture' 'Culture' 'Culture' 'FancyTooltip_Culture' 'vptl_presidential_history_culture_label'
 	Add-ProfileScopeText $g $p 'religion' 'Religion' 'Religion' 'FancyTooltip_Religion' 'vptl_presidential_history_religion_label'
 	Add-IdeologyText $g $p
-	Add-Line $g '\t\t\t\t\t\t\t\t\twidget = { size = { 226 32 } hbox = { spacing = 4'
-	Add-Line $g '\t\t\t\t\t\t\t\t\t\ttextbox = { size = { 72 32 } text = "vptl_presidential_history_popularity_label" fontsize = 14 }'
-	Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[GreaterThan_CFixedPoint(Country.MakeScope.Var('{0}_popularity').GetValue, '(CFixedPoint)0')]`" size = {{ 150 32 }} raw_text = `"#P +[Country.MakeScope.Var('{0}_popularity').GetValue|0]#!`" fontsize = 15 }}" -f $p)
-	Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[LessThan_CFixedPoint(Country.MakeScope.Var('{0}_popularity').GetValue, '(CFixedPoint)0')]`" size = {{ 150 32 }} raw_text = `"#N [Country.MakeScope.Var('{0}_popularity').GetValue|0]#!`" fontsize = 15 }}" -f $p)
-	Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[EqualTo_CFixedPoint(Country.MakeScope.Var('{0}_popularity').GetValue, '(CFixedPoint)0')]`" size = {{ 150 32 }} raw_text = `"[Country.MakeScope.Var('{0}_popularity').GetValue|0]`" fontsize = 15 }}" -f $p)
-	Add-Line $g '\t\t\t\t\t\t\t\t\t} }'
-	Add-Line $g '\t\t\t\t\t\t\t\t}'
+	Add-PopularityText $g $p
+	Add-Line $g '\t\t\t\t\t\t\t}'
 
-	# Results row: active cards show one value; completed cards require a full start/end pair.
+	# Results row: active cards bind live country values; completed cards bind frozen finals.
 	Add-Line $g '\t\t\t\t\t\t\t\thbox = { spacing = 8'
-	foreach ($metric in @(@('gdp','vptl_presidential_history_gdp_label','D',180),@('population','vptl_presidential_history_population_label','D',180),@('sol','vptl_presidential_history_sol_label','1',180),@('prestige','vptl_presidential_history_prestige_label','0',180))) {
+	Add-NationalMetricText $g $p 'gdp' 'vptl_presidential_history_gdp_label' 'D' 'GetGDP' $true
+	Add-NationalMetricText $g $p 'population' 'vptl_presidential_history_population_label' 'D' 'GetTotalPopulation' $true
+	Add-NationalMetricText $g $p 'sol' 'vptl_presidential_history_sol_label' '1' 'GetAverageSoLByPopulation' $false
+	Add-NationalMetricText $g $p 'prestige' 'vptl_presidential_history_prestige_label' '0' 'GetPrestige' $false
+	<# old metric loop retained below only as a source comment for historical context.
 		$name=$metric[0]; $label=$metric[1]; $format=$metric[2]; $width=$metric[3]
-		$currentAvailable="And($open, Or(Country.MakeScope.Var('${p}_${name}_end').IsSet, Country.MakeScope.Var('${p}_${name}_start').IsSet))"
+		# This mirrors the last known-good binding: active reads start, closed reads start to end.
+		$currentAvailable="And($open, Country.MakeScope.Var('${p}_${name}_start').IsSet)"
 		$closedAvailable="And($closed, Country.MakeScope.Var('${p}_${name}_start').IsSet, Country.MakeScope.Var('${p}_${name}_end').IsSet)"
-		$closedStartOnly="And($closed, Country.MakeScope.Var('${p}_${name}_start').IsSet, Not(Country.MakeScope.Var('${p}_${name}_end').IsSet))"
-		$currentMissing="And($open, Not(Country.MakeScope.Var('${p}_${name}_end').IsSet))"
+		$currentMissing="And($open, Not(Country.MakeScope.Var('${p}_${name}_start').IsSet))"
 		$closedMissing="And($closed, Or(Not(Country.MakeScope.Var('${p}_${name}_start').IsSet), Not(Country.MakeScope.Var('${p}_${name}_end').IsSet)))"
 		Add-Line $g ("\t\t\t\t\t\t\t\t\twidget = {{ size = {{ {0} 48 }} vbox = {{" -f $width)
 		Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ size = {{ {0} 18 }} text = `"{1}`" fontsize = 14 }}" -f $width,$label)
-		Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[And({0}, Country.MakeScope.Var('{1}_{2}_end').IsSet)]`" size = {{ {3} 28 }} raw_text = `"#v [Country.MakeScope.Var('{1}_{2}_end').GetValue|{4}]#!`" fontsize = 16 elide = right }}" -f $currentAvailable,$p,$name,$width,$format)
-		Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[And({0}, Not(Country.MakeScope.Var('{1}_{2}_end').IsSet), Country.MakeScope.Var('{1}_{2}_start').IsSet)]`" size = {{ {3} 28 }} raw_text = `"#v [Country.MakeScope.Var('{1}_{2}_start').GetValue|{4}]#!`" fontsize = 16 elide = right }}" -f $currentAvailable,$p,$name,$width,$format)
-		Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ {1} 28 }} raw_text = `"#v [Country.MakeScope.Var('{2}_{3}_start').GetValue|{4}] → [Country.MakeScope.Var('{2}_{3}_end').GetValue|{4}]#!`" fontsize = 15 elide = right }}" -f $closedAvailable,$width,$p,$name,$format)
+		Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ {1} 28 }} raw_text = `"#BOLD [Country.MakeScope.Var('{2}_{3}_start').GetValue|{4}]#!`" fontsize = 16 elide = right }}" -f $currentAvailable,$width,$p,$name,$format)
+		Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ {1} 28 }} raw_text = `"#BOLD [Country.MakeScope.Var('{2}_{3}_start').GetValue|{4}] → [Country.MakeScope.Var('{2}_{3}_end').GetValue|{4}]#!`" fontsize = 15 elide = right }}" -f $closedAvailable,$width,$p,$name,$format)
 		Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[Or({0}, {1})]`" size = {{ {2} 28 }} text = `"vptl_presidential_history_metric_unavailable`" fontsize = 15 elide = right }}" -f $currentMissing,$closedMissing,$width)
 		Add-Line $g '\t\t\t\t\t\t\t\t\t} }'
 	}
@@ -616,11 +714,21 @@ for ($s=1;$s -le 50;$s++) {
 	Add-Line $g '\t\t\t\t\t\t\t\t\t\ttextbox = { size = { 176 18 } text = "vptl_presidential_history_rank_label" fontsize = 14 }'
 	Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ 176 28 }} raw_text = `"#v ##[Country.MakeScope.Var('{1}_score_rank_end').GetValue|0]#!`" fontsize = 16 }}" -f $rankOpenEnd,$p)
 	Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ 176 28 }} raw_text = `"#v ##[Country.MakeScope.Var('{1}_score_rank_start').GetValue|0]#!`" fontsize = 16 }}" -f $rankOpenStartOnly,$p)
-	Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ 176 28 }} raw_text = `"#v ##[Country.MakeScope.Var('{1}_score_rank_start').GetValue|0] → ##[Country.MakeScope.Var('{1}_score_rank_end').GetValue|0]#!`" fontsize = 15 }}" -f $rankClosed,$p)
-	Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ 176 28 }} raw_text = `"#v ##[Country.MakeScope.Var('{1}_score_rank_start').GetValue|0]#!`" fontsize = 16 }}" -f $rankClosedStartOnly,$p)
+	Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ 176 28 }} raw_text = `"#v ##[Country.MakeScope.Var('{1}_score_rank_start').GetValue|0]#! → #v ##[Country.MakeScope.Var('{1}_score_rank_end').GetValue|0]#!`" fontsize = 15 }}" -f $rankClosed,$p)
 	Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[Or({0}, {1})]`" size = {{ 176 28 }} text = `"vptl_presidential_history_rank_unavailable_value`" fontsize = 15 }}" -f $rankMissingOpen,$rankMissingClosed)
 	Add-Line $g '\t\t\t\t\t\t\t\t\t} }'
 	Add-Line $g '\t\t\t\t\t\t\t\t}'
+
+	#>
+	<# Rank display temporarily disabled while rank persistence is being repaired.
+	Add-Line $g '\t\t\t\t\t\t\twidget = { size = { 176 48 } vbox = {'
+	Add-Line $g '\t\t\t\t\t\t\t\ttextbox = { size = { 176 18 } text = "vptl_presidential_history_rank_label" fontsize = 14 }'
+	Add-Line $g ("\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ 176 28 }} raw_text = `"#v ##[Country.GetCountryScorePositionDesc]#!`" fontsize = 16 }}" -f $open)
+	Add-Line $g ("\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ 176 28 }} raw_text = `"#v ##[Country.MakeScope.Var('{1}_score_rank_end').GetValue|0]#!`" fontsize = 16 }}" -f $rankClosed,$p)
+	Add-Line $g ("\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ 176 28 }} text = `"vptl_presidential_history_rank_unavailable_value`" fontsize = 15 }}" -f $rankMissingClosed)
+	Add-Line $g '\t\t\t\t\t\t\t} }'
+	#>
+	Add-Line $g '\t\t\t\t\t\t}'
 
 	# Laws stay inside a dedicated footer so long histories cannot disturb the grid.
 	Add-Line $g '\t\t\t\t\t\t\t\twidget = { size = { 928 40 } background = { using = entry_bg_fancy_dark alpha = 0.22 } hbox = { spacing = 5'
