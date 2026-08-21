@@ -198,37 +198,39 @@ function Add-PopularityText([System.Collections.Generic.List[string]]$Lines, [st
 	Add-Line $Lines ("{0}}} }}" -f $Indent)
 }
 
-function Add-PresidentialProfileTooltipType([System.Collections.Generic.List[string]]$Lines, [int]$Slot) {
+function Add-ExecutiveProfileTooltipType([System.Collections.Generic.List[string]]$Lines, [int]$Slot, [string]$SubjectField, [string]$TooltipType, [string]$TitleKey, [string]$UnavailableKey) {
 	$prefix = "vptl_presidential_history_display_${Slot}"
 	$closed = "And(Country.MakeScope.Var('${prefix}_closed').IsSet, GreaterThan_CFixedPoint(Country.MakeScope.Var('${prefix}_closed').GetValue, '(CFixedPoint)0'))"
 	$open = "Not($closed)"
-	$presidentValid = "Country.MakeScope.Var('${prefix}_president').GetCharacter.IsValid"
-	$presidentIdentity = "${prefix}_president_identity"
+	$subjectVariable = "${prefix}_${SubjectField}"
+	$subjectValid = "Country.MakeScope.Var('${subjectVariable}').GetCharacter.IsValid"
+	$subjectIdentity = "${subjectVariable}_identity"
+	$profilePrefix = if ($SubjectField -eq 'president') { $prefix } else { $subjectVariable }
 	$profileIndent = "`t`t`t`t`t"
 
-	Add-Line $Lines ("`ttype vptl_presidential_history_profile_tooltip_{0} = FancyTooltipWidgetType {{" -f $Slot)
+	Add-Line $Lines ("`ttype {0} = FancyTooltipWidgetType {{" -f $TooltipType)
 	Add-Line $Lines '\t\tblockoverride "text" {}'
 	Add-Line $Lines '\t\tblockoverride "icon_texture" {}'
 	Add-Line $Lines '\t\tblockoverride "icon_frame" {}'
-	Add-Line $Lines '\t\tblockoverride "name" { text = "vptl_presidential_history_profile_tooltip_title" }'
+	Add-Line $Lines ("`t`tblockoverride `"name`" {{ text = `"{0}`" }}" -f $TitleKey)
 	Add-Line $Lines '\t\tblockoverride "type" {}'
 	Add-Line $Lines '\t\tblockoverride "tooltip_content_after" {'
 
 	# The title is record-bound: live names use the stored Character scope, while
 	# dead historical names use the same frozen identity mapping as the card.
-	Add-Line $Lines ("{0}custom_tooltip_textbox = {{ visible = `"[{1}]`" raw_text = `"#BOLD [Country.MakeScope.Var('{2}_president').GetCharacter.GetFullNameNoFormatting]#!`" fontsize = 18 }}" -f $profileIndent,$presidentValid,$prefix)
+	Add-Line $Lines ("{0}custom_tooltip_textbox = {{ visible = `"[{1}]`" raw_text = `"#BOLD [Country.MakeScope.Var('{2}').GetCharacter.GetFullNameNoFormatting]#!`" fontsize = 18 }}" -f $profileIndent,$subjectValid,$subjectVariable)
 	foreach ($identity in $historicalIdentities) {
-		Add-Line $Lines ("{0}custom_tooltip_textbox = {{ visible = `"[And(Not({1}), EqualTo_CFixedPoint(Country.MakeScope.Var('{2}').GetValue, '(CFixedPoint){3}'))]`" text = `"{4}`" fontsize = 18 }}" -f $profileIndent,$presidentValid,$presidentIdentity,$identity.Id,$identity.Loc)
+		Add-Line $Lines ("{0}custom_tooltip_textbox = {{ visible = `"[And(Not({1}), EqualTo_CFixedPoint(Country.MakeScope.Var('{2}').GetValue, '(CFixedPoint){3}'))]`" text = `"{4}`" fontsize = 18 }}" -f $profileIndent,$subjectValid,$subjectIdentity,$identity.Id,$identity.Loc)
 	}
-	Add-Line $Lines ("{0}custom_tooltip_textbox = {{ visible = `"[And(Not({1}), LessThan_CFixedPoint(Country.MakeScope.Var('{2}').GetValue, '(CFixedPoint)1'))]`" text = `"vptl_presidential_history_unavailable_president`" fontsize = 18 }}" -f $profileIndent,$presidentValid,$presidentIdentity)
+	Add-Line $Lines ("{0}custom_tooltip_textbox = {{ visible = `"[And(Not({1}), LessThan_CFixedPoint(Country.MakeScope.Var('{2}').GetValue, '(CFixedPoint)1'))]`" text = `"{3}`" fontsize = 18 }}" -f $profileIndent,$subjectValid,$subjectIdentity,$UnavailableKey)
 	Add-Line $Lines ("{0}tooltip_divider = {{}}" -f $profileIndent)
 
-	# Culture and religion remain the stored captured scopes for both open and closed records.
+	# Culture and religion remain stored captured scopes for both open and closed records.
 	foreach ($profile in @(
 		@{ Field = 'culture'; Getter = 'Culture'; Label = 'vptl_presidential_history_culture_label' },
 		@{ Field = 'religion'; Getter = 'Religion'; Label = 'vptl_presidential_history_religion_label' }
 	)) {
-		$variable = "${prefix}_$($profile.Field)"
+		$variable = "${profilePrefix}_$($profile.Field)"
 		$valid = "Country.MakeScope.Var('$variable').Get$($profile.Getter).IsValid"
 		Add-Line $Lines ("{0}custom_tooltip_textbox = {{ text = `"{1}`" }}" -f $profileIndent,$profile.Label)
 		Add-Line $Lines ("{0}custom_tooltip_textbox_with_empty_line = {{ visible = `"[{1}]`" raw_text = `"#v [Country.MakeScope.Var('{2}').Get{3}.GetNameNoFormatting]#!`" }}" -f $profileIndent,$valid,$variable,$profile.Getter)
@@ -236,8 +238,8 @@ function Add-PresidentialProfileTooltipType([System.Collections.Generic.List[str
 	}
 
 	# Ideology keeps the valid stored scope first, then the historical identity fallback.
-	$ideologyVariable = "${prefix}_ideology"
-	$ideologyIdentity = "${prefix}_ideology_identity"
+	$ideologyVariable = "${profilePrefix}_ideology"
+	$ideologyIdentity = "${profilePrefix}_ideology_identity"
 	$ideologyValid = "Country.MakeScope.Var('$ideologyVariable').GetIdeology.IsValid"
 	Add-Line $Lines ("{0}custom_tooltip_textbox = {{ text = `"vptl_presidential_history_ideology_label`" }}" -f $profileIndent)
 	Add-Line $Lines ("{0}custom_tooltip_textbox_with_empty_line = {{ visible = `"[{1}]`" raw_text = `"#v [Country.MakeScope.Var('{2}').GetIdeology.GetNameNoFormatting]#!`" }}" -f $profileIndent,$ideologyValid,$ideologyVariable)
@@ -247,20 +249,20 @@ function Add-PresidentialProfileTooltipType([System.Collections.Generic.List[str
 	Add-Line $Lines ("{0}custom_tooltip_textbox_with_empty_line = {{ visible = `"[And(Not({1}), Or(Not(Country.MakeScope.Var('{2}').IsSet), LessThan_CFixedPoint(Country.MakeScope.Var('{2}').GetValue, '(CFixedPoint)1')))]`" text = `"vptl_presidential_history_profile_unavailable`" }}" -f $profileIndent,$ideologyValid,$ideologyIdentity)
 
 	# Open records use the maintained popularity value; closed records use only the frozen end value.
-	$activePopularity = Gui-And @($open, "Country.MakeScope.Var('${prefix}_popularity').IsSet")
-	$closedPopularity = Gui-And @($closed, "Country.MakeScope.Var('${prefix}_popularity_end').IsSet")
+	$activePopularity = Gui-And @($open, "Country.MakeScope.Var('${profilePrefix}_popularity').IsSet")
+	$closedPopularity = Gui-And @($closed, "Country.MakeScope.Var('${profilePrefix}_popularity_end').IsSet")
 	$missingPopularity = Gui-Or @(
-		(Gui-And @($open, "Not(Country.MakeScope.Var('${prefix}_popularity').IsSet)")),
-		(Gui-And @($closed, "Not(Country.MakeScope.Var('${prefix}_popularity_end').IsSet)"))
+		(Gui-And @($open, "Not(Country.MakeScope.Var('${profilePrefix}_popularity').IsSet)")),
+		(Gui-And @($closed, "Not(Country.MakeScope.Var('${profilePrefix}_popularity_end').IsSet)"))
 	)
 	Add-Line $Lines ("{0}custom_tooltip_textbox = {{ text = `"vptl_presidential_history_popularity_label`" }}" -f $profileIndent)
 	foreach ($state in @(
-		@{ Condition = "GreaterThan_CFixedPoint(Country.MakeScope.Var('${prefix}_popularity').GetValue, '(CFixedPoint)0')"; Visible = $activePopularity; Value = "#P +[Country.MakeScope.Var('${prefix}_popularity').GetValue|0]#!" },
-		@{ Condition = "LessThan_CFixedPoint(Country.MakeScope.Var('${prefix}_popularity').GetValue, '(CFixedPoint)0')"; Visible = $activePopularity; Value = "#N [Country.MakeScope.Var('${prefix}_popularity').GetValue|0]#!" },
-		@{ Condition = "EqualTo_CFixedPoint(Country.MakeScope.Var('${prefix}_popularity').GetValue, '(CFixedPoint)0')"; Visible = $activePopularity; Value = "[Country.MakeScope.Var('${prefix}_popularity').GetValue|0]" },
-		@{ Condition = "GreaterThan_CFixedPoint(Country.MakeScope.Var('${prefix}_popularity_end').GetValue, '(CFixedPoint)0')"; Visible = $closedPopularity; Value = "#P +[Country.MakeScope.Var('${prefix}_popularity_end').GetValue|0]#!" },
-		@{ Condition = "LessThan_CFixedPoint(Country.MakeScope.Var('${prefix}_popularity_end').GetValue, '(CFixedPoint)0')"; Visible = $closedPopularity; Value = "#N [Country.MakeScope.Var('${prefix}_popularity_end').GetValue|0]#!" },
-		@{ Condition = "EqualTo_CFixedPoint(Country.MakeScope.Var('${prefix}_popularity_end').GetValue, '(CFixedPoint)0')"; Visible = $closedPopularity; Value = "[Country.MakeScope.Var('${prefix}_popularity_end').GetValue|0]" }
+		@{ Condition = "GreaterThan_CFixedPoint(Country.MakeScope.Var('${profilePrefix}_popularity').GetValue, '(CFixedPoint)0')"; Visible = $activePopularity; Value = "#P +[Country.MakeScope.Var('${profilePrefix}_popularity').GetValue|0]#!" },
+		@{ Condition = "LessThan_CFixedPoint(Country.MakeScope.Var('${profilePrefix}_popularity').GetValue, '(CFixedPoint)0')"; Visible = $activePopularity; Value = "#N [Country.MakeScope.Var('${profilePrefix}_popularity').GetValue|0]#!" },
+		@{ Condition = "EqualTo_CFixedPoint(Country.MakeScope.Var('${profilePrefix}_popularity').GetValue, '(CFixedPoint)0')"; Visible = $activePopularity; Value = "[Country.MakeScope.Var('${profilePrefix}_popularity').GetValue|0]" },
+		@{ Condition = "GreaterThan_CFixedPoint(Country.MakeScope.Var('${profilePrefix}_popularity_end').GetValue, '(CFixedPoint)0')"; Visible = $closedPopularity; Value = "#P +[Country.MakeScope.Var('${profilePrefix}_popularity_end').GetValue|0]#!" },
+		@{ Condition = "LessThan_CFixedPoint(Country.MakeScope.Var('${profilePrefix}_popularity_end').GetValue, '(CFixedPoint)0')"; Visible = $closedPopularity; Value = "#N [Country.MakeScope.Var('${profilePrefix}_popularity_end').GetValue|0]#!" },
+		@{ Condition = "EqualTo_CFixedPoint(Country.MakeScope.Var('${profilePrefix}_popularity_end').GetValue, '(CFixedPoint)0')"; Visible = $closedPopularity; Value = "[Country.MakeScope.Var('${profilePrefix}_popularity_end').GetValue|0]" }
 	)) {
 		Add-Line $Lines ("{0}custom_tooltip_textbox_with_empty_line = {{ visible = `"[{1}]`" raw_text = `"{2}`" }}" -f $profileIndent,(Gui-And @($state.Visible,$state.Condition)),$state.Value)
 	}
@@ -358,10 +360,10 @@ function Add-ProfileScopeText([System.Collections.Generic.List[string]]$Lines, [
 	Add-Line $Lines ("{0}}}" -f $Indent)
 }
 
-$scopeFields = @('president','vice_president','party','ig','culture','religion','ideology') + (1..8 | ForEach-Object { "law_$_" })
+$scopeFields = @('president','vice_president','party','ig','culture','religion','ideology','vice_president_culture','vice_president_religion','vice_president_ideology') + (1..8 | ForEach-Object { "law_$_" })
 $percentageMetrics = @('gdp','population','sol','prestige')
 $activePercentageFields = $percentageMetrics | ForEach-Object { "${_}_active_change_available"; "${_}_active_change_percent" }
-$valueFields = @('president_identity','vice_president_identity','party_type_identity','ig_type_identity','ideology_identity','popularity','popularity_start','popularity_end','number','accession_type','departure_reason','gdp_start','gdp_end','gdp_change_available','gdp_change_percent','gdp_active_change_available','gdp_active_change_percent','population_start','population_end','population_change_available','population_change_percent','population_active_change_available','population_active_change_percent','sol_start','sol_end','sol_change_available','sol_change_percent','sol_active_change_available','sol_active_change_percent','prestige_start','prestige_end','prestige_change_available','prestige_change_percent','prestige_active_change_available','prestige_active_change_percent','rank_start','rank_end','score_rank_start','score_rank_end','start_year','start_month','end_year','end_month','law_count','law_overflow_count')
+$valueFields = @('president_identity','vice_president_identity','party_type_identity','ig_type_identity','ideology_identity','vice_president_ideology_identity','popularity','popularity_start','popularity_end','vice_president_popularity','vice_president_popularity_start','vice_president_popularity_end','number','accession_type','departure_reason','gdp_start','gdp_end','gdp_change_available','gdp_change_percent','gdp_active_change_available','gdp_active_change_percent','population_start','population_end','population_change_available','population_change_percent','population_active_change_available','population_active_change_percent','sol_start','sol_end','sol_change_available','sol_change_percent','sol_active_change_available','sol_active_change_percent','prestige_start','prestige_end','prestige_change_available','prestige_change_percent','prestige_active_change_available','prestige_active_change_percent','rank_start','rank_end','score_rank_start','score_rank_end','start_year','start_month','end_year','end_month','law_count','law_overflow_count')
 $allFields = $scopeFields + $valueFields
 $e = [System.Collections.Generic.List[string]]::new()
 $e.Add('# Generated presidential-history effects: edit this generator, then regenerate the output.')
@@ -418,9 +420,10 @@ Add-Line $e '\t}'
 Add-Line $e '}'
 Add-Line $e
 Add-Line $e 'vptl_capture_presidential_history_episode_data = {'
-foreach ($field in @('president','vice_president','party','ig','culture','religion','ideology')) { Add-Line $e "\tremove_variable = vptl_history_capture_$field" }
+foreach ($field in @('president','vice_president','party','ig','culture','religion','ideology','vice_president_culture','vice_president_religion','vice_president_ideology')) { Add-Line $e "\tremove_variable = vptl_history_capture_$field" }
 Add-Line $e '\tset_variable = { name = vptl_history_capture_president_identity value = 0 }'
 Add-Line $e '\tset_variable = { name = vptl_history_capture_vice_president_identity value = 0 }'
+Add-Line $e '\tset_variable = { name = vptl_history_capture_vice_president_ideology_identity value = 0 }'
 Add-Line $e '\tset_variable = { name = vptl_history_capture_popularity_start value = 0 }'
 Add-Line $e '\tset_variable = { name = vptl_history_capture_number value = 0 }'
 Add-Line $e '\tset_variable = { name = vptl_history_capture_accession_type value = 5 }'
@@ -455,7 +458,11 @@ Add-AffiliationIdentityCapture $e 'scope:vptl_history_capture_party' 'vptl_histo
 Add-AffiliationIdentityCapture $e 'scope:vptl_history_capture_ig' 'vptl_history_capture_ig_type_identity' $igTypeIdentities 'is_interest_group_type' "`t"
 Add-Line $e '\tif = { limit = { has_variable = vptl_presidential_successor var:vptl_presidential_successor ?= { is_character_alive = yes } } var:vptl_presidential_successor ?= { if = { limit = { NOT = { has_role = character_role_vptl_presidential_history_subject } } add_character_role = character_role_vptl_presidential_history_subject } } set_variable = { name = vptl_history_capture_vice_president value = var:vptl_presidential_successor }'
 Add-IdentityCapture $e 'var:vptl_presidential_successor' 'vptl_history_capture_vice_president_identity' "`t`t"
+Add-Line $e '\t\tvar:vptl_presidential_successor ?= { culture ?= { save_scope_as = vptl_history_capture_vice_president_culture } religion ?= { save_scope_as = vptl_history_capture_vice_president_religion } ideology ?= { save_scope_as = vptl_history_capture_vice_president_ideology } }'
+Add-IdeologyIdentityCapture $e 'var:vptl_presidential_successor' 'vptl_history_capture_vice_president_ideology_identity' "`t`t"
+Add-Line $e '\t\tset_variable = { name = vptl_history_capture_vice_president_popularity_start value = var:vptl_presidential_successor.popularity }'
 Add-Line $e '\t}'
+foreach ($field in @('culture','religion','ideology')) { Add-Line $e "\tif = { limit = { exists = scope:vptl_history_capture_vice_president_$field } set_variable = { name = vptl_history_capture_vice_president_$field value = scope:vptl_history_capture_vice_president_$field } }" }
 Add-Line $e '}'
 Add-Line $e
 Add-Line $e 'vptl_freeze_presidential_history_affiliations_for_record = {'
@@ -496,6 +503,35 @@ Add-Line $e '\tif = { limit = { NOT = { has_variable = vptl_presidential_history
 for ($i=1;$i -le 128;$i++) { Add-Line $e ("\t\tvptl_freeze_presidential_history_profile_for_record = {{ PREFIX = vptl_presidential_history_slot_{0} }}" -f $i) }
 for ($i=1;$i -le 50;$i++) { Add-Line $e ("\t\tvptl_freeze_presidential_history_profile_for_record = {{ PREFIX = vptl_presidential_history_recent_{0} }}" -f $i) }
 Add-Line $e '\t\tset_variable = vptl_presidential_history_profiles_migrated'
+Add-Line $e '\t}'
+Add-Line $e '}'
+Add-Line $e
+
+Add-Line $e 'vptl_freeze_presidential_history_vice_president_profile_for_record = {'
+Add-Line $e '\t# Legacy VP profiles are backfilled only from the exact stored deputy.'
+Add-Line $e '\tif = { limit = { has_variable = $PREFIX$_populated var:$PREFIX$_vice_president ?= { is_character_alive = yes } OR = { NOT = { has_variable = $PREFIX$_vice_president_culture } NOT = { has_variable = $PREFIX$_vice_president_religion } NOT = { has_variable = $PREFIX$_vice_president_ideology } NOT = { has_variable = $PREFIX$_vice_president_ideology_identity } NOT = { has_variable = $PREFIX$_vice_president_popularity_start } NOT = { has_variable = $PREFIX$_vice_president_popularity } } }'
+Add-Line $e '\t\tvar:$PREFIX$_vice_president ?= { save_scope_as = vptl_history_vice_president_profile_subject culture ?= { save_scope_as = vptl_history_capture_vice_president_culture } religion ?= { save_scope_as = vptl_history_capture_vice_president_religion } ideology ?= { save_scope_as = vptl_history_capture_vice_president_ideology } }'
+foreach ($field in @('culture','religion','ideology')) { Add-Line $e "\t\tif = { limit = { NOT = { has_variable = `$PREFIX`$_vice_president_$field } exists = scope:vptl_history_capture_vice_president_$field } set_variable = { name = `$PREFIX`$_vice_president_$field value = scope:vptl_history_capture_vice_president_$field } }" }
+Add-Line $e '\t\tif = { limit = { NOT = { has_variable = $PREFIX$_vice_president_ideology_identity } }'
+Add-IdeologyIdentityCapture $e 'var:$PREFIX$_vice_president' '$PREFIX$_vice_president_ideology_identity' "`t`t`t"
+Add-Line $e '\t\t}'
+Add-Line $e '\t\tif = { limit = { NOT = { has_variable = $PREFIX$_vice_president_popularity_start } exists = scope:vptl_history_vice_president_profile_subject } set_variable = { name = $PREFIX$_vice_president_popularity_start value = scope:vptl_history_vice_president_profile_subject.popularity } }'
+Add-Line $e '\t\tif = { limit = { NOT = { has_variable = $PREFIX$_vice_president_popularity } has_variable = $PREFIX$_vice_president_popularity_start } set_variable = { name = $PREFIX$_vice_president_popularity value = var:$PREFIX$_vice_president_popularity_start } }'
+Add-Line $e '\t}'
+Add-Line $e '\tif = { limit = { has_variable = $PREFIX$_populated has_variable = $PREFIX$_closed NOT = { has_variable = $PREFIX$_vice_president_popularity_end } }'
+Add-Line $e '\t\tif = { limit = { has_variable = $PREFIX$_vice_president_popularity } set_variable = { name = $PREFIX$_vice_president_popularity_end value = var:$PREFIX$_vice_president_popularity } }'
+Add-Line $e '\t\telse_if = { limit = { has_variable = $PREFIX$_vice_president_popularity_start } set_variable = { name = $PREFIX$_vice_president_popularity_end value = var:$PREFIX$_vice_president_popularity_start } }'
+Add-Line $e '\t}'
+foreach ($field in @('culture','religion','ideology')) { Add-Line $e "\tremove_variable = vptl_history_capture_vice_president_$field" }
+Add-Line $e '\tremove_variable = vptl_history_vice_president_profile_subject'
+Add-Line $e '}'
+Add-Line $e
+
+Add-Line $e 'vptl_migrate_presidential_history_vice_president_profiles = {'
+Add-Line $e '\tif = { limit = { NOT = { has_variable = vptl_presidential_history_vice_president_profiles_migrated } }'
+for ($i=1;$i -le 128;$i++) { Add-Line $e ("\t\tvptl_freeze_presidential_history_vice_president_profile_for_record = {{ PREFIX = vptl_presidential_history_slot_{0} }}" -f $i) }
+for ($i=1;$i -le 50;$i++) { Add-Line $e ("\t\tvptl_freeze_presidential_history_vice_president_profile_for_record = {{ PREFIX = vptl_presidential_history_recent_{0} }}" -f $i) }
+Add-Line $e '\t\tset_variable = vptl_presidential_history_vice_president_profiles_migrated'
 Add-Line $e '\t}'
 Add-Line $e '}'
 Add-Line $e
@@ -565,15 +601,18 @@ Add-Line $e '}'
 Add-Line $e
 Add-Line $e 'vptl_copy_history_capture_to_recent_1 = {'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_president value = var:vptl_history_capture_president }'
-foreach ($f in @('vice_president','party','ig','culture','religion','ideology')) { Add-Line $e "\tif = { limit = { has_variable = vptl_history_capture_$f } set_variable = { name = vptl_presidential_history_recent_1_$f value = var:vptl_history_capture_$f } } else = { remove_variable = vptl_presidential_history_recent_1_$f }" }
+foreach ($f in @('vice_president','party','ig','culture','religion','ideology','vice_president_culture','vice_president_religion','vice_president_ideology')) { Add-Line $e "\tif = { limit = { has_variable = vptl_history_capture_$f } set_variable = { name = vptl_presidential_history_recent_1_$f value = var:vptl_history_capture_$f } } else = { remove_variable = vptl_presidential_history_recent_1_$f }" }
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_president_identity value = var:vptl_history_capture_president_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_vice_president_identity value = var:vptl_history_capture_vice_president_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_party_type_identity value = var:vptl_history_capture_party_type_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_ig_type_identity value = var:vptl_history_capture_ig_type_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_ideology_identity value = var:vptl_history_capture_ideology_identity }'
+Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_vice_president_ideology_identity value = var:vptl_history_capture_vice_president_ideology_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_popularity_start value = var:vptl_history_capture_popularity_start }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_popularity value = var:vptl_history_capture_popularity_start }'
 Add-Line $e '\tremove_variable = vptl_presidential_history_recent_1_popularity_end'
+Add-Line $e '\tif = { limit = { has_variable = vptl_history_capture_vice_president_popularity_start } set_variable = { name = vptl_presidential_history_recent_1_vice_president_popularity_start value = var:vptl_history_capture_vice_president_popularity_start } set_variable = { name = vptl_presidential_history_recent_1_vice_president_popularity value = var:vptl_history_capture_vice_president_popularity_start } } else = { remove_variable = vptl_presidential_history_recent_1_vice_president_popularity_start remove_variable = vptl_presidential_history_recent_1_vice_president_popularity }'
+Add-Line $e '\tremove_variable = vptl_presidential_history_recent_1_vice_president_popularity_end'
 foreach ($f in @('number','accession_type')) { Add-Line $e "\tset_variable = { name = vptl_presidential_history_recent_1_$f value = var:vptl_history_capture_$f }" }
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_departure_reason value = 0 }'
 foreach ($f in @('gdp','population','sol','prestige')) { Add-Line $e "\tset_variable = { name = vptl_presidential_history_recent_1_${f}_start value = var:vptl_history_capture_${f}_start }"; Add-Line $e "\tremove_variable = vptl_presidential_history_recent_1_${f}_end" }
@@ -596,18 +635,20 @@ Add-Line $e '}'
 Add-Line $e
 Add-Line $e 'vptl_copy_history_capture_to_archive_slot = {'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_president value = var:vptl_history_capture_president }'
-foreach ($f in @('vice_president','party','ig','culture','religion','ideology')) { Add-Line $e "\tif = { limit = { has_variable = vptl_history_capture_$f } set_variable = { name = vptl_presidential_history_slot_`$SLOT`$_$f value = var:vptl_history_capture_$f } }".Replace('`$','$') }
+foreach ($f in @('vice_president','party','ig','culture','religion','ideology','vice_president_culture','vice_president_religion','vice_president_ideology')) { Add-Line $e "\tif = { limit = { has_variable = vptl_history_capture_$f } set_variable = { name = vptl_presidential_history_slot_`$SLOT`$_$f value = var:vptl_history_capture_$f } }".Replace('`$','$') }
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_president_identity value = var:vptl_history_capture_president_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president_identity value = var:vptl_history_capture_vice_president_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_party_type_identity value = var:vptl_history_capture_party_type_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_ig_type_identity value = var:vptl_history_capture_ig_type_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_ideology_identity value = var:vptl_history_capture_ideology_identity }'
+Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president_ideology_identity value = var:vptl_history_capture_vice_president_ideology_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_popularity_start value = var:vptl_history_capture_popularity_start }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_popularity value = var:vptl_history_capture_popularity_start }'
+Add-Line $e '\tif = { limit = { has_variable = vptl_history_capture_vice_president_popularity_start } set_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president_popularity_start value = var:vptl_history_capture_vice_president_popularity_start } set_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president_popularity value = var:vptl_history_capture_vice_president_popularity_start } }'
 foreach ($f in @('number','accession_type')) { Add-Line $e "\tset_variable = { name = vptl_presidential_history_slot_`$SLOT`$_$f value = var:vptl_history_capture_$f }".Replace('`$','$') }
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_departure_reason value = 0 }'
 foreach ($f in @('gdp','population','sol','prestige')) { Add-Line $e ("\tset_variable = {{ name = vptl_presidential_history_slot_`$SLOT`$_{0}_start value = var:vptl_history_capture_{0}_start }}" -f $f).Replace('`$','$') }
-foreach ($f in @('gdp_end','population_end','sol_end','prestige_end','rank_end','score_rank_end','popularity_end') + ($percentageMetrics | ForEach-Object { "${_}_change_available"; "${_}_change_percent" }) + $activePercentageFields) { Add-Line $e "\tremove_variable = vptl_presidential_history_slot_`$SLOT`$_$f".Replace('`$','$') }
+foreach ($f in @('gdp_end','population_end','sol_end','prestige_end','rank_end','score_rank_end','popularity_end','vice_president_popularity_end') + ($percentageMetrics | ForEach-Object { "${_}_change_available"; "${_}_change_percent" }) + $activePercentageFields) { Add-Line $e "\tremove_variable = vptl_presidential_history_slot_`$SLOT`$_$f".Replace('`$','$') }
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_rank_start value = var:vptl_history_capture_rank }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_score_rank_start value = var:vptl_history_capture_score_rank }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_start_year value = var:vptl_history_capture_year }'
@@ -632,7 +673,7 @@ Add-Line $e '\t\t\tif = { limit = { has_variable = vptl_presidential_history_cur
 Add-Line $e '\t\t\telse = { remove_variable = vptl_presidential_history_recent_1_populated }'
 Add-Line $e '\t\t}'
 Add-Line $e '\t}'
-foreach ($f in @('president','vice_president','party','ig','culture','religion','ideology','president_identity','vice_president_identity','party_type_identity','ig_type_identity','ideology_identity','popularity','popularity_start','popularity_end','number','accession_type','gdp_start','population_start','sol_start','prestige_start','rank','score_rank','year','month')) { Add-Line $e "\tremove_variable = vptl_history_capture_$f" }
+foreach ($f in @('president','vice_president','party','ig','culture','religion','ideology','vice_president_culture','vice_president_religion','vice_president_ideology','president_identity','vice_president_identity','party_type_identity','ig_type_identity','ideology_identity','vice_president_ideology_identity','popularity','popularity_start','popularity_end','vice_president_popularity_start','number','accession_type','gdp_start','population_start','sol_start','prestige_start','rank','score_rank','year','month')) { Add-Line $e "\tremove_variable = vptl_history_capture_$f" }
 Add-Line $e '}'
 Add-Line $e
 Add-Line $e 'vptl_finalize_presidential_history_archive_slot = {'
@@ -646,6 +687,10 @@ Add-Line $e '\t\t# Prefer the outgoing president, then the maintained active val
 Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_popularity_end value = var:vptl_presidential_history_slot_$SLOT$_popularity_start }'
 Add-Line $e '\t\tif = { limit = { has_variable = vptl_presidential_history_slot_$SLOT$_popularity } set_variable = { name = vptl_presidential_history_slot_$SLOT$_popularity_end value = var:vptl_presidential_history_slot_$SLOT$_popularity } }'
 Add-Line $e '\t\tif = { limit = { has_variable = vptl_presidential_history_current_president var:vptl_presidential_history_current_president ?= { is_character_alive = yes } } set_variable = { name = vptl_presidential_history_slot_$SLOT$_popularity_end value = var:vptl_presidential_history_current_president.popularity } }'
+Add-Line $e '\t\t# The closing record owns the final VP value; later successor changes cannot replace it.'
+Add-Line $e '\t\tif = { limit = { has_variable = vptl_presidential_history_slot_$SLOT$_vice_president_popularity_start } set_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president_popularity_end value = var:vptl_presidential_history_slot_$SLOT$_vice_president_popularity_start } }'
+Add-Line $e '\t\tif = { limit = { has_variable = vptl_presidential_history_slot_$SLOT$_vice_president_popularity } set_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president_popularity_end value = var:vptl_presidential_history_slot_$SLOT$_vice_president_popularity } }'
+Add-Line $e '\t\tif = { limit = { has_variable = vptl_presidential_history_slot_$SLOT$_vice_president var:vptl_presidential_history_slot_$SLOT$_vice_president ?= { is_character_alive = yes } } set_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president_popularity_end value = var:vptl_presidential_history_slot_$SLOT$_vice_president.popularity } }'
 Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_departure_reason value = var:vptl_presidential_history_departure_reason }'
 Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_end_year value = var:vptl_history_capture_year }'
 Add-Line $e '\t\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_end_month value = var:vptl_history_capture_month }'
@@ -655,6 +700,7 @@ Add-Line $e '\t\tif = { limit = { has_variable = vptl_presidential_history_recen
 Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_gdp_end value = var:vptl_presidential_history_slot_$SLOT$_gdp_end } set_variable = { name = vptl_presidential_history_recent_1_population_end value = var:vptl_presidential_history_slot_$SLOT$_population_end } set_variable = { name = vptl_presidential_history_recent_1_sol_end value = var:vptl_presidential_history_slot_$SLOT$_sol_end } set_variable = { name = vptl_presidential_history_recent_1_prestige_end value = var:vptl_presidential_history_slot_$SLOT$_prestige_end }'
 Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_rank_end value = var:vptl_presidential_history_slot_$SLOT$_rank_end } set_variable = { name = vptl_presidential_history_recent_1_score_rank_end value = var:vptl_presidential_history_slot_$SLOT$_score_rank_end }'
 	Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_popularity_end value = var:vptl_presidential_history_slot_$SLOT$_popularity_end }'
+	Add-Line $e '\t\t\tif = { limit = { has_variable = vptl_presidential_history_slot_$SLOT$_vice_president_popularity_end } set_variable = { name = vptl_presidential_history_recent_1_vice_president_popularity_end value = var:vptl_presidential_history_slot_$SLOT$_vice_president_popularity_end } } else = { remove_variable = vptl_presidential_history_recent_1_vice_president_popularity_end }'
 	foreach ($metric in $percentageMetrics) { Add-Line $e "\t\t\tif = { limit = { has_variable = vptl_presidential_history_slot_`$SLOT`$_${metric}_change_available } set_variable = { name = vptl_presidential_history_recent_1_${metric}_change_available } set_variable = { name = vptl_presidential_history_recent_1_${metric}_change_percent value = var:vptl_presidential_history_slot_`$SLOT`$_${metric}_change_percent } } else = { remove_variable = vptl_presidential_history_recent_1_${metric}_change_available remove_variable = vptl_presidential_history_recent_1_${metric}_change_percent }".Replace('`$','$') }
 	Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_departure_reason value = var:vptl_presidential_history_departure_reason } set_variable = { name = vptl_presidential_history_recent_1_end_year value = var:vptl_history_capture_year } set_variable = { name = vptl_presidential_history_recent_1_end_month value = var:vptl_history_capture_month } set_variable = vptl_presidential_history_recent_1_closed'
 Add-Line $e '\t\t}'
@@ -700,13 +746,33 @@ Add-Line $e '}'
 Add-Line $e
 Add-Line $e 'vptl_refresh_open_presidential_history_episode = {'
 	Add-Line $e '\t# Historical final metrics are immutable; active cards bind directly to current Country values.'
-	Add-Line $e '\t# Only the associated successor may refresh while the episode stays open.'
+	Add-Line $e '\t# Only the associated successor and its active profile may refresh while the episode stays open.'
 	Add-Line $e '\tif = { limit = { has_variable = vptl_presidential_history_current_slot has_variable = vptl_presidential_history_current_president NOT = { has_variable = vptl_presidential_history_close_in_progress } }'
 	Add-Line $e '\t\tif = { limit = { has_variable = vptl_presidential_successor }'
 Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_vice_president value = var:vptl_presidential_successor }'
 Add-IdentityCapture $e 'var:vptl_presidential_successor' 'vptl_presidential_history_recent_1_vice_president_identity' "`t`t`t"
-	for ($i=1;$i -le 128;$i++) { Add-Line $e "\t\t\tif = { limit = { var:vptl_presidential_history_current_slot = $i } set_variable = { name = vptl_presidential_history_slot_${i}_vice_president value = var:vptl_presidential_successor } }" }
+	Add-Line $e '\t\t\tvar:vptl_presidential_successor ?= { culture ?= { save_scope_as = vptl_history_capture_vice_president_culture } religion ?= { save_scope_as = vptl_history_capture_vice_president_religion } ideology ?= { save_scope_as = vptl_history_capture_vice_president_ideology } }'
+	Add-IdeologyIdentityCapture $e 'var:vptl_presidential_successor' 'vptl_history_capture_vice_president_ideology_identity' "`t`t`t"
+	Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_vice_president_ideology_identity value = var:vptl_history_capture_vice_president_ideology_identity }'
+	foreach ($field in @('culture','religion','ideology')) { Add-Line $e "\t\t\tif = { limit = { exists = scope:vptl_history_capture_vice_president_$field } set_variable = { name = vptl_presidential_history_recent_1_vice_president_$field value = scope:vptl_history_capture_vice_president_$field } } else = { remove_variable = vptl_presidential_history_recent_1_vice_president_$field }" }
+	Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_vice_president_popularity_start value = var:vptl_presidential_successor.popularity }'
+	Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_vice_president_popularity value = var:vptl_presidential_successor.popularity }'
+	for ($i=1;$i -le 128;$i++) {
+		Add-Line $e "\t\t\tif = { limit = { var:vptl_presidential_history_current_slot = $i } set_variable = { name = vptl_presidential_history_slot_${i}_vice_president value = var:vptl_presidential_successor } set_variable = { name = vptl_presidential_history_slot_${i}_vice_president_identity value = var:vptl_presidential_history_recent_1_vice_president_identity } set_variable = { name = vptl_presidential_history_slot_${i}_vice_president_ideology_identity value = var:vptl_history_capture_vice_president_ideology_identity } set_variable = { name = vptl_presidential_history_slot_${i}_vice_president_popularity_start value = var:vptl_presidential_successor.popularity } set_variable = { name = vptl_presidential_history_slot_${i}_vice_president_popularity value = var:vptl_presidential_successor.popularity }"
+		foreach ($field in @('culture','religion','ideology')) { Add-Line $e "\t\t\t\tif = { limit = { exists = scope:vptl_history_capture_vice_president_$field } set_variable = { name = vptl_presidential_history_slot_${i}_vice_president_$field value = scope:vptl_history_capture_vice_president_$field } } else = { remove_variable = vptl_presidential_history_slot_${i}_vice_president_$field }" }
+		Add-Line $e '\t\t\t}'
+	}
 	Add-Line $e '\t\t}'
+	Add-Line $e '\t\telse = {'
+	foreach ($field in @('vice_president','vice_president_identity','vice_president_culture','vice_president_religion','vice_president_ideology','vice_president_ideology_identity','vice_president_popularity_start','vice_president_popularity','vice_president_popularity_end')) { Add-Line $e "\t\t\tremove_variable = vptl_presidential_history_recent_1_$field" }
+	for ($i=1;$i -le 128;$i++) {
+		Add-Line $e "\t\t\tif = { limit = { var:vptl_presidential_history_current_slot = $i }"
+		foreach ($field in @('vice_president','vice_president_identity','vice_president_culture','vice_president_religion','vice_president_ideology','vice_president_ideology_identity','vice_president_popularity_start','vice_president_popularity','vice_president_popularity_end')) { Add-Line $e "\t\t\t\tremove_variable = vptl_presidential_history_slot_${i}_$field" }
+		Add-Line $e '\t\t\t}'
+	}
+	Add-Line $e '\t\t}'
+	foreach ($field in @('culture','religion','ideology')) { Add-Line $e "\t\tremove_variable = vptl_history_capture_vice_president_$field" }
+	Add-Line $e '\t\tremove_variable = vptl_history_capture_vice_president_ideology_identity'
 	Add-Line $e '\t\tif = { limit = { has_variable = vptl_presidential_history_current_president var:vptl_presidential_history_current_president ?= { is_character_alive = yes } }'
 	Add-Line $e '\t\t\tset_variable = { name = vptl_presidential_history_recent_1_popularity value = var:vptl_presidential_history_current_president.popularity }'
 	for ($i=1;$i -le 128;$i++) { Add-Line $e "\t\t\tif = { limit = { var:vptl_presidential_history_current_slot = $i } set_variable = { name = vptl_presidential_history_slot_${i}_popularity value = var:vptl_presidential_history_current_president.popularity } }" }
@@ -754,6 +820,7 @@ Add-Line $e
 Add-Line $e 'vptl_load_presidential_history_latest_50 = {'
 Add-Line $e '\tvptl_migrate_presidential_history_affiliation_identities = yes'
 Add-Line $e '\tvptl_migrate_presidential_history_profiles = yes'
+Add-Line $e '\tvptl_migrate_presidential_history_vice_president_profiles = yes'
 Add-Line $e '\tvptl_migrate_presidential_history_metric_snapshots = yes'
 Add-Line $e '\tvptl_migrate_presidential_history_metric_percentages = yes'
 Add-Line $e '\tvptl_migrate_presidential_history_closed_rank_fallback = yes'
@@ -787,7 +854,10 @@ $g.Add('')
 # vanilla TooltipTypes registry. Keep the individual type names namespaced
 # with vptl_, but register them where the engine looks them up at hover time.
 Add-Line $g 'types TooltipTypes {'
-for ($s=1;$s -le 50;$s++) { Add-PresidentialProfileTooltipType $g $s }
+for ($s=1;$s -le 50;$s++) {
+	Add-ExecutiveProfileTooltipType $g $s 'president' ("vptl_presidential_history_profile_tooltip_{0}" -f $s) 'vptl_presidential_history_profile_tooltip_title' 'vptl_presidential_history_unavailable_president'
+	Add-ExecutiveProfileTooltipType $g $s 'vice_president' ("vptl_presidential_history_vice_president_profile_tooltip_{0}" -f $s) 'vptl_presidential_history_vice_president_profile_tooltip_title' 'vptl_presidential_history_unavailable_vice_president'
+}
 Add-Line $g '}'
 Add-Line $g ''
 Add-Line $g 'window = {'; Add-Line $g '\tname = "vptl_presidential_history_window"'; Add-Line $g '\tlayer = top'; Add-Line $g '\tparentanchor = center'; Add-Line $g '\tsize = { 1040 850 }'; Add-Line $g '\tallow_outside = yes'; Add-Line $g '\tvisible = "[And(GetVariableSystem.Exists(''vptl_presidential_history_panel_open''), GetMetaPlayer.GetPlayedOrObservedCountry.IsValid)]"'; Add-Line $g '\tdatacontext = "[GetMetaPlayer.GetPlayedOrObservedCountry]"'; Add-Line $g '\tbackground = { using = paper_bg }'
@@ -813,7 +883,7 @@ for ($s=1;$s -le 50;$s++) {
 	Add-IdentityFallbackText $g $p 'president' 'vptl_presidential_history_unavailable_president' '300 34' '24' -TooltipWidget ("vptl_presidential_history_profile_tooltip_{0}" -f $s)
 	Add-Line $g '\t\t\t\t\t\t\t\t\twidget = { size = { 314 34 } hbox = { spacing = 6'
 	Add-Line $g '\t\t\t\t\t\t\t\t\t\ttextbox = { size = { 106 34 } raw_text = "#weak [GetPlayer.GetCustom(''vptl_presidential_successor_title'')]:#!" fontsize = 14 elide = right align = right|nobaseline }'
-	Add-IdentityFallbackText $g $p 'vice_president' 'vptl_presidential_history_unavailable_vice_president' '202 34' '16' '\t\t\t\t\t\t\t\t\t\t'
+	Add-IdentityFallbackText $g $p 'vice_president' 'vptl_presidential_history_unavailable_vice_president' '202 34' '16' '\t\t\t\t\t\t\t\t\t\t' -TooltipWidget ("vptl_presidential_history_vice_president_profile_tooltip_{0}" -f $s)
 	Add-Line $g '\t\t\t\t\t\t\t\t\t} }'
 	Add-Line $g '\t\t\t\t\t\t\t\t\twidget = { size = { 232 34 }'
 	Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ 232 34 }} raw_text = `"#BOLD [Country.MakeScope.Var('{1}_start_year').GetValue|0]–#!`" fontsize = 18 align = right|nobaseline }}" -f $open,$p)
