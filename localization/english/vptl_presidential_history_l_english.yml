@@ -22,6 +22,8 @@
  vptl_presidential_history_ideology_label:0 "Ideology"
  vptl_presidential_history_popularity_label:0 "Popularity"
  vptl_presidential_history_profile_unavailable:0 "Unavailable"
+ vptl_presidential_history_profile_tooltip_title:0 "Presidential profile"
+ vptl_presidential_history_vice_president_profile_tooltip_title:0 "Vice Presidential profile"
  vptl_presidential_history_gdp_label:0 "GDP"
  vptl_presidential_history_population_label:0 "Population"
  vptl_presidential_history_sol_label:0 "Standard of Living"
