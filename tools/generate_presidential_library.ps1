@@ -137,6 +137,25 @@ function Add-IdentityFallbackText([System.Collections.Generic.List[string]]$Line
 	Add-Line $Lines ("{0}}}" -f $Indent)
 }
 
+function Add-AccessionLine([System.Collections.Generic.List[string]]$Lines, [string]$Prefix, [string]$Indent = "`t`t`t`t`t`t`t`t`t") {
+	$ageVariable = "${Prefix}_president_age_at_accession"
+	$agePositive = "GreaterThan_CFixedPoint(Country.MakeScope.Var('$ageVariable').GetValue, '(CFixedPoint)0')"
+	$methods = @(
+		@{ Type = 1; AgeKey = 'vptl_presidential_history_accession_elected_at_age'; BaseKey = 'vptl_presidential_history_accession_elected' },
+		@{ Type = 2; AgeKey = 'vptl_presidential_history_accession_succeeded_at_age'; BaseKey = 'vptl_presidential_history_accession_succeeded' },
+		@{ Type = 3; AgeKey = 'vptl_presidential_history_accession_interim_at_age'; BaseKey = 'vptl_presidential_history_accession_interim' },
+		@{ Type = 4; AgeKey = 'vptl_presidential_history_accession_provisional_at_age'; BaseKey = 'vptl_presidential_history_accession_provisional' },
+		@{ Type = 5; AgeKey = 'vptl_presidential_history_accession_initial_at_age'; BaseKey = 'vptl_presidential_history_accession_initial' }
+	)
+	foreach ($method in $methods) {
+		$typeCondition = "EqualTo_CFixedPoint(Country.MakeScope.Var('${Prefix}_accession_type').GetValue, '(CFixedPoint)$($method.Type)')"
+		$ageCondition = Gui-And @($typeCondition,$agePositive)
+		Add-Line $Lines ("{0}widget = {{ visible = `"[{1}]`" size = {{ 170 30 }} hbox = {{ layoutpolicy_horizontal = preferred layoutpolicy_vertical = preferred spacing = 3 textbox = {{ layoutpolicy_horizontal = preferred text = `"{2}`" fontsize = 15 elide = right align = left|nobaseline }} textbox = {{ layoutpolicy_horizontal = preferred raw_text = `"[Country.MakeScope.Var('{3}').GetValue|0]`" fontsize = 15 align = left|nobaseline }} }} }}" -f $Indent,$ageCondition,$method.AgeKey,$ageVariable)
+		Add-Line $Lines ("{0}textbox = {{ visible = `"[{1}]`" size = {{ 170 30 }} text = `"{2}`" fontsize = 15 elide = right }}" -f $Indent,(Gui-And @($typeCondition,"Not($agePositive)")),$method.BaseKey)
+	}
+	Add-Line $Lines ("{0}textbox = {{ visible = `"[EqualTo_CFixedPoint(Country.MakeScope.Var('{1}_accession_type').GetValue, '(CFixedPoint)0')]`" size = {{ 170 30 }} text = `"vptl_presidential_history_accession_unrecorded`" fontsize = 15 elide = right }}" -f $Indent,$Prefix)
+}
+
 function Add-AffiliationIdentityCapture([System.Collections.Generic.List[string]]$Lines, [string]$ScopeExpr, [string]$TargetVariable, [array]$Mappings, [string]$Trigger, [string]$Indent = "`t") {
 	Add-Line $Lines "${Indent}set_variable = { name = $TargetVariable value = 0 }"
 	foreach ($mapping in $Mappings) {
@@ -150,6 +169,24 @@ function Add-AffiliationIdentityText([System.Collections.Generic.List[string]]$L
 		Add-Line $Lines ("{0}`ttextbox = {{ visible = `"[EqualTo_CFixedPoint(Country.MakeScope.Var('{1}_{2}').GetValue, '(CFixedPoint){3}')]`" size = {{ {4} }} text = `"{5}`" tooltip = `"{5}`" fontsize = {6} elide = right align = left|nobaseline }}" -f $Indent,$Prefix,$IdentityField,$mapping.Id,$Size,$mapping.Loc,$FontSize)
 	}
 	Add-Line $Lines ("{0}`ttextbox = {{ visible = `"[Or(LessThan_CFixedPoint(Country.MakeScope.Var('{1}_{2}').GetValue, '(CFixedPoint)1'), GreaterThan_CFixedPoint(Country.MakeScope.Var('{1}_{2}').GetValue, '(CFixedPoint){3}'))]`" size = {{ {4} }} text = `"{5}`" fontsize = {6} elide = right align = left|nobaseline }}" -f $Indent,$Prefix,$IdentityField,$Mappings.Count,$Size,$UnavailableKey,$FontSize)
+	Add-Line $Lines ("{0}}}" -f $Indent)
+}
+
+function Add-PartyIdentityText([System.Collections.Generic.List[string]]$Lines, [string]$Prefix, [array]$Mappings, [string]$UnavailableKey, [string]$Size, [string]$FontSize, [string]$Indent = "`t`t`t`t`t`t`t`t`t") {
+	$partyVariable = "${Prefix}_party"
+	$partyValid = "Country.MakeScope.Var('$partyVariable').GetParty.IsValid"
+	Add-Line $Lines ("{0}widget = {{ size = {{ {1} }}" -f $Indent,$Size)
+	Add-Line $Lines ("{0}`ttextbox = {{ visible = `"[{1}]`" size = {{ {2} }} datacontext = `"[Country.MakeScope.Var('{3}').GetParty]`" raw_text = `"[Party.GetNameNoFormatting]`" tooltipwidget = {{ FancyTooltip_Party = {{}} }} fontsize = {4} elide = right align = left|nobaseline }}" -f $Indent,$partyValid,$Size,$partyVariable,$FontSize)
+	foreach ($mapping in $Mappings) {
+		$visible = Gui-And @("Not($partyValid)", "EqualTo_CFixedPoint(Country.MakeScope.Var('${Prefix}_party_type_identity').GetValue, '(CFixedPoint)$($mapping.Id)')")
+		Add-Line $Lines ("{0}`ttextbox = {{ visible = `"[{1}]`" size = {{ {2} }} text = `"{3}`" tooltip = `"{3}`" fontsize = {4} elide = right align = left|nobaseline }}" -f $Indent,$visible,$Size,$mapping.Loc,$FontSize)
+	}
+	$invalidIdentity = Gui-Or @(
+		"LessThan_CFixedPoint(Country.MakeScope.Var('${Prefix}_party_type_identity').GetValue, '(CFixedPoint)1')",
+		"GreaterThan_CFixedPoint(Country.MakeScope.Var('${Prefix}_party_type_identity').GetValue, '(CFixedPoint)$($Mappings.Count)')"
+	)
+	$unavailable = Gui-And @("Not($partyValid)",$invalidIdentity)
+	Add-Line $Lines ("{0}`ttextbox = {{ visible = `"[{1}]`" size = {{ {2} }} text = `"{3}`" fontsize = {4} elide = right align = left|nobaseline }}" -f $Indent,$unavailable,$Size,$UnavailableKey,$FontSize)
 	Add-Line $Lines ("{0}}}" -f $Indent)
 }
 
@@ -339,14 +376,13 @@ function Add-NationalMetricText([System.Collections.Generic.List[string]]$Lines,
 	Add-Line $Lines ("{0}}} }}" -f $Indent)
 }
 
-function Add-FrozenIgBadge([System.Collections.Generic.List[string]]$Lines, [string]$Prefix, [string]$Indent = "`t`t`t`t`t`t`t`t`t") {
-	Add-Line $Lines ("{0}widget = {{ size = {{ 300 30 }} hbox = {{ spacing = 6" -f $Indent)
+function Add-FrozenIgIcon([System.Collections.Generic.List[string]]$Lines, [string]$Prefix, [string]$Indent = "`t`t`t`t`t`t`t`t`t") {
+	Add-Line $Lines ("{0}widget = {{ size = {{ 30 34 }} hbox = {{ spacing = 0" -f $Indent)
 	Add-Line $Lines ("{0}`twidget = {{ size = {{ 30 30 }}" -f $Indent)
 	foreach ($mapping in $igTypeIdentities) {
 		Add-Line $Lines ("{0}`t`ticon = {{ visible = `"[EqualTo_CFixedPoint(Country.MakeScope.Var('{1}_ig_type_identity').GetValue, '(CFixedPoint){2}')]`" size = {{ 30 30 }} texture = `"gfx/interface/icons/ig_icons/{3}`" tooltip = `"{4}`" }}" -f $Indent,$Prefix,$mapping.Id,$mapping.Texture,$mapping.Loc)
 	}
 	Add-Line $Lines ("{0}`t}}" -f $Indent)
-	Add-AffiliationIdentityText $Lines $Prefix 'ig_type_identity' $igTypeIdentities 'vptl_presidential_history_unavailable_ig' '264 30' '15' ("{0}`t" -f $Indent)
 	Add-Line $Lines ("{0}}} }}" -f $Indent)
 }
 
@@ -363,7 +399,7 @@ function Add-ProfileScopeText([System.Collections.Generic.List[string]]$Lines, [
 $scopeFields = @('president','vice_president','party','ig','culture','religion','ideology','vice_president_culture','vice_president_religion','vice_president_ideology') + (1..8 | ForEach-Object { "law_$_" })
 $percentageMetrics = @('gdp','population','sol','prestige')
 $activePercentageFields = $percentageMetrics | ForEach-Object { "${_}_active_change_available"; "${_}_active_change_percent" }
-$valueFields = @('president_identity','vice_president_identity','party_type_identity','ig_type_identity','ideology_identity','vice_president_ideology_identity','popularity','popularity_start','popularity_end','vice_president_popularity','vice_president_popularity_start','vice_president_popularity_end','number','accession_type','departure_reason','gdp_start','gdp_end','gdp_change_available','gdp_change_percent','gdp_active_change_available','gdp_active_change_percent','population_start','population_end','population_change_available','population_change_percent','population_active_change_available','population_active_change_percent','sol_start','sol_end','sol_change_available','sol_change_percent','sol_active_change_available','sol_active_change_percent','prestige_start','prestige_end','prestige_change_available','prestige_change_percent','prestige_active_change_available','prestige_active_change_percent','rank_start','rank_end','score_rank_start','score_rank_end','start_year','start_month','end_year','end_month','law_count','law_overflow_count')
+$valueFields = @('president_identity','vice_president_identity','party_type_identity','ig_type_identity','ideology_identity','vice_president_ideology_identity','president_age_at_accession','popularity','popularity_start','popularity_end','vice_president_popularity','vice_president_popularity_start','vice_president_popularity_end','number','accession_type','departure_reason','gdp_start','gdp_end','gdp_change_available','gdp_change_percent','gdp_active_change_available','gdp_active_change_percent','population_start','population_end','population_change_available','population_change_percent','population_active_change_available','population_active_change_percent','sol_start','sol_end','sol_change_available','sol_change_percent','sol_active_change_available','sol_active_change_percent','prestige_start','prestige_end','prestige_change_available','prestige_change_percent','prestige_active_change_available','prestige_active_change_percent','rank_start','rank_end','score_rank_start','score_rank_end','start_year','start_month','end_year','end_month','law_count','law_overflow_count')
 $allFields = $scopeFields + $valueFields
 $e = [System.Collections.Generic.List[string]]::new()
 $e.Add('# Generated presidential-history effects: edit this generator, then regenerate the output.')
@@ -425,6 +461,7 @@ Add-Line $e '\tset_variable = { name = vptl_history_capture_president_identity v
 Add-Line $e '\tset_variable = { name = vptl_history_capture_vice_president_identity value = 0 }'
 Add-Line $e '\tset_variable = { name = vptl_history_capture_vice_president_ideology_identity value = 0 }'
 Add-Line $e '\tset_variable = { name = vptl_history_capture_popularity_start value = 0 }'
+	Add-Line $e '\tset_variable = { name = vptl_history_capture_president_age_at_accession value = 0 }'
 Add-Line $e '\tset_variable = { name = vptl_history_capture_number value = 0 }'
 Add-Line $e '\tset_variable = { name = vptl_history_capture_accession_type value = 5 }'
 Add-Line $e '\tset_variable = { name = vptl_history_capture_gdp_start value = gdp }'
@@ -438,6 +475,7 @@ Add-Line $e '\truler ?= { save_scope_as = vptl_history_capture_president }'
 Add-Line $e '\tif = {'
 Add-Line $e '\t\tlimit = { exists = scope:vptl_history_capture_president }'
 Add-Line $e '\t\tset_variable = { name = vptl_history_capture_president value = scope:vptl_history_capture_president }'
+	Add-Line $e '\t\tset_variable = { name = vptl_history_capture_president_age_at_accession value = scope:vptl_history_capture_president.age }'
 Add-Line $e '\t\tscope:vptl_history_capture_president = { if = { limit = { is_character_alive = yes NOT = { has_role = character_role_vptl_presidential_history_subject } } add_character_role = character_role_vptl_presidential_history_subject } }'
 Add-IdentityCapture $e 'scope:vptl_history_capture_president' 'vptl_history_capture_president_identity' "`t`t"
 Add-Line $e '\t\tif = { limit = { scope:vptl_history_capture_president = { has_variable = vptl_presidential_order_number } } set_variable = { name = vptl_history_capture_number value = scope:vptl_history_capture_president.var:vptl_presidential_order_number } }'
@@ -450,7 +488,7 @@ Add-Line $e '\t\tscope:vptl_history_capture_president = { this.interest_group ?=
 Add-IdeologyIdentityCapture $e 'scope:vptl_history_capture_president' 'vptl_history_capture_ideology_identity' "`t`t"
 Add-Line $e '\t}'
 Add-Line $e '\t# The first tracked USA episode is Jackson''s real presidency, begun March 1829.'
-Add-Line $e '\tif = { limit = { this = c:USA NOT = { has_variable = vptl_presidential_history_slot_1_populated } scope:vptl_history_capture_president ?= { OR = { has_variable = is_andrew_jackson has_template = usa_andrew_jackson_template } } } set_variable = { name = vptl_history_capture_year value = 1829 } set_variable = { name = vptl_history_capture_month value = 3 } set_variable = { name = vptl_history_capture_accession_type value = 1 } }'
+Add-Line $e '\tif = { limit = { this = c:USA NOT = { has_variable = vptl_presidential_history_slot_1_populated } scope:vptl_history_capture_president ?= { OR = { has_variable = is_andrew_jackson has_template = usa_andrew_jackson_template } } } set_variable = { name = vptl_history_capture_year value = 1829 } set_variable = { name = vptl_history_capture_month value = 3 } set_variable = { name = vptl_history_capture_accession_type value = 1 } set_variable = { name = vptl_history_capture_president_age_at_accession value = 61 } }'
 Add-Line $e '\tif = { limit = { exists = scope:vptl_history_capture_ig } set_variable = { name = vptl_history_capture_ig value = scope:vptl_history_capture_ig } }'
 Add-Line $e '\tif = { limit = { exists = scope:vptl_history_capture_party } set_variable = { name = vptl_history_capture_party value = scope:vptl_history_capture_party } }'
 foreach ($field in @('culture','religion','ideology')) { Add-Line $e "\tif = { limit = { exists = scope:vptl_history_capture_$field } set_variable = { name = vptl_history_capture_$field value = scope:vptl_history_capture_$field } }" }
@@ -608,6 +646,7 @@ Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_party_
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_ig_type_identity value = var:vptl_history_capture_ig_type_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_ideology_identity value = var:vptl_history_capture_ideology_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_vice_president_ideology_identity value = var:vptl_history_capture_vice_president_ideology_identity }'
+Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_president_age_at_accession value = var:vptl_history_capture_president_age_at_accession }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_popularity_start value = var:vptl_history_capture_popularity_start }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_recent_1_popularity value = var:vptl_history_capture_popularity_start }'
 Add-Line $e '\tremove_variable = vptl_presidential_history_recent_1_popularity_end'
@@ -642,6 +681,7 @@ Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_par
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_ig_type_identity value = var:vptl_history_capture_ig_type_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_ideology_identity value = var:vptl_history_capture_ideology_identity }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president_ideology_identity value = var:vptl_history_capture_vice_president_ideology_identity }'
+Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_president_age_at_accession value = var:vptl_history_capture_president_age_at_accession }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_popularity_start value = var:vptl_history_capture_popularity_start }'
 Add-Line $e '\tset_variable = { name = vptl_presidential_history_slot_$SLOT$_popularity value = var:vptl_history_capture_popularity_start }'
 Add-Line $e '\tif = { limit = { has_variable = vptl_history_capture_vice_president_popularity_start } set_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president_popularity_start value = var:vptl_history_capture_vice_president_popularity_start } set_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president_popularity value = var:vptl_history_capture_vice_president_popularity_start } }'
@@ -673,7 +713,7 @@ Add-Line $e '\t\t\tif = { limit = { has_variable = vptl_presidential_history_cur
 Add-Line $e '\t\t\telse = { remove_variable = vptl_presidential_history_recent_1_populated }'
 Add-Line $e '\t\t}'
 Add-Line $e '\t}'
-foreach ($f in @('president','vice_president','party','ig','culture','religion','ideology','vice_president_culture','vice_president_religion','vice_president_ideology','president_identity','vice_president_identity','party_type_identity','ig_type_identity','ideology_identity','vice_president_ideology_identity','popularity','popularity_start','popularity_end','vice_president_popularity_start','number','accession_type','gdp_start','population_start','sol_start','prestige_start','rank','score_rank','year','month')) { Add-Line $e "\tremove_variable = vptl_history_capture_$f" }
+foreach ($f in @('president','vice_president','party','ig','culture','religion','ideology','vice_president_culture','vice_president_religion','vice_president_ideology','president_identity','vice_president_identity','party_type_identity','ig_type_identity','ideology_identity','vice_president_ideology_identity','president_age_at_accession','popularity','popularity_start','popularity_end','vice_president_popularity_start','number','accession_type','gdp_start','population_start','sol_start','prestige_start','rank','score_rank','year','month')) { Add-Line $e "\tremove_variable = vptl_history_capture_$f" }
 Add-Line $e '}'
 Add-Line $e
 Add-Line $e 'vptl_finalize_presidential_history_archive_slot = {'
@@ -877,25 +917,28 @@ for ($s=1;$s -le 50;$s++) {
 	Add-Line $g '\t\t\t\t\t\tbackground = { using = entry_bg_fancy_dark alpha = 0.42 }'
 	Add-Line $g '\t\t\t\t\t\thbox = {'; Add-Line $g '\t\t\t\t\t\t\tmargin = { 18 8 }'; Add-Line $g '\t\t\t\t\t\t\tvbox = {'; Add-Line $g '\t\t\t\t\t\t\t\tspacing = 2'
 
-	# Fixed header grid: number, president, deputy, and year-only service dates.
+	# Fixed header grid: number, president plus IG icon, deputy, party, and year-only service dates.
 	Add-Line $g '\t\t\t\t\t\t\t\thbox = { spacing = 6'
 	Add-Line $g ("\t\t\t\t\t\t\t\t\ttextbox = {{ size = {{ 64 34 }} raw_text = `"#BOLD No. [Country.MakeScope.Var('{0}_number').GetValue|0]#!`" fontsize = 18 align = left|nobaseline }}" -f $p)
-	Add-IdentityFallbackText $g $p 'president' 'vptl_presidential_history_unavailable_president' '300 34' '24' -TooltipWidget ("vptl_presidential_history_profile_tooltip_{0}" -f $s)
-	Add-Line $g '\t\t\t\t\t\t\t\t\twidget = { size = { 314 34 } hbox = { spacing = 6'
-	Add-Line $g '\t\t\t\t\t\t\t\t\t\ttextbox = { size = { 106 34 } raw_text = "#weak [GetPlayer.GetCustom(''vptl_presidential_successor_title'')]:#!" fontsize = 14 elide = right align = right|nobaseline }'
-	Add-IdentityFallbackText $g $p 'vice_president' 'vptl_presidential_history_unavailable_vice_president' '202 34' '16' '\t\t\t\t\t\t\t\t\t\t' -TooltipWidget ("vptl_presidential_history_vice_president_profile_tooltip_{0}" -f $s)
+	Add-Line $g '\t\t\t\t\t\t\t\t\twidget = { size = { 260 34 } hbox = { spacing = 6'
+	Add-IdentityFallbackText $g $p 'president' 'vptl_presidential_history_unavailable_president' '224 34' '24' -TooltipWidget ("vptl_presidential_history_profile_tooltip_{0}" -f $s)
+	Add-FrozenIgIcon $g $p
 	Add-Line $g '\t\t\t\t\t\t\t\t\t} }'
-	Add-Line $g '\t\t\t\t\t\t\t\t\twidget = { size = { 232 34 }'
-	Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ 232 34 }} raw_text = `"#BOLD [Country.MakeScope.Var('{1}_start_year').GetValue|0]–#!`" fontsize = 18 align = right|nobaseline }}" -f $open,$p)
-	Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ 232 34 }} raw_text = `"#BOLD [Country.MakeScope.Var('{1}_start_year').GetValue|0]–[Country.MakeScope.Var('{1}_end_year').GetValue|0]#!`" fontsize = 18 align = right|nobaseline }}" -f $closed,$p)
+	Add-Line $g '\t\t\t\t\t\t\t\t\twidget = { size = { 260 34 } hbox = { spacing = 6'
+	Add-Line $g '\t\t\t\t\t\t\t\t\t\ttextbox = { size = { 106 34 } raw_text = "#weak [GetPlayer.GetCustom(''vptl_presidential_successor_title'')]:#!" fontsize = 14 elide = right align = right|nobaseline }'
+	Add-IdentityFallbackText $g $p 'vice_president' 'vptl_presidential_history_unavailable_vice_president' '148 34' '16' '\t\t\t\t\t\t\t\t\t\t' -TooltipWidget ("vptl_presidential_history_vice_president_profile_tooltip_{0}" -f $s)
+	Add-Line $g '\t\t\t\t\t\t\t\t\t} }'
+	Add-PartyIdentityText $g $p $partyTypeIdentities 'vptl_presidential_history_unavailable_party' '160 34' '15'
+	Add-Line $g '\t\t\t\t\t\t\t\t\twidget = { size = { 160 34 }'
+	Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ 160 34 }} raw_text = `"#BOLD [Country.MakeScope.Var('{1}_start_year').GetValue|0]–#!`" fontsize = 18 align = right|nobaseline }}" -f $open,$p)
+	Add-Line $g ("\t\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ 160 34 }} raw_text = `"#BOLD [Country.MakeScope.Var('{1}_start_year').GetValue|0]–[Country.MakeScope.Var('{1}_end_year').GetValue|0]#!`" fontsize = 18 align = right|nobaseline }}" -f $closed,$p)
 	Add-Line $g '\t\t\t\t\t\t\t\t\t}'
 	Add-Line $g '\t\t\t\t\t\t\t\t}'
 
-	# Office row keeps accession, frozen affiliations, and status in fixed columns.
+	# Office row keeps the combined accession line and right-aligned status.
 	Add-Line $g '\t\t\t\t\t\t\t\thbox = { spacing = 8'
-	for ($i=0;$i -le 5;$i++) { $key=@('vptl_presidential_history_accession_unrecorded','vptl_presidential_history_accession_elected','vptl_presidential_history_accession_succeeded','vptl_presidential_history_accession_interim','vptl_presidential_history_accession_provisional','vptl_presidential_history_accession_initial')[$i]; Add-Line $g ("\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[EqualTo_CFixedPoint(Country.MakeScope.Var('{0}_accession_type').GetValue, '(CFixedPoint){1}')]`" size = {{ 170 30 }} text = `"{2}`" fontsize = 15 elide = right tooltip = `"{2}`" }}" -f $p,$i,$key) }
-	Add-AffiliationIdentityText $g $p 'party_type_identity' $partyTypeIdentities 'vptl_presidential_history_unavailable_party' '210 30' '15'
-	Add-FrozenIgBadge $g $p
+	Add-AccessionLine $g $p
+	Add-Line $g '\t\t\t\t\t\t\t\t\t\twidget = { layoutpolicy_horizontal = expanding }'
 	Add-Line $g ("\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[{0}]`" size = {{ 224 30 }} text = `"vptl_presidential_history_departure_open`" fontsize = 15 align = right|nobaseline }}" -f $open)
 	for ($i=1;$i -le 7;$i++) { $key=@('','vptl_presidential_history_departure_death','vptl_presidential_history_departure_lost_election','vptl_presidential_history_departure_term_limited','vptl_presidential_history_departure_election_handoff','vptl_presidential_history_departure_removed','vptl_presidential_history_departure_system_ended','vptl_presidential_history_departure_unknown')[$i]; Add-Line $g ("\t\t\t\t\t\t\t\t\ttextbox = {{ visible = `"[And({0}, EqualTo_CFixedPoint(Country.MakeScope.Var('{1}_departure_reason').GetValue, '(CFixedPoint){2}'))]`" size = {{ 224 30 }} text = `"{3}`" fontsize = 15 elide = left align = right|nobaseline tooltip = `"{3}`" }}" -f $closed,$p,$i,$key) }
 	Add-Line $g '\t\t\t\t\t\t\t\t}'

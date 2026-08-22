@@ -1242,8 +1242,8 @@ if ($historyDateEffectsText -notmatch '(?m)^vptl_capture_presidential_history_da
 	(Test-Path (Join-Path $resolvedModPath "common\script_values\zzz_vptl_presidential_history.txt"))) {
 	Add-Issue "history-ledger-date" "common\scripted_effects\zzz_vptl_presidential_history_dates.txt" 0 "Month/year capture must use National History's proven explicit 1836-1935 date table, not an unverified dynamic-year expression."
 }
-if ($historyEffectsText -notmatch 'this\s*=\s*c:USA[\s\S]*?NOT\s*=\s*\{\s*has_variable\s*=\s*vptl_presidential_history_slot_1_populated\s*\}[\s\S]*?has_variable\s*=\s*is_andrew_jackson[\s\S]*?vptl_history_capture_year\s+value\s*=\s*1829[\s\S]*?vptl_history_capture_month\s+value\s*=\s*3[\s\S]*?vptl_history_capture_accession_type\s+value\s*=\s*1') {
-	Add-Issue "history-ledger-jackson-date" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "The first tracked USA Jackson episode must be Elected and begin in March 1829 without changing later Jackson accessions."
+if ($historyEffectsText -notmatch 'this\s*=\s*c:USA[\s\S]*?NOT\s*=\s*\{\s*has_variable\s*=\s*vptl_presidential_history_slot_1_populated\s*\}[\s\S]*?has_variable\s*=\s*is_andrew_jackson[\s\S]*?vptl_history_capture_year\s+value\s*=\s*1829[\s\S]*?vptl_history_capture_month\s+value\s*=\s*3[\s\S]*?vptl_history_capture_accession_type\s+value\s*=\s*1[\s\S]*?vptl_history_capture_president_age_at_accession\s+value\s*=\s*61') {
+	Add-Issue "history-ledger-jackson-date" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "The first tracked USA Jackson episode must be Elected in March 1829 with the mandated age-61 historical accession snapshot, without changing later Jackson accessions."
 }
 if ($historyEffectsText -match 'add_journal_entry|has_journal_entry|je:je_vptl_presidential_history|scope:journal_entry|JournalEntry' -or
 	(Test-Path (Join-Path $resolvedModPath "common\journal_entries\zzz_vptl_presidential_history.txt")) -or
@@ -1267,7 +1267,7 @@ if ($historyWindowText -notmatch "GetVariableSystem\.Exists\('vptl_presidential_
 	$historyWindowText -match 'historical_character_icon\.dds' -or
 	$historyWindowText -match 'FancyTooltip_Character\s*=\s*\{\}' -or
 	$historyWindowText -match 'party_icon\s*=\s*\{' -or
-	$historyWindowText -match 'GetParty\.GetName' -or
+	$historyWindowText -match 'Country\.Get(?:Ruling)?Party' -or
 	$historyWindowText -match 'GetInterestGroup\.GetName' -or
 	$historyWindowText -match 'GetInterestGroup\.GetTexture' -or
 	$historyWindowText -match 'ig_icon\s*=\s*\{' -or
@@ -1294,16 +1294,35 @@ if ($historyWindowText -notmatch "GetVariableSystem\.Exists\('vptl_presidential_
 }
 $historyCardCount = [regex]::Matches($historyWindowText, 'size\s*=\s*\{\s*964\s+174\s*\}').Count
 $historyHeaderNumberCount = [regex]::Matches($historyWindowText, 'size\s*=\s*\{\s*64\s+34\s*\}[^\r\n]*No\.').Count
-$historyHeaderPresidentCount = [regex]::Matches($historyWindowText, 'size\s*=\s*\{\s*300\s+34\s*\}').Count
-$historyHeaderVpCount = [regex]::Matches($historyWindowText, 'size\s*=\s*\{\s*314\s+34\s*\}').Count
-$historyHeaderDatesCount = [regex]::Matches($historyWindowText, 'size\s*=\s*\{\s*232\s+34\s*\}').Count
+$historyHeaderPresidentCount = [regex]::Matches($historyWindowText, '(?s)widget\s*=\s*\{\s*size\s*=\s*\{\s*260\s+34\s*\}\s*hbox\s*=\s*\{\s*spacing\s*=\s*6.*?size\s*=\s*\{\s*224\s+34\s*\}').Count
+$historyHeaderVpCount = [regex]::Matches($historyWindowText, '(?s)widget\s*=\s*\{\s*size\s*=\s*\{\s*260\s+34\s*\}\s*hbox\s*=\s*\{\s*spacing\s*=\s*6.*?GetPlayer\.GetCustom\(''vptl_presidential_successor_title''\)').Count
+$historyHeaderDatesCount = [regex]::Matches($historyWindowText, 'raw_text\s*=\s*"#BOLD \[Country\.MakeScope\.Var\(''vptl_presidential_history_display_\d+_start_year''\)\.GetValue\|0\]–').Count
+$historyStoredPartyValidityCount = [regex]::Matches($historyWindowText, 'visible\s*=\s*"\[Country\.MakeScope\.Var\(''vptl_presidential_history_display_\d+_party''\)\.GetParty\.IsValid\]"').Count
+$historyStoredPartyDatacontextCount = [regex]::Matches($historyWindowText, 'datacontext\s*=\s*"\[Country\.MakeScope\.Var\(''vptl_presidential_history_display_\d+_party''\)\.GetParty\]').Count
+$historyStoredPartyNameCount = [regex]::Matches($historyWindowText, 'raw_text\s*=\s*"\[Party\.GetNameNoFormatting\]"').Count
+$historyStoredPartyTooltipCount = [regex]::Matches($historyWindowText, 'tooltipwidget\s*=\s*\{\s*FancyTooltip_Party\s*=\s*\{\}\s*\}').Count
 $historyLawFooterCount = [regex]::Matches($historyWindowText, 'size\s*=\s*\{\s*928\s+40\s*\}').Count
-if ($historyCardCount -ne 50 -or $historyHeaderNumberCount -ne 50 -or $historyHeaderPresidentCount -lt 50 -or $historyHeaderVpCount -ne 50 -or $historyHeaderDatesCount -ne 150 -or $historyLawFooterCount -ne 50 -or
+$historyCardBodies = [regex]::Matches($historyWindowText, '(?s)size\s*=\s*\{\s*964\s+174\s*\}.*?(?=size\s*=\s*\{\s*964\s+174\s*\}|\z)')
+$historyHeaderCardIssues = 0
+$historyOfficeAffinityIssues = 0
+foreach ($cardBody in $historyCardBodies) {
+	$firstOfficeRow = $cardBody.Value.IndexOf('hbox = { spacing = 8')
+	$secondOfficeRow = if ($firstOfficeRow -ge 0) { $cardBody.Value.IndexOf('hbox = { spacing = 8', $firstOfficeRow + 1) } else { -1 }
+	if ($firstOfficeRow -lt 0 -or $secondOfficeRow -lt 0) {
+		$historyHeaderCardIssues++
+		continue
+	}
+	$headerText = $cardBody.Value.Substring(0, $firstOfficeRow)
+	$officeText = $cardBody.Value.Substring($firstOfficeRow, $secondOfficeRow - $firstOfficeRow)
+	if ($headerText -notmatch 'party_type_identity' -or $headerText -notmatch 'ig_type_identity') { $historyHeaderCardIssues++ }
+	if ($officeText -match 'party_type_identity|ig_type_identity|vptl_presidential_history_unavailable_ig') { $historyOfficeAffinityIssues++ }
+}
+if ($historyCardCount -ne 50 -or $historyHeaderNumberCount -ne 50 -or $historyHeaderPresidentCount -ne 50 -or $historyHeaderVpCount -ne 50 -or $historyHeaderDatesCount -ne 100 -or $historyStoredPartyValidityCount -ne 50 -or $historyStoredPartyDatacontextCount -ne 50 -or $historyStoredPartyNameCount -ne 50 -or $historyStoredPartyTooltipCount -ne 50 -or $historyLawFooterCount -ne 50 -or
+	$historyHeaderCardIssues -gt 0 -or $historyOfficeAffinityIssues -gt 0 -or
 	$historyWindowText -match 'vptl_presidential_history_(?:current_label|political_profile|national_snapshot|presidency_results)' -or
 	$historyWindowText -match 'vptl_presidential_history_display_\d+_(?:start|end)_month') {
-	Add-Issue "history-library-shared-card" "gui\vptl_presidential_history_window.gui" 0 "All 50 records must use the fixed 174px header/office/results/law grid, omit the permanent profile row, and display service dates by year only."
+	Add-Issue "history-library-shared-card" "gui\vptl_presidential_history_window.gui" 0 "All 50 records must use the fixed 174px header/office/results/law grid, keep stored party and IG in the header, remove them from the office row, omit the permanent profile row, and display service dates by year only."
 }
-$historyCardBodies = [regex]::Matches($historyWindowText, '(?s)size\s*=\s*\{\s*964\s+174\s*\}.*?(?=size\s*=\s*\{\s*964\s+174\s*\}|\z)')
 $profileRowInCard = $false
 foreach ($cardBody in $historyCardBodies) {
 	if ($cardBody.Value -match 'vptl_presidential_history_(?:culture_label|religion_label|ideology_label|popularity_label)|FancyTooltip_(?:Culture|Religion|Ideology)|vptl_presidential_history_display_\d+_(?:culture|religion|ideology|popularity)') {
@@ -1381,6 +1400,12 @@ if ($historyCaptureBlock -notmatch 'vptl_history_capture_popularity_start\s+valu
 	$historyEffectsText -notmatch 'vptl_migrate_presidential_history_profiles\s*=\s*yes[\s\S]*?vptl_refresh_open_presidential_history_episode') {
 	Add-Issue "history-library-frozen-profile" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Culture, religion, ideology, and popularity start must be captured once at accession and backfilled only once from the exact surviving stored president."
 }
+if ($historyWindowText -notmatch "Country\.MakeScope\.Var\('vptl_presidential_history_display_1_party'\)\.GetParty\.IsValid" -or
+	$historyWindowText -notmatch "datacontext\s*=\s*.*Country\.MakeScope\.Var\('vptl_presidential_history_display_1_party'\)\.GetParty" -or
+	$historyWindowText -notmatch 'raw_text\s*=\s*"\[Party\.GetNameNoFormatting\]"' -or
+	$historyWindowText -notmatch "Not\(Country\.MakeScope\.Var\('vptl_presidential_history_display_1_party'\)\.GetParty\.IsValid\).*?party_type_identity") {
+	Add-Issue "history-library-party-name" "gui\vptl_presidential_history_window.gui" 0 "Each party header must prefer the stored party scope name and gate generic party-type fallbacks behind an invalid stored scope."
+}
 if ($historyCaptureBlock -notmatch 'vptl_history_capture_vice_president_popularity_start\s+value\s*=\s*var:vptl_presidential_successor\.popularity' -or
 	$historyCaptureBlock -notmatch 'vptl_history_capture_vice_president_culture' -or
 	$historyCaptureBlock -notmatch 'vptl_history_capture_vice_president_religion' -or
@@ -1426,11 +1451,34 @@ if ($historyWindowText -notmatch '(?:gdp|population|sol|prestige)_change_(?:avai
 	$historyWindowText -notmatch 'vptl_presidential_history_no_laws') {
 	Add-Issue "history-library-display-polish" "gui\vptl_presidential_history_window.gui" 0 "Complete raw metric ranges, signed four-metric percentages, and frozen affiliation text are required."
 }
+if ($historyEffectsText -notmatch 'vptl_history_capture_president_age_at_accession\s+value\s*=\s*scope:vptl_history_capture_president\.age' -or
+	$historyEffectsText -notmatch 'vptl_presidential_history_recent_1_president_age_at_accession\s+value\s*=\s*var:vptl_history_capture_president_age_at_accession' -or
+	$historyEffectsText -notmatch 'vptl_presidential_history_slot_\$SLOT\$_president_age_at_accession\s+value\s*=\s*var:vptl_history_capture_president_age_at_accession' -or
+	$historyEffectsText -notmatch 'vptl_presidential_history_display_\$SLOT\$_president_age_at_accession') {
+	Add-Issue "history-library-accession-age-propagation" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Presidential accession age must be captured once and propagated through archive, recent, and display state."
+}
+if ($historyEffectsText -notmatch 'remove_variable\s*=\s*vptl_history_capture_president_age_at_accession' -or
+	$historyOpenRefreshBlock -match 'president_age_at_accession\s+value') {
+	Add-Issue "history-library-accession-age-lifecycle" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Accession age must be cleaned after capture and must never be rewritten by active refresh."
+}
+if ($historyWindowText -match 'Character\.GetAge' -or
+	$historyWindowText -notmatch 'vptl_presidential_history_display_1_president_age_at_accession' -or
+	$historyWindowText -notmatch 'layoutpolicy_horizontal\s*=\s*preferred\s+layoutpolicy_vertical\s*=\s*preferred\s+spacing\s*=\s*3\s+textbox\s*=\s*\{\s*layoutpolicy_horizontal\s*=\s*preferred\s+text\s*=\s*"vptl_presidential_history_accession_elected_at_age"' -or
+	$historyWindowText -match 'size\s*=\s*\{\s*142\s+30\s*\}|size\s*=\s*\{\s*25\s+30\s*\}' -or
+	$historyWindowText -notmatch 'vptl_presidential_history_accession_elected_at_age' -or
+	$historyWindowText -notmatch 'vptl_presidential_history_accession_succeeded_at_age' -or
+	$historyWindowText -notmatch 'vptl_presidential_history_accession_interim_at_age' -or
+	$historyWindowText -notmatch 'vptl_presidential_history_accession_provisional_at_age' -or
+	$historyWindowText -notmatch 'vptl_presidential_history_accession_initial_at_age' -or
+	$historyWindowText -notmatch 'vptl_presidential_history_accession_elected' -or
+	$historyWindowText -notmatch 'vptl_presidential_history_accession_unrecorded') {
+	Add-Issue "history-library-accession-age-display" "gui\vptl_presidential_history_window.gui" 0 "Accession age must render from stored display-cache state for all known accession methods with an unavailable-age fallback."
+}
 if ($historyEffectsText -notmatch 'vptl_presidential_history_display_count\s+value\s*=\s*var:vptl_presidential_history_recent_count' -or
 	$historyEffectsText -notmatch 'vptl_presidential_history_display_\$SLOT\$_president\s+value\s*=\s*var:vptl_presidential_history_recent_\$SLOT\$_president') {
 	Add-Issue "history-ledger-display-cache" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Opening the standalone ledger must copy durable recent records into a separate National History-style display cache."
 }
-foreach ($field in @('party_type_identity','ig_type_identity','culture','religion','ideology','ideology_identity','popularity','popularity_start','popularity_end','vice_president_culture','vice_president_religion','vice_president_ideology','vice_president_ideology_identity','vice_president_popularity','vice_president_popularity_start','vice_president_popularity_end','gdp_start','gdp_end','gdp_change_available','gdp_change_percent','gdp_active_change_available','gdp_active_change_percent','population_start','population_end','population_change_available','population_change_percent','population_active_change_available','population_active_change_percent','sol_start','sol_end','sol_change_available','sol_change_percent','sol_active_change_available','sol_active_change_percent','prestige_start','prestige_end','prestige_change_available','prestige_change_percent','prestige_active_change_available','prestige_active_change_percent','rank_start','rank_end','score_rank_start','score_rank_end','law_count','law_overflow_count')) {
+foreach ($field in @('party_type_identity','ig_type_identity','culture','religion','ideology','ideology_identity','president_age_at_accession','popularity','popularity_start','popularity_end','vice_president_culture','vice_president_religion','vice_president_ideology','vice_president_ideology_identity','vice_president_popularity','vice_president_popularity_start','vice_president_popularity_end','gdp_start','gdp_end','gdp_change_available','gdp_change_percent','gdp_active_change_available','gdp_active_change_percent','population_start','population_end','population_change_available','population_change_percent','population_active_change_available','population_active_change_percent','sol_start','sol_end','sol_change_available','sol_change_percent','sol_active_change_available','sol_active_change_percent','prestige_start','prestige_end','prestige_change_available','prestige_change_percent','prestige_active_change_available','prestige_active_change_percent','rank_start','rank_end','score_rank_start','score_rank_end','law_count','law_overflow_count')) {
 	if ($historyEffectsText -notmatch "vptl_presidential_history_recent_.+_$field" -or
 		$historyEffectsText -notmatch "vptl_presidential_history_display_.+_$field") {
 		Add-Issue "history-library-propagation" "common\scripted_effects\zzz_vptl_presidential_history.txt" 0 "Presidential Library field '$field' must propagate through archive, recent, and display state."
@@ -1572,6 +1620,7 @@ foreach ($key in @(
 	'vptl_presidential_history_section','vptl_presidential_history_open_tooltip','vptl_presidential_history_empty',
 	'vptl_presidential_history_unavailable_president','vptl_presidential_history_unavailable_vice_president','vptl_presidential_history_unavailable_party','vptl_presidential_history_unavailable_ig',
 	'vptl_presidential_history_culture_label','vptl_presidential_history_religion_label','vptl_presidential_history_ideology_label','vptl_presidential_history_popularity_label','vptl_presidential_history_profile_unavailable','vptl_presidential_history_profile_tooltip_title','vptl_presidential_history_vice_president_profile_tooltip_title',
+	'vptl_presidential_history_accession_elected_at_age','vptl_presidential_history_accession_succeeded_at_age','vptl_presidential_history_accession_interim_at_age','vptl_presidential_history_accession_provisional_at_age','vptl_presidential_history_accession_initial_at_age',
 	'vptl_presidential_history_gdp_label','vptl_presidential_history_population_label','vptl_presidential_history_sol_label','vptl_presidential_history_prestige_label','vptl_presidential_history_rank_label','vptl_presidential_history_rank_unavailable_value','vptl_presidential_history_metric_unavailable',
 	'vptl_presidential_history_laws_enacted','vptl_presidential_history_no_laws')) {
 	if ($historyLocalizationText -notmatch "(?m)^\s*$([regex]::Escape($key)):0\s+") {

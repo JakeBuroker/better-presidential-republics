@@ -448,6 +448,7 @@ vptl_capture_presidential_history_episode_data = {
 	set_variable = { name = vptl_history_capture_vice_president_identity value = 0 }
 	set_variable = { name = vptl_history_capture_vice_president_ideology_identity value = 0 }
 	set_variable = { name = vptl_history_capture_popularity_start value = 0 }
+	set_variable = { name = vptl_history_capture_president_age_at_accession value = 0 }
 	set_variable = { name = vptl_history_capture_number value = 0 }
 	set_variable = { name = vptl_history_capture_accession_type value = 5 }
 	set_variable = { name = vptl_history_capture_gdp_start value = gdp }
@@ -461,6 +462,7 @@ vptl_capture_presidential_history_episode_data = {
 	if = {
 		limit = { exists = scope:vptl_history_capture_president }
 		set_variable = { name = vptl_history_capture_president value = scope:vptl_history_capture_president }
+		set_variable = { name = vptl_history_capture_president_age_at_accession value = scope:vptl_history_capture_president.age }
 		scope:vptl_history_capture_president = { if = { limit = { is_character_alive = yes NOT = { has_role = character_role_vptl_presidential_history_subject } } add_character_role = character_role_vptl_presidential_history_subject } }
 		set_variable = { name = vptl_history_capture_president_identity value = 0 }
 		scope:vptl_history_capture_president = {
@@ -518,7 +520,7 @@ vptl_capture_presidential_history_episode_data = {
 		if = { limit = { scope:vptl_history_capture_president ?= { has_ideology = ideology:ideology_moderate } } set_variable = { name = vptl_history_capture_ideology_identity value = 5 } }
 	}
 	# The first tracked USA episode is Jackson's real presidency, begun March 1829.
-	if = { limit = { this = c:USA NOT = { has_variable = vptl_presidential_history_slot_1_populated } scope:vptl_history_capture_president ?= { OR = { has_variable = is_andrew_jackson has_template = usa_andrew_jackson_template } } } set_variable = { name = vptl_history_capture_year value = 1829 } set_variable = { name = vptl_history_capture_month value = 3 } set_variable = { name = vptl_history_capture_accession_type value = 1 } }
+	if = { limit = { this = c:USA NOT = { has_variable = vptl_presidential_history_slot_1_populated } scope:vptl_history_capture_president ?= { OR = { has_variable = is_andrew_jackson has_template = usa_andrew_jackson_template } } } set_variable = { name = vptl_history_capture_year value = 1829 } set_variable = { name = vptl_history_capture_month value = 3 } set_variable = { name = vptl_history_capture_accession_type value = 1 } set_variable = { name = vptl_history_capture_president_age_at_accession value = 61 } }
 	if = { limit = { exists = scope:vptl_history_capture_ig } set_variable = { name = vptl_history_capture_ig value = scope:vptl_history_capture_ig } }
 	if = { limit = { exists = scope:vptl_history_capture_party } set_variable = { name = vptl_history_capture_party value = scope:vptl_history_capture_party } }
 	if = { limit = { exists = scope:vptl_history_capture_culture } set_variable = { name = vptl_history_capture_culture value = scope:vptl_history_capture_culture } }
@@ -1903,6 +1905,8 @@ vptl_copy_presidential_history_recent_slot = {
 		else = { remove_variable = vptl_presidential_history_recent_$TO$_ideology_identity }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$FROM$_vice_president_ideology_identity } set_variable = { name = vptl_presidential_history_recent_$TO$_vice_president_ideology_identity value = var:vptl_presidential_history_recent_$FROM$_vice_president_ideology_identity } }
 		else = { remove_variable = vptl_presidential_history_recent_$TO$_vice_president_ideology_identity }
+		if = { limit = { has_variable = vptl_presidential_history_recent_$FROM$_president_age_at_accession } set_variable = { name = vptl_presidential_history_recent_$TO$_president_age_at_accession value = var:vptl_presidential_history_recent_$FROM$_president_age_at_accession } }
+		else = { remove_variable = vptl_presidential_history_recent_$TO$_president_age_at_accession }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$FROM$_popularity } set_variable = { name = vptl_presidential_history_recent_$TO$_popularity value = var:vptl_presidential_history_recent_$FROM$_popularity } }
 		else = { remove_variable = vptl_presidential_history_recent_$TO$_popularity }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$FROM$_popularity_start } set_variable = { name = vptl_presidential_history_recent_$TO$_popularity_start value = var:vptl_presidential_history_recent_$FROM$_popularity_start } }
@@ -2065,6 +2069,7 @@ vptl_copy_history_capture_to_recent_1 = {
 	set_variable = { name = vptl_presidential_history_recent_1_ig_type_identity value = var:vptl_history_capture_ig_type_identity }
 	set_variable = { name = vptl_presidential_history_recent_1_ideology_identity value = var:vptl_history_capture_ideology_identity }
 	set_variable = { name = vptl_presidential_history_recent_1_vice_president_ideology_identity value = var:vptl_history_capture_vice_president_ideology_identity }
+	set_variable = { name = vptl_presidential_history_recent_1_president_age_at_accession value = var:vptl_history_capture_president_age_at_accession }
 	set_variable = { name = vptl_presidential_history_recent_1_popularity_start value = var:vptl_history_capture_popularity_start }
 	set_variable = { name = vptl_presidential_history_recent_1_popularity value = var:vptl_history_capture_popularity_start }
 	remove_variable = vptl_presidential_history_recent_1_popularity_end
@@ -2136,6 +2141,7 @@ vptl_copy_history_capture_to_archive_slot = {
 	set_variable = { name = vptl_presidential_history_slot_$SLOT$_ig_type_identity value = var:vptl_history_capture_ig_type_identity }
 	set_variable = { name = vptl_presidential_history_slot_$SLOT$_ideology_identity value = var:vptl_history_capture_ideology_identity }
 	set_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president_ideology_identity value = var:vptl_history_capture_vice_president_ideology_identity }
+	set_variable = { name = vptl_presidential_history_slot_$SLOT$_president_age_at_accession value = var:vptl_history_capture_president_age_at_accession }
 	set_variable = { name = vptl_presidential_history_slot_$SLOT$_popularity_start value = var:vptl_history_capture_popularity_start }
 	set_variable = { name = vptl_presidential_history_slot_$SLOT$_popularity value = var:vptl_history_capture_popularity_start }
 	if = { limit = { has_variable = vptl_history_capture_vice_president_popularity_start } set_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president_popularity_start value = var:vptl_history_capture_vice_president_popularity_start } set_variable = { name = vptl_presidential_history_slot_$SLOT$_vice_president_popularity value = var:vptl_history_capture_vice_president_popularity_start } }
@@ -2337,6 +2343,7 @@ vptl_open_presidential_history_episode = {
 	remove_variable = vptl_history_capture_ig_type_identity
 	remove_variable = vptl_history_capture_ideology_identity
 	remove_variable = vptl_history_capture_vice_president_ideology_identity
+	remove_variable = vptl_history_capture_president_age_at_accession
 	remove_variable = vptl_history_capture_popularity
 	remove_variable = vptl_history_capture_popularity_start
 	remove_variable = vptl_history_capture_popularity_end
@@ -10203,6 +10210,8 @@ vptl_copy_presidential_history_recent_to_display_slot = {
 		else = { remove_variable = vptl_presidential_history_display_$SLOT$_ideology_identity }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_vice_president_ideology_identity } set_variable = { name = vptl_presidential_history_display_$SLOT$_vice_president_ideology_identity value = var:vptl_presidential_history_recent_$SLOT$_vice_president_ideology_identity } }
 		else = { remove_variable = vptl_presidential_history_display_$SLOT$_vice_president_ideology_identity }
+		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_president_age_at_accession } set_variable = { name = vptl_presidential_history_display_$SLOT$_president_age_at_accession value = var:vptl_presidential_history_recent_$SLOT$_president_age_at_accession } }
+		else = { remove_variable = vptl_presidential_history_display_$SLOT$_president_age_at_accession }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_popularity } set_variable = { name = vptl_presidential_history_display_$SLOT$_popularity value = var:vptl_presidential_history_recent_$SLOT$_popularity } }
 		else = { remove_variable = vptl_presidential_history_display_$SLOT$_popularity }
 		if = { limit = { has_variable = vptl_presidential_history_recent_$SLOT$_popularity_start } set_variable = { name = vptl_presidential_history_display_$SLOT$_popularity_start value = var:vptl_presidential_history_recent_$SLOT$_popularity_start } }
@@ -10317,6 +10326,7 @@ vptl_copy_presidential_history_recent_to_display_slot = {
 		remove_variable = vptl_presidential_history_display_$SLOT$_ig_type_identity
 		remove_variable = vptl_presidential_history_display_$SLOT$_ideology_identity
 		remove_variable = vptl_presidential_history_display_$SLOT$_vice_president_ideology_identity
+		remove_variable = vptl_presidential_history_display_$SLOT$_president_age_at_accession
 		remove_variable = vptl_presidential_history_display_$SLOT$_popularity
 		remove_variable = vptl_presidential_history_display_$SLOT$_popularity_start
 		remove_variable = vptl_presidential_history_display_$SLOT$_popularity_end
